@@ -49,7 +49,7 @@ See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 - The owner reconfirmed that `classicstorymaps.com` shows Verified in the `davidasbury` account's Pages settings; both authoritative nameservers independently returned the destination challenge TXT on 2026-10-26. See [session 0020](../../session-logs/2026-10-26-0020-session-log.md). This closes the current account-verification snapshot item, superseding pending verification statements above, but does not bind the repository or establish live-service acceptance. Preserve the challenge record and recheck verification before cutover if circumstances change.
 - Catalog source constructs its callback from origin plus pathname. The owner subsequently supplied the registration inventory and confirmed adding catalog callbacks, as recorded below. Runtime-specific paths were subsequently inventoried with limitations explicitly accepted by the owner below; the agent made no OAuth setting changes.
 
-**V1 snapshot complete; V2 accepted with limitations; V3 reconfirmation pending:**
+**V1 snapshot complete; V2 accepted with limitations; V3 reconfirmed:**
 catalog callbacks and scoped owner tests are recorded. The owner accepted the
 runtime authentication limitations below for transfer only; repairs are deferred.
 The owner established the viewer-specific quiet window below, superseding
@@ -120,6 +120,30 @@ release content, transfer execution by an agent, or waiver of post-cutover
 acceptance. Keep all existing callbacks and recovery evidence. V3 must still
 reconfirm destination account-level verification and its DNS challenge; window,
 queue, exact-revision, transfer-comparison and acceptance safeguards remain.
+
+### V3 Verification Reconfirmed
+
+Recorded `2026-10-26 15:44:44-07:00[America/Los_Angeles]`. The owner confirmed
+that `classicstorymaps.com` still shows **Verified** under the `davidasbury`
+account's Settings > Pages. Immediately preceding that confirmation, independent
+`dig` checks of `eloise.ns.cloudflare.com` and `sergi.ns.cloudflare.com` returned
+authoritative, agreeing TXT answers for
+`_github-pages-challenge-davidasbury.classicstorymaps.com`, with TTL 300 seconds.
+The challenge value was not copied into the record. Account-level verification
+remains owner-observed, distinct from the DNS evidence.
+
+This completes V3 reconfirmation and supersedes the pending V3 statements in the
+earlier V2 record. It does not bind Pages or establish destination-site acceptance.
+The owner authorized one final pre-transfer tracking-only `[skip ci]` commit and
+fresh refs/queue checks afterward. See
+[session 0024](../../session-logs/2026-10-26-0024-session-log.md).
+
+After those checks, the owner transfers the repository while retaining its name
+and public visibility, then stops for the before/after comparison. Do not combine
+that step with Pages binding, clearing `SITE_BASE_PATH`, DNS changes or dispatch.
+Preserve the verification TXT, validation branch, old callbacks and recovery
+evidence. The existing quiet window, V2 limitations and post-cutover acceptance
+requirements are unchanged; recheck verification if circumstances change.
 
 ### Deferred Second Sign-In Finding
 

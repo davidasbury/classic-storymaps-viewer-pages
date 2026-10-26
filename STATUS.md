@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: V2 accepted for transfer with documented authentication limitations; V3 verification reconfirmation pending
+  phase: V3 verification reconfirmed; V2 limitations accepted; owner-operated viewer transfer next after final checks
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,7 +21,7 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Viewer V2 accepted with limitations, 2026-10-26; V3 verification reconfirmation is next.**
+**Viewer V3 complete, 2026-10-26; owner-operated transfer is next after final checks.**
 
 - The owner accepted the converter prerequisite and authorized viewer preflight. No viewer transfer, workflow dispatch, Pages or DNS change was performed. The owner subsequently added the catalog OAuth callbacks recorded below; the agent made no account-setting changes.
 - The [fresh source-admin baseline](.github/prompts/baselines/viewer-2026-10-26-before.txt) has no `UNKNOWN` results. Compared with the October 22 baseline, only documentation-only `main` advancement and the script-added `main` deployment-policy detail differ. The owner approved this comparison on 2026-10-26; see [session 0013](session-logs/2026-10-26-0013-session-log.md).
@@ -36,7 +36,8 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - From the current `/viewers/` catalog, the owner reported successful sign-in/return/sign-out, private Map Tour and Shortlist viewing, and loss of private access after sign-out and reload. Viewing required a second username/password sign-in despite catalog authentication. Investigation was explicitly deferred until after transfer; session reuse or credential forwarding is a hypothesis, not a verified cause. See [deferred finding](.github/prompts/transfer-decisions.prompt.md#deferred-second-sign-in-finding).
 - The runtime inventory found pre-existing conditional OAuth limitations: Map Tour, Swipe, Journal, Series, Cascade and Shortlist use the built-in `storymaps` client in item-access paths; their default popup callback files return 404 on the current site, and ArcGIS rejects those callback URLs at both current and destination origins. All four catalog callbacks validate successfully for `4ZanYdCYK0mWsFLz`. Crowdsource and Basic publish callback files but can depend on separately configured clients whose registrations were not verified. See [session 0023](session-logs/2026-10-26-0023-session-log.md) for the source, SDK and public-service evidence and its limits.
 - The owner explicitly accepted these authentication limitations for transfer, retained the pinned application content, deferred repairs and authorized this tracking-only `[skip ci]` commit and progression to V3. V2 is dispositioned by that scoped acceptance, not by a claim that every runtime login works. Destination-domain authentication, private viewing, sign-out access loss and eight-runtime acceptance remain required after cutover. The second-sign-in cause remains unverified.
-- V3 requires reconfirming the destination account's Verified status and challenge TXT before transfer. Deployment queues and the final full SHA must be rechecked before execution. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged; normal authoring and automation remain paused.
+- V3 is complete: the owner reconfirmed that `classicstorymaps.com` still shows Verified under `davidasbury` Settings > Pages, after both authoritative nameservers independently returned agreeing destination challenge TXT records with TTL 300 seconds. Account-level status is owner-observed; DNS does not establish it alone. The owner authorized one final pre-transfer tracking-only `[skip ci]` commit; see [session 0024](session-logs/2026-10-26-0024-session-log.md).
+- Recheck refs, deployment queues and the quiet window after this commit is pushed, before the owner transfers the viewer. Keep the name and public visibility, then stop for the before/after comparison before Pages binding or base-path changes. The final deployment SHA still requires selection and verification before dispatch. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged; normal authoring and automation remain paused.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).
