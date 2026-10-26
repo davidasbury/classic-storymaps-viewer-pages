@@ -43,6 +43,12 @@ See [session 0026](session-logs/2026-10-26-0026-session-log.md),
 [transfer decisions](.github/prompts/transfer-decisions.prompt.md) for the execution
 record and unchanged release gates.
 
+The [joint closure record](session-logs/2026-10-26-0028-session-log.md) consolidates
+the accepted transfer, local move and concurrent tracking update without
+repeating private converter evidence. Establishing `convert.classicstorymaps.com`
+before linking was recommended, but no domain setup or integration was performed
+by this closure. The existing next action and separate release gates remain.
+
 ## Historical Preflight Snapshot
 
 The following describes the state before transfer; the accepted cutover above supersedes its pending execution and acceptance statements.
