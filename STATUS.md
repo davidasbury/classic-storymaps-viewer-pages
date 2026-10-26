@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Viewer cutover accepted; clone remote updated; external tracking handoff pending
+  phase: Viewer cutover accepted; local clone relocated and remote verified; external tracking handoff pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -33,7 +33,11 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 This clone's origin now targets the destination repository through the existing
 `github.com-davidasbury` SSH alias; authenticated read access verified both branch
-refs. The directory and shared SSH configuration were not changed. See
+refs. After acceptance and closure, the owner separately requested relocation of
+the existing local clone. That move preserved Git state and recovery archive
+hashes; the old directory is absent and shared SSH configuration is unchanged.
+The owner will have the project-tracking agent update the registry; this agent
+did not inspect or change it. See [session 0026](session-logs/2026-10-26-0026-session-log.md),
 [session 0025](session-logs/2026-10-26-0025-session-log.md) and
 [transfer decisions](.github/prompts/transfer-decisions.prompt.md) for the execution
 record and unchanged release gates.
