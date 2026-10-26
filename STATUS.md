@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Recovery, Cloudflare inventory and destination domain verification recorded; OAuth and viewer quiet window pending; release gates unchanged
+  phase: V1 snapshot complete and viewer quiet window established; V2 OAuth preparation pending; release gates unchanged
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,7 +21,7 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Viewer preflight started, 2026-10-26.**
+**Viewer V1 snapshot complete, 2026-10-26; OAuth preparation remains before transfer.**
 
 - The owner accepted the converter prerequisite and authorized viewer preflight. No viewer transfer, workflow dispatch, Pages, DNS or OAuth change was performed.
 - The [fresh source-admin baseline](.github/prompts/baselines/viewer-2026-10-26-before.txt) has no `UNKNOWN` results. Compared with the October 22 baseline, only documentation-only `main` advancement and the script-added `main` deployment-policy detail differ. The owner approved this comparison on 2026-10-26; see [session 0013](session-logs/2026-10-26-0013-session-log.md).
@@ -31,7 +31,8 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - The isolated recovery build from that exact source passed 139 tests and 68 published-link checks. Its archive contains 2,929 files and extracted byte-for-byte identically. All 42 browser checks passed on the extracted copy: eight launchers at three widths and four runtimes on desktop/mobile. Of 42 selected live files, 40 matched exactly; Journal and Series bundles differed only in build-timestamp comments, with identical parsed JavaScript. See [session 0015](session-logs/2026-10-26-0015-session-log.md) for the retained local archive, checksum and limits. This is local recovery evidence, not a hosted rollback or full eight-runtime/private-content acceptance.
 - Both Cloudflare authoritative nameservers agree on the GitHub Pages apex A/AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with observed TTL 300 seconds. The owner confirmed apex and `www` are gray-cloud/DNS-only with configured TTL `Auto`; no DNS change was made. No apex CAA record was returned. See [session 0016](session-logs/2026-10-26-0016-session-log.md). The owner subsequently confirmed encryption mode `Full (strict)` and Always Use HTTPS `On`; see [session 0017](session-logs/2026-10-26-0017-session-log.md) and [session 0018](session-logs/2026-10-26-0018-session-log.md). The owner also confirmed there are no Redirect Rules, Bulk Redirects or legacy Page Rules; see [session 0019](session-logs/2026-10-26-0019-session-log.md). This completes the requested Cloudflare settings inventory, not live redirect acceptance. The last HTTPS checks returned 404 for apex and `www`; the viewer custom domain remains unset in the recorded baseline.
 - The owner confirmed that `classicstorymaps.com` shows Verified in the destination `davidasbury` account's Pages settings. The destination challenge TXT was independently rechecked on both authoritative nameservers. See [session 0020](session-logs/2026-10-26-0020-session-log.md). This records current verification ownership, not a repository domain binding or live-service acceptance.
-- Registered OAuth callbacks and runtime callback inventory, and a viewer-specific quiet window/deadline remain open. Deployment queues must be rechecked immediately before execution. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
+- The owner established the viewer quiet window starting now, captured at `2026-10-26 15:00:01-07:00[America/Los_Angeles]`, with recovery decision at `2026-10-26 17:00:00-07:00[America/Los_Angeles]` and final deadline at `2026-10-26 21:00:00-07:00[America/Los_Angeles]`. The owner confirmed no viewer authoring or automation until transfer completion, then explicitly authorized this transfer-tracking-only `[skip ci]` documentation commit. All five outstanding workflow status counts were zero at the start check. See [session 0021](session-logs/2026-10-26-0021-session-log.md). The deadline does not automatically end the pause or authorize an extension.
+- Registered OAuth callbacks and runtime callback inventory remain open for V2. Deployment queues must be rechecked immediately before execution. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).

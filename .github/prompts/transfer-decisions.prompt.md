@@ -49,10 +49,22 @@ See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 - The owner reconfirmed that `classicstorymaps.com` shows Verified in the `davidasbury` account's Pages settings; both authoritative nameservers independently returned the destination challenge TXT on 2026-10-26. See [session 0020](../../session-logs/2026-10-26-0020-session-log.md). This closes the current account-verification snapshot item, superseding pending verification statements above, but does not bind the repository or establish live-service acceptance. Preserve the challenge record and recheck verification before cutover if circumstances change.
 - Catalog source constructs its callback from origin plus pathname. The registered callback list and runtime-specific login paths still need inventory. No OAuth setting was changed.
 
-**Not ready for transfer:** OAuth preparation
-and a viewer-specific quiet window/recovery deadline remain open. Do not inherit
-another repository's maintenance window or treat entry-page HTTP success as
-eight-runtime acceptance. The following October 22 table is historical evidence.
+**V1 snapshot complete; not yet ready for transfer:** OAuth preparation remains
+open. The owner established the viewer-specific quiet window below, superseding
+its earlier pending status. Do not treat entry-page HTTP success as eight-runtime
+acceptance. The following October 22 table is historical evidence.
+
+### Viewer Quiet Window, 2026-10-26
+
+- Start: the owner's "now", captured at `2026-10-26 15:00:01-07:00[America/Los_Angeles]`.
+- Recovery decision: `2026-10-26 17:00:00-07:00[America/Los_Angeles]`.
+- Final deadline: `2026-10-26 21:00:00-07:00[America/Los_Angeles]`.
+- The owner confirmed no viewer authoring or automation until transfer completion, then explicitly permitted this transfer-tracking-only documentation commit with `[skip ci]`. This is not permission for ordinary authoring, workflow dispatch or hosting changes.
+- Queued, in-progress, waiting, requested and pending workflow counts were all zero at the start check. Recheck immediately before transfer and before any publishing-sensitive change; this observation does not enforce the pause automatically.
+- At the recovery decision point, the owner chooses and records whether to continue repair or recover. An expired window is a stop/recovery trigger under the existing procedure, not an automatic rollback or extension. The pause does not automatically lift at the final deadline. DNS/certificate delays can exceed this window; no readiness by the deadline is promised.
+
+See [session 0021](../../session-logs/2026-10-26-0021-session-log.md). No viewer
+transfer, dispatch or hosting change was performed by establishing this window.
 
 ## Verified State, 2026-10-22
 
