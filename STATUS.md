@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Viewer baseline approved; owner confirmed no installed GitHub Apps; recovery and remaining preflight pending; release gates unchanged
+  phase: Local recovery build and archive verified; domain, OAuth and quiet-window preflight pending; release gates unchanged
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -27,9 +27,10 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - The [fresh source-admin baseline](.github/prompts/baselines/viewer-2026-10-26-before.txt) has no `UNKNOWN` results. Compared with the October 22 baseline, only documentation-only `main` advancement and the script-added `main` deployment-policy detail differ. The owner approved this comparison on 2026-10-26; see [session 0013](session-logs/2026-10-26-0013-session-log.md).
 - The owner reported that the source viewer repository's Installed GitHub Apps page shows no installed Apps. This closes the before-transfer Apps inventory item as owner-observed evidence, not an API inventory; see [session 0014](session-logs/2026-10-26-0014-session-log.md).
 - `840b60fcd5ea29ccfc9de1ebc1e6e06179e7d476` passed ancestry and the exact documentation-path allowlist against approved `1ce19fd6532950b8333e49da4eca7cd009ed9195`. Documentation closure advances `main` again; select and recheck the final full SHA before dispatch. The validation branch remains `2b8c572ec7038372c3130a3e9715bd61d09b0460`.
-- Deployment queues were empty. The latest successful Pages run remains `39900419606` at `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`; the root, catalog and all eight runtime entry URLs returned HTTPS 200. These are HTTP checks, not runtime or authenticated acceptance. Repository and run artifact inventories were empty; a known-good recoverable artifact is not established.
+- Deployment queues were empty. The latest successful Pages run remains `39900419606` at `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`. Its original Actions artifact is unavailable; the live site remains accessible. A local replacement recovery package has now been rebuilt and checked, as described below.
+- The isolated recovery build from that exact source passed 139 tests and 68 published-link checks. Its archive contains 2,929 files and extracted byte-for-byte identically. All 42 browser checks passed on the extracted copy: eight launchers at three widths and four runtimes on desktop/mobile. Of 42 selected live files, 40 matched exactly; Journal and Series bundles differed only in build-timestamp comments, with identical parsed JavaScript. See [session 0015](session-logs/2026-10-26-0015-session-log.md) for the retained local archive, checksum and limits. This is local recovery evidence, not a hosted rollback or full eight-runtime/private-content acceptance.
 - Fresh DNS resolves the apex A/AAAA records to GitHub Pages, `www` to `davidasbury.github.io`, and the destination challenge TXT. Apex and `www` both return HTTPS 404; the viewer Pages custom domain is still unset. Current account-level Verified status and Cloudflare configuration require owner confirmation.
-- Recovery evidence, registered OAuth callbacks and runtime callback inventory, and a viewer-specific quiet window/deadline remain open. See [session 0012](session-logs/2026-10-26-0012-session-log.md) and [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
+- Registered OAuth callbacks and runtime callback inventory, and a viewer-specific quiet window/deadline remain open alongside domain/Cloudflare verification. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).
