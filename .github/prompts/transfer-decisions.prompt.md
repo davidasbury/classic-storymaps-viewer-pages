@@ -47,10 +47,11 @@ See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 - Both Cloudflare authoritative nameservers returned the four GitHub Pages apex A and four AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with TTL 300 seconds. No apex CAA record was returned; a `www` CAA query returned its CNAME. The owner confirmed apex and `www` are gray-cloud/DNS-only with configured TTL `Auto`. This records dashboard settings separately from DNS observations; no records were changed. See [session 0016](../../session-logs/2026-10-26-0016-session-log.md). The owner subsequently reported Cloudflare encryption mode `Full (strict)` in [session 0017](../../session-logs/2026-10-26-0017-session-log.md); that setting was not changed or independently inspected by the agent. HTTPS/redirect settings and current destination Pages Verified status remain open. The earlier apex/`www` HTTPS checks returned 404; those were not repeated during these settings observations.
 - The owner confirmed Always Use HTTPS is `On` in [session 0018](../../session-logs/2026-10-26-0018-session-log.md), then confirmed there are no Redirect Rules, Bulk Redirects or legacy Page Rules in [session 0019](../../session-logs/2026-10-26-0019-session-log.md). These owner observations complete the requested Cloudflare settings inventory, superseding its pending portions above. No setting was changed or independently inspected by the agent. Live redirect acceptance remains separate.
 - The owner reconfirmed that `classicstorymaps.com` shows Verified in the `davidasbury` account's Pages settings; both authoritative nameservers independently returned the destination challenge TXT on 2026-10-26. See [session 0020](../../session-logs/2026-10-26-0020-session-log.md). This closes the current account-verification snapshot item, superseding pending verification statements above, but does not bind the repository or establish live-service acceptance. Preserve the challenge record and recheck verification before cutover if circumstances change.
-- Catalog source constructs its callback from origin plus pathname. The owner subsequently supplied the registration inventory and confirmed adding catalog callbacks, as recorded below. Remaining runtime-specific login paths still need inventory; the agent made no OAuth setting changes.
+- Catalog source constructs its callback from origin plus pathname. The owner subsequently supplied the registration inventory and confirmed adding catalog callbacks, as recorded below. Runtime-specific paths were subsequently inventoried with limitations explicitly accepted by the owner below; the agent made no OAuth setting changes.
 
-**V1 snapshot complete; not yet ready for transfer:** V2 catalog callback additions
-and scoped owner tests are recorded; remaining runtime callback inventory is open.
+**V1 snapshot complete; V2 accepted with limitations; V3 reconfirmation pending:**
+catalog callbacks and scoped owner tests are recorded. The owner accepted the
+runtime authentication limitations below for transfer only; repairs are deferred.
 The owner established the viewer-specific quiet window below, superseding
 its earlier pending status. Do not treat entry-page HTTP success as eight-runtime
 acceptance. The following October 22 table is historical evidence.
@@ -81,7 +82,44 @@ The original callback inventories and four owner-confirmed additions are in
 - Existing callbacks were retained. No replacement client or viewer code change was made. Registration changes are owner-confirmed, not an authenticated agent settings readback.
 - A fresh isolated Chrome check of both current catalog path forms observed client `4ZanYdCYK0mWsFLz` and the exact corresponding redirect URI. Authorization was intercepted before reaching ArcGIS; no credentials or tokens were used. This confirms emitted requests, not successful login.
 - The owner separately reported successful sign-in, return to the current `/viewers/` catalog, and sign-out. Private Map Tour and Shortlist viewing and loss of private access after sign-out/reload also passed as owner-reported, subject to the second-sign-in finding below. The explicit `index.html` path had request inspection, not a separately reported authenticated round trip.
-- Live entry configuration checks found empty OAuth client defaults for seven templates and null for Basic. Conditional runtime paths still exist: Journal source registers built-in `storymaps` for private-item access checks, Crowdsource can use an item-specific client and `oauth-callback.html`, and Basic can register a configured client. Empty defaults do not prove callback completeness or session reuse. Finish the remaining runtime callback inventory before closing V2; destination-domain and full eight-template acceptance remain separate.
+- Live entry configuration checks found empty OAuth client defaults for seven templates and null for Basic. Conditional runtime paths still exist: Journal source registers built-in `storymaps` for private-item access checks, Crowdsource can use an item-specific client and `oauth-callback.html`, and Basic can register a configured client. Empty defaults do not prove callback completeness or session reuse. The subsequent inventory and owner disposition below supersede the pending V2 inventory status; destination-domain and full eight-template acceptance remain separate.
+
+### V2 Runtime Inventory and Owner Acceptance
+
+Recorded `2026-10-26 15:40:29-07:00[America/Los_Angeles]`. The owner approved
+preserving the pinned application, accepting the pre-existing authentication
+limitations for transfer, deferring repairs, and continuing to V3. The owner also
+authorized this tracking-only `[skip ci]` record during the quiet window.
+
+| Runtime paths under `/viewers/` | Client selection and callback evidence |
+| --- | --- |
+| `maptour/`, `swipe/`, `shortlist/` | Configured client defaults empty. Conditional item-access paths register built-in `storymaps`, popup enabled, with SDK 3.31's default same-directory `oauth-callback.html`. All three current-site callback files returned 404. |
+| `mapjournal/`, `mapseries/`, `cascade/` | Configured client defaults empty. Conditional item-access paths register built-in `storymaps`, popup enabled, with SDK 3.41's default same-directory `oauth-callback.html`. All three current-site callback files returned 404. |
+| `crowdsource/` | Empty global client default; contribution sign-in can select an item-specific client. Explicit HTTPS same-directory `oauth-callback.html` returned 200 with a completion handler. Item-specific registrations were not inspected. |
+| `basic/` | Null default client; `oauthappid` can supply a client, including via URL. Popup callback file returned 200 with a completion handler. Override-client registrations were not inspected. |
+
+ArcGIS's public read-only `validateRedirectUri` endpoint returned `valid: true`
+for all four catalog callbacks under `4ZanYdCYK0mWsFLz`. For `storymaps`, it
+returned `valid: false` for each of the six runtime popup callbacks at both
+the current GitHub Pages base and `https://classicstorymaps.com`: twelve negative
+results. These are redirect-validation results, not authenticated round trips.
+The vendor SDK source independently establishes the popup callback construction;
+no live private story was used to force those conditional branches.
+
+This finding does not establish the cause of the owner's second sign-in, nor
+invalidate successful private-view tests that may use another authentication
+path. Adding these runtime URLs to the catalog client alone would not change the
+runtime's client selection or restore missing files. No such change was made.
+See [session 0023](../../session-logs/2026-10-26-0023-session-log.md) for evidence.
+
+**Disposition:** V2 is accepted for transfer with these documented limitations,
+not certified as fully functional authentication. This scoped decision supersedes
+the pending runtime-inventory gate, including unverified conditional-client
+registrations; it does not authorize authentication code changes, new clients,
+release content, transfer execution by an agent, or waiver of post-cutover
+acceptance. Keep all existing callbacks and recovery evidence. V3 must still
+reconfirm destination account-level verification and its DNS challenge; window,
+queue, exact-revision, transfer-comparison and acceptance safeguards remain.
 
 ### Deferred Second Sign-In Finding
 

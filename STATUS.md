@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: V2 catalog callbacks and scoped owner tests recorded; remaining runtime callback inventory open; second sign-in follow-up deferred
+  phase: V2 accepted for transfer with documented authentication limitations; V3 verification reconfirmation pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,7 +21,7 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Viewer V1 snapshot complete, 2026-10-26; OAuth preparation remains before transfer.**
+**Viewer V2 accepted with limitations, 2026-10-26; V3 verification reconfirmation is next.**
 
 - The owner accepted the converter prerequisite and authorized viewer preflight. No viewer transfer, workflow dispatch, Pages or DNS change was performed. The owner subsequently added the catalog OAuth callbacks recorded below; the agent made no account-setting changes.
 - The [fresh source-admin baseline](.github/prompts/baselines/viewer-2026-10-26-before.txt) has no `UNKNOWN` results. Compared with the October 22 baseline, only documentation-only `main` advancement and the script-added `main` deployment-policy detail differ. The owner approved this comparison on 2026-10-26; see [session 0013](session-logs/2026-10-26-0013-session-log.md).
@@ -34,7 +34,9 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - The owner established the viewer quiet window starting now, captured at `2026-10-26 15:00:01-07:00[America/Los_Angeles]`, with recovery decision at `2026-10-26 17:00:00-07:00[America/Los_Angeles]` and final deadline at `2026-10-26 21:00:00-07:00[America/Los_Angeles]`. The owner confirmed no viewer authoring or automation until transfer completion, then explicitly authorized this transfer-tracking-only `[skip ci]` documentation commit. All five outstanding workflow status counts were zero at the start check. See [session 0021](session-logs/2026-10-26-0021-session-log.md). The deadline does not automatically end the pause or authorize an extension.
 - The owner identified existing client `4ZanYdCYK0mWsFLz` and confirmed adding both catalog path forms under the destination domain and current GitHub Pages site while retaining existing callbacks. The separate Dev client was not selected for production. An isolated browser check independently observed both current-site callback paths, intercepting authorization before ArcGIS; it did not authenticate. See [session 0022](session-logs/2026-10-26-0022-session-log.md) for the exact registration inventory and evidence limits.
 - From the current `/viewers/` catalog, the owner reported successful sign-in/return/sign-out, private Map Tour and Shortlist viewing, and loss of private access after sign-out and reload. Viewing required a second username/password sign-in despite catalog authentication. Investigation was explicitly deferred until after transfer; session reuse or credential forwarding is a hypothesis, not a verified cause. See [deferred finding](.github/prompts/transfer-decisions.prompt.md#deferred-second-sign-in-finding).
-- V2 remains open for the remaining runtime-specific callback inventory; these scoped tests do not certify every template or destination-domain authentication. Deployment queues must be rechecked immediately before execution. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged. The owner separately authorized this tracking-only `[skip ci]` record during the quiet window; normal authoring and automation remain paused.
+- The runtime inventory found pre-existing conditional OAuth limitations: Map Tour, Swipe, Journal, Series, Cascade and Shortlist use the built-in `storymaps` client in item-access paths; their default popup callback files return 404 on the current site, and ArcGIS rejects those callback URLs at both current and destination origins. All four catalog callbacks validate successfully for `4ZanYdCYK0mWsFLz`. Crowdsource and Basic publish callback files but can depend on separately configured clients whose registrations were not verified. See [session 0023](session-logs/2026-10-26-0023-session-log.md) for the source, SDK and public-service evidence and its limits.
+- The owner explicitly accepted these authentication limitations for transfer, retained the pinned application content, deferred repairs and authorized this tracking-only `[skip ci]` commit and progression to V3. V2 is dispositioned by that scoped acceptance, not by a claim that every runtime login works. Destination-domain authentication, private viewing, sign-out access loss and eight-runtime acceptance remain required after cutover. The second-sign-in cause remains unverified.
+- V3 requires reconfirming the destination account's Verified status and challenge TXT before transfer. Deployment queues and the final full SHA must be rechecked before execution. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged; normal authoring and automation remain paused.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).
