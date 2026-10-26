@@ -2,6 +2,15 @@
 
 Monorepo for hosting Classic Storymaps landing and per-app viewer helper pages under `/templates/classic-storymaps`.
 
+Canonical repository: [davidasbury/classic-storymaps-viewer-pages](https://github.com/davidasbury/classic-storymaps-viewer-pages).
+Production: [classicstorymaps.com](https://classicstorymaps.com/), with the
+[viewer catalog](https://classicstorymaps.com/viewers/) at `/viewers/`.
+The owner accepted the ownership/domain cutover on 2026-10-26; see
+[transfer decisions](.github/prompts/transfer-decisions.prompt.md).
+The old GitHub Pages root and catalog return 404. Update saved viewer links to
+the custom domain, removing the `/classic-storymaps-viewer-pages` prefix while
+preserving the remaining path and query. Conversion integration remains disabled.
+
 ## Initial Contents
 - `.github/prompts/plan-storymapsSiteDeploy.prompt.md` - primary execution checklist and scope for this repo
 - `apps/` - app-specific page implementations
@@ -84,7 +93,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory publish
 
 Open `http://127.0.0.1:8000/`. Stop the server with Ctrl+C. Choose another port
 if 8000 is occupied. This preview uses an empty base path so the output is served
-at the local root; GitHub Pages uses the repository base path described below.
+at the local root, matching the current custom-domain production base path.
 Builds write ignored dependencies/output inside runtime directories and may
 change tracked upstream build metadata. Review such changes separately; do not
 commit them as part of generated output.
@@ -133,7 +142,10 @@ Both publish scripts accept `SITE_BASE_PATH`, defaulting to empty for a root
 custom domain. Use `/classic-storymaps-viewer-pages` for the GitHub Pages project
 address, or another absolute path for a nested deployment. The workflow reads
 the GitHub repository variable `SITE_BASE_PATH`; configure it for the intended
-address before deploying. This change does not set the repository variable.
+address before deploying. For the accepted `classicstorymaps.com` deployment,
+the owner removed that variable and the workflow used an empty value. Leave it
+unset for root-domain builds. Do not treat the default project URL as an
+automatic fallback while the custom-domain binding is active.
 
 Source HTML uses `__SITE_BASE_PATH__` for handwritten root links. Build the
 landing before previewing it; the scripts substitute the configured prefix and

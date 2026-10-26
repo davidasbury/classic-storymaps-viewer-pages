@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: V3 verification reconfirmed; V2 limitations accepted; owner-operated viewer transfer next after final checks
+  phase: Viewer cutover accepted; clone remote updated; external tracking handoff pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,27 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Viewer cutover accepted by the owner, 2026-10-26.**
+
+- The public canonical repository is [davidasbury/classic-storymaps-viewer-pages](https://github.com/davidasbury/classic-storymaps-viewer-pages). Production is [classicstorymaps.com](https://classicstorymaps.com/), hosted by GitHub Pages with Cloudflare authoritative DNS. The owner performed the transfer, binding, variable removal and workflow dispatch; the agent performed read-only verification.
+- The owner approved the restored post-transfer comparison, retained `dasbury-esri` write access and confirmed no destination GitHub Apps. Secret scanning and push protection initially became disabled after transfer; the owner restored both and the agent independently verified restoration before binding. Branches, visibility and the remaining captured controls were preserved.
+- Accepted deployment: run `40416446662`, source `cc5af80ba15216dad86ed2d982e3d670cd51cdb4`, a verified documentation-only descendant of approved `1ce19fd6532950b8333e49da4eca7cd009ed9195`. All 139 tests and 68 published-link checks passed. The Pages-specific deployment API returned `succeed`; the downloaded artifact matched GitHub's SHA-256, and twelve sampled live files matched the artifact byte-for-byte, including the disabled conversion configuration. This is sampled byte verification, not a whole-site equality claim.
+- Pages binds `classicstorymaps.com`, uses GitHub Actions and enforces HTTPS. `SITE_BASE_PATH` was removed before the build; the workflow log confirms its empty value. Both authoritative nameservers and a public resolver matched the approved DNS records, so no DNS change was required. HTTPS and `www` redirects preserved the tested path and query. The old GitHub Pages root and catalog returned 404; saved links to those addresses require updating.
+- The owner reported successful catalog sign-in/return/sign-out at both `/viewers/` and `/viewers/index.html`, visual checks for all eight runtimes, private-content rendering, and loss of private access after sign-out and reload. These are owner-observed results, not agent-authenticated browser tests. The second sign-in remains a deferred issue with no established cause; previously accepted conditional OAuth limitations remain unchanged.
+- At `2026-10-26 16:13:55-07:00[America/Los_Angeles]`, remote `main`, the successful run and Pages deployment still matched the accepted SHA, all five outstanding queue counts were zero, and published conversion integration was disabled. The owner subsequently accepted the cutover and authorized documentation-only `[skip ci]` commits/pushes, canonical-link updates and this clone's remote update. No application changes, new deployment, directory move, cleanup or restricted registry access were authorized.
+- The authorized tracking owner still needs to update the viewer registry and other clones on their permitted surfaces. The existing `next_action` frontmatter is the owner's earlier preflight wording and has intentionally not been reinterpreted; its replacement awaits owner direction. Retained-content rights and new-release gates remain in force. Preserve recovery packages, the validation branch, deploy key, old callbacks and destination verification TXT.
+
+This clone's origin now targets the destination repository through the existing
+`github.com-davidasbury` SSH alias; authenticated read access verified both branch
+refs. The directory and shared SSH configuration were not changed. See
+[session 0025](session-logs/2026-10-26-0025-session-log.md) and
+[transfer decisions](.github/prompts/transfer-decisions.prompt.md) for the execution
+record and unchanged release gates.
+
+## Historical Preflight Snapshot
+
+The following describes the state before transfer; the accepted cutover above supersedes its pending execution and acceptance statements.
 
 **Viewer V3 complete, 2026-10-26; owner-operated transfer is next after final checks.**
 
@@ -83,7 +104,7 @@ may work on its non-confidential content. Work-domain reporting remains unchange
 hybrid designation is recorded by `extra.agents`, not a new domain value.
 
 Superseded 2026-10-17 by the transfer decisions above: retained-content rights now gate the next public release, not migration. The
-[migration handoff](https://github.com/dasbury-esri/ArcGIS-StoryMaps-Classic-Converter-App/blob/main/docs/runbooks/migration-handoff.md)
+[migration handoff](https://github.com/davidasbury/ArcGIS-StoryMaps-Classic-Converter-App/blob/main/docs/runbooks/migration-handoff.md)
 is the continuation guide and requires access to the converter repository.
 No transfer, new deployment or rights clearance is implied by onboarding.
 
@@ -120,8 +141,10 @@ main-branch push without the required skip marker. See the
 
 ## Next
 
-- [ ] Resolve retained-content rights before migration.
+- [ ] Complete the authorized viewer tracking handoff and other-clone updates outside this agent's restricted scope.
+- [ ] Investigate the deferred second sign-in only under separate authorization.
+- [ ] Resolve retained-content rights before any new public release.
 - [ ] Execute the resolution/defer plan and complete attribution coverage before release approval.
-- [ ] Obtain approval before repository transfer or production publication.
+- [ ] Obtain separate approval before new production publication or enabling conversion integration.
 
 See `session-logs/` for session outcomes.

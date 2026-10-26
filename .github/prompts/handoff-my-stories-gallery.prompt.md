@@ -15,7 +15,7 @@ Read current target instructions and preserve the other agent's working-tree cha
 
 ## Owner-confirmed Placement
 
-The gallery belongs on the existing [Viewers page](https://dasbury-esri.github.io/classic-storymaps-viewer-pages/viewers/) in [viewers.html](../../apps/classic-storymaps-site/viewers.html), not on a new page or the archived My Stories page. These decisions supersede the original signed-in-only handoff.
+The gallery belongs on the existing [Viewers page](https://classicstorymaps.com/viewers/) in [viewers.html](../../apps/classic-storymaps-site/viewers.html), not on a new page or the archived My Stories page. These decisions supersede the original signed-in-only handoff.
 
 - Initially show eight whole-card launcher links for everyone. Browse Stories opens the gallery; Hide Stories restores the cards. Preserve an explicitly opened gallery through a validated OAuth round trip, but do not automatically open it merely because a session exists.
 - Story cards remain fully clickable. When conversion is enabled and eligible, show green View and blue Convert buttons together; otherwise omit the action row. Shortlist's staged viewer-only patch suppresses Edit even for owners and disables its builder-transition helper.

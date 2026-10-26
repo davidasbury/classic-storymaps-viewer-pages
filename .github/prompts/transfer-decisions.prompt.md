@@ -17,6 +17,59 @@ copy covers the viewer only.
 **Order:** the converter transfers first and must be accepted before any step
 below starts.
 
+## Accepted Viewer Cutover, 2026-10-26
+
+The owner accepted the viewer cutover after the checks below and authorized
+documentation-only `[skip ci]` commits/pushes, canonical-link updates and this
+clone's remote update. The public canonical repository is
+[davidasbury/classic-storymaps-viewer-pages](https://github.com/davidasbury/classic-storymaps-viewer-pages);
+production is [classicstorymaps.com](https://classicstorymaps.com/).
+The historical preflight sections below remain evidence, not current pending
+gates. No application edits, new deployment, directory move, authentication
+repair, recovery cleanup or restricted tracking-registry edit were authorized.
+
+### Transfer and Configuration
+
+- The owner transferred the repository, preserving its name, public visibility, `main`, and `validation/batch-d-releases`. Destination `davidasbury` has admin access; the owner explicitly approved retained `dasbury-esri` write access and confirmed no installed destination GitHub Apps.
+- At `2026-10-26 15:50:17-07:00[America/Los_Angeles]`, post-transfer metadata independently confirmed that secret scanning and push protection had become disabled. Execution stopped before binding. The owner restored both; at `2026-10-26 15:53:12-07:00[America/Los_Angeles]`, the repeated admin baseline had no unknowns and matched the before baseline apart from expected documentation-only `main` advancement and collaborator changes. The owner approved that comparison.
+- With queues empty, the owner bound `classicstorymaps.com` under Pages with GitHub Actions as source, then removed `SITE_BASE_PATH`. The pre-dispatch readback at `2026-10-26 15:57:35-07:00[America/Los_Angeles]` verified absence of the variable, empty queues and exact remote SHA equality. HTTPS is enforced; the certificate covers apex and `www`.
+- Both Cloudflare authoritative nameservers and public resolver `1.1.1.1` matched the approved four apex A records, four AAAA records and `www` CNAME `davidasbury.github.io`. No DNS change was required. Preserve the destination challenge TXT and existing DNS-only/Full (strict) settings.
+- The [after baseline](baselines/viewer-2026-10-26-after.txt) is a fresh post-cutover capture, not a reconstruction of the earlier pre-binding comparison. Relative to the [before baseline](baselines/viewer-2026-10-26-before.txt), it additionally records the authorized custom-domain binding and removed base-path variable. The session record distinguishes those hosting changes from transfer effects.
+
+### Pinned Deployment and Acceptance
+
+| Evidence | Result |
+| --- | --- |
+| Selected and deployed SHA | `cc5af80ba15216dad86ed2d982e3d670cd51cdb4` |
+| Approval qualification | Ancestry from `1ce19fd6532950b8333e49da4eca7cd009ed9195` and the exact documentation-path allowlist both passed; remote `main` matched immediately before owner dispatch |
+| Workflow | Owner-dispatched [run 40416446662](https://github.com/davidasbury/classic-storymaps-viewer-pages/actions/runs/40416446662), attempt 1, `main`, successful build and deployment |
+| Checks | 139 tests and 68 published-link checks passed; workflow environment showed empty `SITE_BASE_PATH` |
+| Artifact | `github-pages`, ID `12695278344`, 59,989,153 bytes; ZIP SHA-256 `fbf3e48763bdc1e5fd8da80ef0349978c43337530a0fd5acc79540d6308bf8f4` |
+| Independent publication evidence | Downloaded ZIP matched GitHub's digest using Node crypto and `shasum`; Pages-specific deployment status for the selected SHA returned `succeed`; twelve sampled live files matched the artifact byte-for-byte |
+| TLS and redirects | HTTPS validated; HTTP-to-HTTPS and `www`-to-apex redirects preserved the tested `/viewers/` path and query |
+| Catalog authentication | Owner reported sign-in, return and sign-out passing at both `/viewers/` and `/viewers/index.html` |
+| Runtime visuals | Owner reported Map Tour, Swipe, Map Journal, Map Series, Cascade, Shortlist, Crowdsource and Basic passing visual checks |
+| Private access | Owner reported private content opening/rendering, still requiring a second sign-in, then becoming inaccessible after sign-out and reload |
+| Conversion integration | Published configuration matched the artifact and evaluated to `gallery.converter.enabled === false` |
+| Old Pages URLs | Former-owner project root and `/viewers/` both returned 404; saved links need the custom origin and removal of the old project prefix |
+
+The visual and authenticated tests above are owner-observed, not agent-authenticated
+browser evidence. Sampled byte comparisons do not establish whole-site equality.
+The second-sign-in issue and conditional runtime OAuth limitations remain deferred;
+the transfer acceptance does not diagnose or repair them. Existing callbacks and
+both the pre-transfer recovery package and the accepted deployment artifact are
+retained locally; neither is a hosted rollback exercise.
+
+At `2026-10-26 16:13:55-07:00[America/Los_Angeles]`, the accepted run, remote SHA,
+Pages binding, HTTPS and disabled conversion configuration were unchanged, and
+all five outstanding queue counts were zero. The owner subsequently gave final
+acceptance and closure authorization. No additional content release is approved.
+Other clones and the viewer registry remain the authorized tracking owner's
+handoff responsibility. This clone's origin was updated to the destination through
+the existing `github.com-davidasbury` SSH alias after authenticated read access
+verified both refs. Its directory and shared SSH configuration were unchanged.
+See [session 0025](../../session-logs/2026-10-26-0025-session-log.md).
+
 ## Owner Decisions
 
 | ID | Decision |
