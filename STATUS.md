@@ -11,7 +11,7 @@ next_action: "David to run the transfer preflight, then transfer after the conve
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Local recovery build and archive verified; domain, OAuth and quiet-window preflight pending; release gates unchanged
+  phase: Recovery and DNS inventory verified; TLS/redirect, domain, OAuth and quiet-window checks pending; release gates unchanged
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -29,8 +29,8 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - `840b60fcd5ea29ccfc9de1ebc1e6e06179e7d476` passed ancestry and the exact documentation-path allowlist against approved `1ce19fd6532950b8333e49da4eca7cd009ed9195`. Documentation closure advances `main` again; select and recheck the final full SHA before dispatch. The validation branch remains `2b8c572ec7038372c3130a3e9715bd61d09b0460`.
 - Deployment queues were empty. The latest successful Pages run remains `39900419606` at `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`. Its original Actions artifact is unavailable; the live site remains accessible. A local replacement recovery package has now been rebuilt and checked, as described below.
 - The isolated recovery build from that exact source passed 139 tests and 68 published-link checks. Its archive contains 2,929 files and extracted byte-for-byte identically. All 42 browser checks passed on the extracted copy: eight launchers at three widths and four runtimes on desktop/mobile. Of 42 selected live files, 40 matched exactly; Journal and Series bundles differed only in build-timestamp comments, with identical parsed JavaScript. See [session 0015](session-logs/2026-10-26-0015-session-log.md) for the retained local archive, checksum and limits. This is local recovery evidence, not a hosted rollback or full eight-runtime/private-content acceptance.
-- Fresh DNS resolves the apex A/AAAA records to GitHub Pages, `www` to `davidasbury.github.io`, and the destination challenge TXT. Apex and `www` both return HTTPS 404; the viewer Pages custom domain is still unset. Current account-level Verified status and Cloudflare configuration require owner confirmation.
-- Registered OAuth callbacks and runtime callback inventory, and a viewer-specific quiet window/deadline remain open alongside domain/Cloudflare verification. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
+- Both Cloudflare authoritative nameservers agree on the GitHub Pages apex A/AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with observed TTL 300 seconds. The owner confirmed apex and `www` are gray-cloud/DNS-only with configured TTL `Auto`; no DNS change was made. No apex CAA record was returned. See [session 0016](session-logs/2026-10-26-0016-session-log.md). Current account-level Pages Verified status and Cloudflare TLS/redirect settings still require confirmation. The last HTTPS checks returned 404 for apex and `www`; the viewer custom domain remains unset in the recorded baseline.
+- Registered OAuth callbacks and runtime callback inventory, and a viewer-specific quiet window/deadline remain open alongside account-level domain verification and Cloudflare TLS/redirect inventory. A hosted restore has not been exercised; recovery must preserve compatible hosting, base-path and OAuth settings. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).
