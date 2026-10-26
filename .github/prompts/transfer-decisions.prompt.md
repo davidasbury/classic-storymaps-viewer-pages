@@ -35,7 +35,7 @@ exactly as open before the move as after it.
 
 The owner accepted the converter prerequisite and instructed the agent to begin
 viewer preflight. This record contains no private converter operational evidence.
-No viewer transfer, workflow dispatch or hosting/account change was performed.
+At that initial snapshot, no viewer transfer, workflow dispatch or hosting/account change was performed.
 See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 
 - Fresh admin snapshot: [viewer-2026-10-26-before.txt](baselines/viewer-2026-10-26-before.txt), collected as source owner `dasbury-esri`, has no `UNKNOWN` fields. Against the October 22 snapshot, `main` advanced through documentation and the script now reports `main type=branch`; other captured settings are unchanged. The owner approved this comparison on 2026-10-26; see [session 0013](../../session-logs/2026-10-26-0013-session-log.md). This is approval of the before-baseline comparison, not a future post-transfer comparison or permission to bypass remaining preflight gates.
@@ -47,10 +47,11 @@ See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 - Both Cloudflare authoritative nameservers returned the four GitHub Pages apex A and four AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with TTL 300 seconds. No apex CAA record was returned; a `www` CAA query returned its CNAME. The owner confirmed apex and `www` are gray-cloud/DNS-only with configured TTL `Auto`. This records dashboard settings separately from DNS observations; no records were changed. See [session 0016](../../session-logs/2026-10-26-0016-session-log.md). The owner subsequently reported Cloudflare encryption mode `Full (strict)` in [session 0017](../../session-logs/2026-10-26-0017-session-log.md); that setting was not changed or independently inspected by the agent. HTTPS/redirect settings and current destination Pages Verified status remain open. The earlier apex/`www` HTTPS checks returned 404; those were not repeated during these settings observations.
 - The owner confirmed Always Use HTTPS is `On` in [session 0018](../../session-logs/2026-10-26-0018-session-log.md), then confirmed there are no Redirect Rules, Bulk Redirects or legacy Page Rules in [session 0019](../../session-logs/2026-10-26-0019-session-log.md). These owner observations complete the requested Cloudflare settings inventory, superseding its pending portions above. No setting was changed or independently inspected by the agent. Live redirect acceptance remains separate.
 - The owner reconfirmed that `classicstorymaps.com` shows Verified in the `davidasbury` account's Pages settings; both authoritative nameservers independently returned the destination challenge TXT on 2026-10-26. See [session 0020](../../session-logs/2026-10-26-0020-session-log.md). This closes the current account-verification snapshot item, superseding pending verification statements above, but does not bind the repository or establish live-service acceptance. Preserve the challenge record and recheck verification before cutover if circumstances change.
-- Catalog source constructs its callback from origin plus pathname. The registered callback list and runtime-specific login paths still need inventory. No OAuth setting was changed.
+- Catalog source constructs its callback from origin plus pathname. The owner subsequently supplied the registration inventory and confirmed adding catalog callbacks, as recorded below. Remaining runtime-specific login paths still need inventory; the agent made no OAuth setting changes.
 
-**V1 snapshot complete; not yet ready for transfer:** OAuth preparation remains
-open. The owner established the viewer-specific quiet window below, superseding
+**V1 snapshot complete; not yet ready for transfer:** V2 catalog callback additions
+and scoped owner tests are recorded; remaining runtime callback inventory is open.
+The owner established the viewer-specific quiet window below, superseding
 its earlier pending status. Do not treat entry-page HTTP success as eight-runtime
 acceptance. The following October 22 table is historical evidence.
 
@@ -65,6 +66,37 @@ acceptance. The following October 22 table is historical evidence.
 
 See [session 0021](../../session-logs/2026-10-26-0021-session-log.md). No viewer
 transfer, dispatch or hosting change was performed by establishing this window.
+
+### V2 Catalog OAuth Evidence, 2026-10-26
+
+The owner mapped item `e4e7a3bb2862461f9d40118496490a1b` to client
+`4ZanYdCYK0mWsFLz`, matching the catalog's deployed default. The separate
+"Classic StoryMaps Viewer Pages - Dev" item `0feb252753164f329e022542b9b28f04`
+uses client `jezihb1UGmBVf6Xh` and was left outside the production change.
+The original callback inventories and four owner-confirmed additions are in
+[session 0022](../../session-logs/2026-10-26-0022-session-log.md).
+
+- Destination additions: `https://classicstorymaps.com/viewers/` and `https://classicstorymaps.com/viewers/index.html`.
+- Current-site additions: `https://dasbury-esri.github.io/classic-storymaps-viewer-pages/viewers/` and `https://dasbury-esri.github.io/classic-storymaps-viewer-pages/viewers/index.html`.
+- Existing callbacks were retained. No replacement client or viewer code change was made. Registration changes are owner-confirmed, not an authenticated agent settings readback.
+- A fresh isolated Chrome check of both current catalog path forms observed client `4ZanYdCYK0mWsFLz` and the exact corresponding redirect URI. Authorization was intercepted before reaching ArcGIS; no credentials or tokens were used. This confirms emitted requests, not successful login.
+- The owner separately reported successful sign-in, return to the current `/viewers/` catalog, and sign-out. Private Map Tour and Shortlist viewing and loss of private access after sign-out/reload also passed as owner-reported, subject to the second-sign-in finding below. The explicit `index.html` path had request inspection, not a separately reported authenticated round trip.
+- Live entry configuration checks found empty OAuth client defaults for seven templates and null for Basic. Conditional runtime paths still exist: Journal source registers built-in `storymaps` for private-item access checks, Crowdsource can use an item-specific client and `oauth-callback.html`, and Basic can register a configured client. Empty defaults do not prove callback completeness or session reuse. Finish the remaining runtime callback inventory before closing V2; destination-domain and full eight-template acceptance remain separate.
+
+### Deferred Second Sign-In Finding
+
+**Owner-requested follow-up after transfer:** from the current `/viewers/` catalog,
+private Map Tour and Shortlist viewing prompted for username/password again even
+though the user was already signed into the catalog. Expected behavior is reuse
+of the catalog session for authorized private viewing. Viewing succeeded after
+the second sign-in; the owner also reported loss of private access after sign-out
+and reload. These are scoped owner observations, not an agent reproduction.
+
+Root cause is unverified. Investigate session reuse/credential handoff after
+transfer without assuming forwarding is the cause. Preserve sign-out access-loss
+coverage during any later fix. No authentication fix is authorized during this
+transfer, and this deferral does not waive remaining callback or acceptance gates.
+No private story identifiers, credentials or token-bearing URLs were recorded.
 
 ## Verified State, 2026-10-22
 
