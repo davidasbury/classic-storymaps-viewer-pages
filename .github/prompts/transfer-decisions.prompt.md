@@ -38,14 +38,14 @@ viewer preflight. This record contains no private converter operational evidence
 No viewer transfer, workflow dispatch or hosting/account change was performed.
 See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
 
-- Fresh admin snapshot: [viewer-2026-10-26-before.txt](baselines/viewer-2026-10-26-before.txt), collected as source owner `dasbury-esri`, has no `UNKNOWN` fields. Against the October 22 snapshot, `main` advanced through documentation and the script now reports `main type=branch`; other captured settings are unchanged. The owner must approve the comparison.
+- Fresh admin snapshot: [viewer-2026-10-26-before.txt](baselines/viewer-2026-10-26-before.txt), collected as source owner `dasbury-esri`, has no `UNKNOWN` fields. Against the October 22 snapshot, `main` advanced through documentation and the script now reports `main type=branch`; other captured settings are unchanged. The owner approved this comparison on 2026-10-26; see [session 0013](../../session-logs/2026-10-26-0013-session-log.md). This is approval of the before-baseline comparison, not a future post-transfer comparison or permission to bypass remaining preflight gates.
 - At collection, local and remote `main` were `840b60fcd5ea29ccfc9de1ebc1e6e06179e7d476`. Ancestry and the exact allowed-path diff against `1ce19fd6532950b8333e49da4eca7cd009ed9195` passed. Subsequent documentation commits must pass again; this is not a frozen cutover SHA.
 - Queued, in-progress, waiting, requested and pending workflow counts were all zero. Pages remains workflow-based with no custom domain, HTTPS enforced, and `SITE_BASE_PATH=/classic-storymaps-viewer-pages`.
 - The latest successful run is `39900419606`, source `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`. Repository-wide and run-specific artifact inventories both returned zero. The `github-pages` deployments query also returned an empty list. This does not prove the site is absent: the old root, catalog and eight runtime entry URLs returned HTTPS 200. It does mean independent deployed-revision and recoverable-artifact evidence remain unresolved; no restore or full runtime acceptance is claimed.
 - Public DNS returned four GitHub Pages A and four AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with observed TTL 300 seconds. No apex CAA or source-account challenge answer was returned. These recursive DNS observations do not verify Cloudflare's configured proxy, TLS or redirect settings. Apex and `www` returned HTTPS 404. The destination account's current Pages Verified state remains owner-only.
 - Catalog source constructs its callback from origin plus pathname. The registered callback list and runtime-specific login paths still need inventory. No OAuth setting was changed.
 
-**Not ready for transfer:** owner approval of the baseline, installed Apps,
+**Not ready for transfer:** installed Apps,
 known-good recovery evidence, Cloudflare/account verification, OAuth preparation
 and a viewer-specific quiet window/recovery deadline remain open. Do not inherit
 another repository's maintenance window or treat entry-page HTTP success as
