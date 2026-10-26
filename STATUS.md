@@ -5,13 +5,13 @@ name: Classic StoryMaps Viewer Pages
 domain: work
 confidential: false
 state: active
-health: yellow
-priority: 1
-next_action: "David to run the transfer preflight, then transfer after the converter. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md)."
+health: green
+priority: 2
+next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Viewer cutover accepted; local clone relocated and remote verified; external tracking handoff pending
+  phase: Viewer cutover accepted; registry owner updated; owner-directed converter/viewer linking next
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -29,15 +29,16 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 - Pages binds `classicstorymaps.com`, uses GitHub Actions and enforces HTTPS. `SITE_BASE_PATH` was removed before the build; the workflow log confirms its empty value. Both authoritative nameservers and a public resolver matched the approved DNS records, so no DNS change was required. HTTPS and `www` redirects preserved the tested path and query. The old GitHub Pages root and catalog returned 404; saved links to those addresses require updating.
 - The owner reported successful catalog sign-in/return/sign-out at both `/viewers/` and `/viewers/index.html`, visual checks for all eight runtimes, private-content rendering, and loss of private access after sign-out and reload. These are owner-observed results, not agent-authenticated browser tests. The second sign-in remains a deferred issue with no established cause; previously accepted conditional OAuth limitations remain unchanged.
 - At `2026-10-26 16:13:55-07:00[America/Los_Angeles]`, remote `main`, the successful run and Pages deployment still matched the accepted SHA, all five outstanding queue counts were zero, and published conversion integration was disabled. The owner subsequently accepted the cutover and authorized documentation-only `[skip ci]` commits/pushes, canonical-link updates and this clone's remote update. No application changes, new deployment, directory move, cleanup or restricted registry access were authorized.
-- The authorized tracking owner still needs to update the viewer registry and other clones on their permitted surfaces. The existing `next_action` frontmatter is the owner's earlier preflight wording and has intentionally not been reinterpreted; its replacement awaits owner direction. Retained-content rights and new-release gates remain in force. Preserve recovery packages, the validation branch, deploy key, old callbacks and destination verification TXT.
+- The existing viewer registry entry now records the destination owner. David set the project to active, green, priority 2, with next action "link converter and viewer pages". Other-clone updates remain a separate handoff. This tracking update does not implement linking or authorize deployment; retained-content rights and new-release gates remain in force. Preserve recovery packages, the validation branch, deploy key, old callbacks and destination verification TXT.
 
 This clone's origin now targets the destination repository through the existing
 `github.com-davidasbury` SSH alias; authenticated read access verified both branch
 refs. After acceptance and closure, the owner separately requested relocation of
 the existing local clone. That move preserved Git state and recovery archive
 hashes; the old directory is absent and shared SSH configuration is unchanged.
-The owner will have the project-tracking agent update the registry; this agent
-did not inspect or change it. See [session 0026](session-logs/2026-10-26-0026-session-log.md),
+The authorized tracking update is recorded in
+[session 0027](session-logs/2026-10-26-0027-session-log.md).
+See [session 0026](session-logs/2026-10-26-0026-session-log.md),
 [session 0025](session-logs/2026-10-26-0025-session-log.md) and
 [transfer decisions](.github/prompts/transfer-decisions.prompt.md) for the execution
 record and unchanged release gates.
@@ -139,13 +140,15 @@ main-branch push without the required skip marker. See the
 
 ## Done
 
+- [x] Updated the existing registry owner and applied David's current tracking values.
 - [x] Owner approved hybrid designation and initial tracking values.
 - [x] Created STATUS with a pointer to the existing migration handoff.
 - [x] Verified fresh notice/font packaging with the full Node 24 suite, published-link checks and independent artifact comparisons.
 
 ## Next
 
-- [ ] Complete the authorized viewer tracking handoff and other-clone updates outside this agent's restricted scope.
+- [ ] link converter and viewer pages
+- [ ] Complete any remaining other-clone updates on their authorized surfaces.
 - [ ] Investigate the deferred second sign-in only under separate authorization.
 - [ ] Resolve retained-content rights before any new public release.
 - [ ] Execute the resolution/defer plan and complete attribution coverage before release approval.
