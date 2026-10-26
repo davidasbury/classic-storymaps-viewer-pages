@@ -31,6 +31,26 @@ The transfer changes **who owns** the repository, not **what is public**. The
 viewer is already public and served by Pages, so every open rights question is
 exactly as open before the move as after it.
 
+## Preflight Started, 2026-10-26
+
+The owner accepted the converter prerequisite and instructed the agent to begin
+viewer preflight. This record contains no private converter operational evidence.
+No viewer transfer, workflow dispatch or hosting/account change was performed.
+See [session 0012](../../session-logs/2026-10-26-0012-session-log.md).
+
+- Fresh admin snapshot: [viewer-2026-10-26-before.txt](baselines/viewer-2026-10-26-before.txt), collected as source owner `dasbury-esri`, has no `UNKNOWN` fields. Against the October 22 snapshot, `main` advanced through documentation and the script now reports `main type=branch`; other captured settings are unchanged. The owner must approve the comparison.
+- At collection, local and remote `main` were `840b60fcd5ea29ccfc9de1ebc1e6e06179e7d476`. Ancestry and the exact allowed-path diff against `1ce19fd6532950b8333e49da4eca7cd009ed9195` passed. Subsequent documentation commits must pass again; this is not a frozen cutover SHA.
+- Queued, in-progress, waiting, requested and pending workflow counts were all zero. Pages remains workflow-based with no custom domain, HTTPS enforced, and `SITE_BASE_PATH=/classic-storymaps-viewer-pages`.
+- The latest successful run is `39900419606`, source `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`. Repository-wide and run-specific artifact inventories both returned zero. The `github-pages` deployments query also returned an empty list. This does not prove the site is absent: the old root, catalog and eight runtime entry URLs returned HTTPS 200. It does mean independent deployed-revision and recoverable-artifact evidence remain unresolved; no restore or full runtime acceptance is claimed.
+- Public DNS returned four GitHub Pages A and four AAAA records, `www` CNAME `davidasbury.github.io`, and the destination challenge TXT, with observed TTL 300 seconds. No apex CAA or source-account challenge answer was returned. These recursive DNS observations do not verify Cloudflare's configured proxy, TLS or redirect settings. Apex and `www` returned HTTPS 404. The destination account's current Pages Verified state remains owner-only.
+- Catalog source constructs its callback from origin plus pathname. The registered callback list and runtime-specific login paths still need inventory. No OAuth setting was changed.
+
+**Not ready for transfer:** owner approval of the baseline, installed Apps,
+known-good recovery evidence, Cloudflare/account verification, OAuth preparation
+and a viewer-specific quiet window/recovery deadline remain open. Do not inherit
+another repository's maintenance window or treat entry-page HTTP success as
+eight-runtime acceptance. The following October 22 table is historical evidence.
+
 ## Verified State, 2026-10-22
 
 Recorded by Claude. Each item names its evidence; re-check before acting.
@@ -107,6 +127,7 @@ keys, recovery codes or credential-bearing URLs.
    - **Also record:** a known-good deploy that can be restored, and the Cloudflare apex and `www` records with their TTL, proxy mode and TLS settings, plus any CAA records. Mark anything unavailable as unknown.
    - **Complete** when the before file has no `UNKNOWN` lines, or the owner accepts each remaining one in the session log. Do not treat the dated "Verified State" table as a fresh snapshot.
    - **Before baseline collected, 2026-10-22 21:24 PDT,** by the owner as an admin: [`baselines/viewer-before.txt`](baselines/viewer-before.txt), with no `UNKNOWN` lines. Still open: the installed GitHub Apps (owner), the Cloudflare records, and a known-good deploy. `d05c215` is a candidate but has been checked by HTTP status only.
+   - **Refreshed 2026-10-26:** use [`baselines/viewer-2026-10-26-before.txt`](baselines/viewer-2026-10-26-before.txt) for the current comparison; retain the older file as history. Recheck before cutover if refs or settings change. The new snapshot already includes the deployment branch policy, so that section is no longer an expected addition when comparing against it.
    - **After step 4,** re-run the script against `davidasbury/classic-storymaps-viewer-pages` and diff the two files. Expected differences:
      - `main` advanced by commits made after the before run;
      - `davidasbury` as the admin, with `dasbury-esri` added as a collaborator;

@@ -8,10 +8,10 @@ state: active
 health: yellow
 priority: 1
 next_action: "David to run the transfer preflight, then transfer after the converter. See [transfer decisions](.github/prompts/transfer-decisions.prompt.md)."
-updated: 2026-10-22
+updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Follow-up transfer safeguards documented; owner preflight and converter acceptance pending; next-public-release gates unchanged
+  phase: Converter prerequisite accepted; viewer read-only preflight started; recovery evidence and owner approvals pending; release gates unchanged
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,13 +21,14 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Transfer plan reconciled, 2026-10-22.**
+**Viewer preflight started, 2026-10-26.**
 
-- This repository's [transfer decisions](.github/prompts/transfer-decisions.prompt.md) now include the follow-up safeguards: a read-only baseline script (`.github/prompts/transfer-baseline.sh`) run before and after the transfer, with the owner approving the comparison; drained deployment queues; and exact selected-SHA checks.
-- Session 0008 recorded domain verification under `davidasbury` and DNS matching the target; recheck both before execution.
-- The baseline revision remains `1ce19fd`; a documentation-only descendant requires verified ancestry and an allowed-path diff, with its full SHA selected before dispatch and matched to the run and deployed revision.
-- The owner ran the before baseline as an admin on 2026-10-22 ([`viewer-before.txt`](.github/prompts/baselines/viewer-before.txt)), with no `UNKNOWN` results. Its two commits had no `[skip ci]` and deployed Pages: the live site now serves `1ce19fd`'s content from `d05c215`. See [session 0011](session-logs/2026-10-22-0011-session-log.md).
-- The cutover still waits for owner preflight and acceptance of the converter transfer. Owner decisions and next-public-release gates are unchanged.
+- The owner accepted the converter prerequisite and authorized viewer preflight. No viewer transfer, workflow dispatch, Pages, DNS or OAuth change was performed.
+- The [fresh source-admin baseline](.github/prompts/baselines/viewer-2026-10-26-before.txt) has no `UNKNOWN` results. Compared with the October 22 baseline, only documentation-only `main` advancement and the script-added `main` deployment-policy detail differ. Owner comparison approval remains pending.
+- `840b60fcd5ea29ccfc9de1ebc1e6e06179e7d476` passed ancestry and the exact documentation-path allowlist against approved `1ce19fd6532950b8333e49da4eca7cd009ed9195`. Documentation closure advances `main` again; select and recheck the final full SHA before dispatch. The validation branch remains `2b8c572ec7038372c3130a3e9715bd61d09b0460`.
+- Deployment queues were empty. The latest successful Pages run remains `39900419606` at `d05c215dd5fd58fcd6eef6d08377074074a2bcdb`; the root, catalog and all eight runtime entry URLs returned HTTPS 200. These are HTTP checks, not runtime or authenticated acceptance. Repository and run artifact inventories were empty; a known-good recoverable artifact is not established.
+- Fresh DNS resolves the apex A/AAAA records to GitHub Pages, `www` to `davidasbury.github.io`, and the destination challenge TXT. Apex and `www` both return HTTPS 404; the viewer Pages custom domain is still unset. Current account-level Verified status and Cloudflare configuration require owner confirmation.
+- Installed Apps, recovery evidence, registered OAuth callbacks and runtime callback inventory, owner baseline approval, and a viewer-specific quiet window/deadline remain open. See [session 0012](session-logs/2026-10-26-0012-session-log.md) and [transfer decisions](.github/prompts/transfer-decisions.prompt.md). Rights and conversion-integration gates are unchanged.
 
 See [session 0010](session-logs/2026-10-22-0010-session-log.md), [follow-up session 0009](session-logs/2026-10-22-0009-session-log.md) and the
 [earlier reconciliation](session-logs/2026-10-22-0008-session-log.md).
