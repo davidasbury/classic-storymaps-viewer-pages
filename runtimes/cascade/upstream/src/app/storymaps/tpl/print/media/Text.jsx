@@ -1,6 +1,7 @@
 /* eslint brace-style: 0 */
 /* eslint react/no-danger: "warn" */
 import React, { Component } from 'react';
+import PrintSanitizer from 'storymaps/tpl/print/PrintSanitizer';
 
 class Text extends Component {
 
@@ -12,7 +13,7 @@ class Text extends Component {
     let colorAdjusted = html.replace(/background-color: rgba?\([^;]*;/g, '').replace(/color: rgb\([^;]*/g, (color) => {
       return this.maybeAddTextShadow(color);
     });
-    return {__html: colorAdjusted.replace(/<\/?script>/g, '')};
+    return {__html: PrintSanitizer.sanitize(colorAdjusted)};
   }
 
   maybeAddTextShadow(colorStr) {

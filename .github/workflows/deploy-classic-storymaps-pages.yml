@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     env:
@@ -48,6 +48,16 @@ jobs:
           bash scripts/build-basic-runtime.sh
           bash scripts/build-classic-storymaps-landing.sh
           bash scripts/build-classic-storymaps-runtime-publish.sh
+
+      - name: Validate Cascade print security in Chromium
+        env:
+          CASCADE_BUILD_ROOT: publish/viewers/cascade
+          PLAYWRIGHT_NODE_MODULES: ${{ runner.temp }}/cascade-print-tests/node_modules
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/cascade-print-tests" --ignore-scripts --no-audit --no-fund --save-exact playwright@1.64.1 esbuild@0.28.2
+          node "$PLAYWRIGHT_NODE_MODULES/playwright/cli.js" install --with-deps chromium
+          node scripts/validate-cascade-print-browser.mjs
 
       - name: Record runtime build sources
         run: |
@@ -89,7 +99,7 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write

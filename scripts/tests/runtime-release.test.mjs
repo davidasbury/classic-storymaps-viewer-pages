@@ -9,6 +9,66 @@ import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
+test('Cascade print release adapter wires both HTML sinks and CSS through security policy', async () => {
+  const { patchCascadePrintBundle, secureCascadePrint } = await import('../../runtimes/cascade/patches/print-security.mjs');
+  const text = 'define("storymaps-react/tpl/print/media/Text",["module","exports","react"],function(e,t,n){var a={default:n};t.default={render:function(){var e=this.createMarkup(this.props.text);return a.default.createElement(this.props.tag,{dangerouslySetInnerHTML:e})}}})';
+  const theme = 'define("storymaps-react/tpl/print/PrintViewReact",["module","exports","react","helper"],function(e,t,n,r,i,o,a,s,l,u,c){var g={default:n};t.default={renderCustomStyles:function(){},methods:[{key:"renderCustomStyles",value:function(){var t=[];return g.default.createElement("style",{dangerouslySetInnerHTML:{__html:t.join(" ")}})}},{key:"render",value:function(){}}]}})';
+  const original = text + ',' + theme;
+  const patched = patchCascadePrintBundle(original);
+  const modules = new Map();
+  vm.runInNewContext(patched, { define: (name, dependencies, factory) => modules.set(name, { dependencies, factory }) });
+  const react = { createElement: (tag, props, children) => ({ tag, props, children }) };
+  const security = { sanitize: value => 'sanitized:' + value, themeStyles: () => 'body { color: black; }' };
+  const textModule = modules.get('storymaps-react/tpl/print/media/Text');
+  assert.equal(textModule.dependencies[3], 'storymaps/tpl/print/PrintSanitizer');
+  const exports = {};
+  textModule.factory({}, exports, react, security);
+  for (const tag of ['div', 'figcaption']) {
+    const rendered = exports.default.render.call({ props: { tag, text: 'sample' }, createMarkup: value => ({ __html: value }) });
+    assert.equal(rendered.props.dangerouslySetInnerHTML.__html, 'sanitized:sample');
+  }
+  const themeModule = modules.get('storymaps-react/tpl/print/PrintViewReact');
+  assert.equal(themeModule.dependencies[3], 'storymaps/tpl/print/PrintSanitizer');
+  themeModule.factory({}, exports, react, security);
+  const style = exports.default.methods[0].value.call({ state: { appSettings: {} }, getAppTheme: () => 'bg-custom' });
+  assert.equal(style.tag, 'style');
+  assert.equal(style.props, null);
+  assert.equal(style.children, 'body { color: black; }');
+  assert.throws(() => patchCascadePrintBundle(patched), /Unrecognized/);
+  assert.throws(() => patchCascadePrintBundle(original.replace('this.props.text', 'this.props.other')), /Unrecognized/);
+  assert.throws(() => secureCascadePrint(path.join(repo, 'runtimes/cascade/upstream')), /Cannot stage/);
+  const temporary = mkdtempSync(path.join(os.tmpdir(), 'classic-print-security-'));
+  try {
+    mkdirSync(path.join(temporary, 'app'));
+    writeFileSync(path.join(temporary, 'app/print-min.js'), patched);
+    writeFileSync(path.join(temporary, 'BUILD_SOURCE'), 'release:1.23.0');
+    assert.throws(() => secureCascadePrint(temporary), /Unexpected Cascade release print checksum/);
+    writeFileSync(path.join(temporary, 'BUILD_SOURCE'), 'unknown');
+    assert.throws(() => secureCascadePrint(temporary), /Unsupported Cascade print build source/);
+    writeFileSync(path.join(temporary, 'BUILD_SOURCE'), 'grunt');
+    secureCascadePrint(temporary);
+    const vendor = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/resources/dompurify/purify.min.js'), 'utf8');
+    const generated = readFileSync(path.join(temporary, 'resources/dompurify/purify.min.js'), 'utf8');
+    assert.ok(generated.includes(vendor + '\n'));
+    let sanitizer;
+    vm.runInNewContext(generated, { define: (dependencies, factory) => { sanitizer = factory(); } });
+    assert.equal(typeof sanitizer, 'function');
+    assert.equal(sanitizer.version, '3.4.17');
+    assert.doesNotThrow(() => new vm.Script('(function(){' + generated + '})()'));
+    writeFileSync(path.join(temporary, 'app/print-min.js'), original);
+    assert.throws(() => secureCascadePrint(temporary), /Grunt output lacks Cascade print security/);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+  const build = readFileSync(path.join(repo, 'scripts/build-cascade-runtime.sh'), 'utf8');
+  assert.match(build, /node .*patches\/print-security\.mjs.*"\$OUTPUT_PATH"/);
+  const workflow = readFileSync(path.join(repo, '.github/workflows/deploy-classic-storymaps-pages.yml'), 'utf8');
+  assert.equal((workflow.match(/runs-on: ubuntu-24\.04/g) || []).length, 2);
+  assert.doesNotMatch(workflow, /runs-on: ubuntu-latest/);
+  assert.match(workflow, /node scripts\/validate-cascade-print-browser\.mjs/);
+  assert.ok(workflow.indexOf('node scripts/validate-cascade-print-browser.mjs') < workflow.indexOf('name: Upload Pages artifact'));
+});
+
 test('Basic build replaces social glyphs with licensed Font Awesome without changing upstream', async () => {
   const temporary = mkdtempSync(path.join(os.tmpdir(), 'classic-basic-font-'));
   const sourceCss = path.join(repo, 'runtimes/basic/upstream/css/main.css');
@@ -83,6 +143,11 @@ test('runtime publishing preserves root, font and editor license documents verba
       }
       if (['mapjournal', 'mapseries'].includes(runtime)) assert.ok(notices.includes('upstream/src/lib-app/ckeditor/LICENSE.md'));
       assert.match(readFileSync(path.join(output, 'notices/supplemental/OFL-1.1.txt'), 'utf8'), /SIL OPEN FONT LICENSE Version 1.1/);
+      if (runtime === 'cascade') {
+        assert.deepEqual(readFileSync(path.join(output, 'notices/supplemental/DOMPurify-LICENSE.txt')),
+          readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/resources/dompurify/LICENSE')));
+        assert.match(readFileSync(path.join(output, 'notices/supplemental/DOMPurify-attribution.txt'), 'utf8'), /3\.4\.17[\s\S]*Apache-2\.0[\s\S]*AMD wrapper/);
+      }
       if (runtime === 'shortlist') {
         for (const filename of retiredFonts) assert.equal(existsSync(path.join(output, filename)), false);
         assert.ok(notices.includes('supplemental/Ionicons-2.0.1-LICENSE.txt'));

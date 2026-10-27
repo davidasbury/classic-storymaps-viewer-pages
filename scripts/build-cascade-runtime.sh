@@ -54,5 +54,6 @@ else
   node "$SCRIPT_DIR/patch-runtime-release.mjs" "$MANIFEST_PATH" "$OUTPUT_PATH" "$RUNTIME_PATH/src/index.html"
 fi
 has_required_cascade_viewer_files "$OUTPUT_PATH"
+node "$SCRIPT_DIR/../runtimes/cascade/patches/print-security.mjs" "$OUTPUT_PATH"
 
 echo "Cascade build output copied to $OUTPUT_PATH"

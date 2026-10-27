@@ -12,7 +12,7 @@ updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
-  phase: Basic Font Awesome implemented; Tailcoat retained by owner; attribution and release acceptance pending
+  phase: Cascade print hardened and runners pinned; deployment and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,6 +21,30 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Cascade print hardened and runners pinned; not deployed, 2026-10-26.**
+
+Both Pages jobs now select Ubuntu 24.04. Cascade print text and captions use
+pinned DOMPurify with a restrictive formatting policy, and theme styles use
+validated CSS text. A checksum-guarded adapter also secures the actual official
+release bundle; source-only edits would not have reached the shipped path.
+The existing HTML-sink warnings were not suppressed. License notices and a
+pre-publication Chromium regression gate are included.
+
+Source/release desktop/mobile checks passed 72 attack render cases plus
+formatting and theme tests; the original bundle failed the same control.
+The separate native print loader rendered 129 public-story text blocks and
+removed locally injected executable markup without page errors or ArcGIS
+writes. All 167 tests passed before concurrent Map Tour additions; the shared
+tree subsequently passed 175. Full legacy Grunt compilation, private stories
+and the new hosted CI gate were not newly certified. See
+[security verification](docs/testing/cascade-print-security.md) and
+[session 0044](session-logs/2026-10-26-0044-session-log.md).
+
+Owner-dispatched Pages run `40453530823` successfully published
+`dfb470f0a206acaef3e85251adacbe4ea397d6a3`, superseding the older deployment
+references below. These new security changes are separate and unpublished.
+The shared preview and Netlify were untouched; remaining acceptance gates stand.
 
 **Map Tour in-memory compatibility verified locally, 2026-10-26.**
 

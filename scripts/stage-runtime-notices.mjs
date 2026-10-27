@@ -44,6 +44,10 @@ export function stageRuntimeNotices(runtime, output) {
   if (runtime === 'basic') {
     supplement('FontAwesome-4.7.0-attribution.txt', 'Font Awesome 4.7.0\nCopyright Dave Gandy 2016. All rights reserved.\nFont files: SIL Open Font License 1.1; complete terms in OFL-1.1.txt.\nSource: https://github.com/FortAwesome/Font-Awesome/tree/v4.7.0/fonts\nThe Basic build uses unchanged Font Awesome files in place of its original custom social font. Only the local CSS glyph mapping changes; the font files are unmodified.\nBrand icons represent their respective services; no endorsement is implied.\n');
   }
+  if (runtime === 'cascade') {
+    supplement('DOMPurify-LICENSE.txt', fs.readFileSync(path.join(repository, prefix, 'src/resources/dompurify/LICENSE')));
+    supplement('DOMPurify-attribution.txt', 'DOMPurify 3.4.17\nCopyright Cure53 and other contributors; the vendored distribution retains its upstream copyright header.\nSource: https://github.com/cure53/DOMPurify/tree/3.4.17\nPackage: https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz\nThe Apache-2.0 option is used; full terms are in DOMPurify-LICENSE.txt.\nGenerated output encloses the unchanged vendor code in a local AMD wrapper with a terminating newline for the legacy Dojo loader. A separate local policy restricts print markup and formatting.\n');
+  }
   if (runtime === 'shortlist') {
     for (const family of ['icomoon', 'fontelloIcons']) {
       for (const extension of ['eot', 'svg', 'ttf', 'woff']) {

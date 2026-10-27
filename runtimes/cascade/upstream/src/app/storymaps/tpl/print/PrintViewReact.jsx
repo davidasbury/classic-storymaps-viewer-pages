@@ -4,6 +4,7 @@ import React, {Component} from 'react';
 import {} from 'lib-build/less!./styles/PrintView.less';
 
 import CommonHelper from 'storymaps/tpl/utils/CommonHelper';
+import PrintSanitizer from 'storymaps/tpl/print/PrintSanitizer';
 
 import Cover from './section/Cover';
 import Title from './section/Title';
@@ -235,27 +236,8 @@ class PrintViewReact extends Component {
   }
 
   renderCustomStyles() {
-    let w = this.state.appSettings; // walker
-    let styles = [];
-    /* eslint no-cond-assign: 0 */
-    if (w && (w = w.theme) && (w = w.fonts)) {
-      if (w.titleFont) {
-        styles.push(`h1, h2, h3, h4, h5, h6 { font-family: ${w.titleFont.fontFamily};}`);
-      }
-      if (w.titleFont) {
-        styles.push(`body { font-family: ${w.bodyFont.fontFamily};}`);
-      }
-    }
-    if (this.getAppTheme() === 'bg-custom') {
-      w = this.state.appSettings;
-      if (w && (w = w.theme) && (w = w.colors) && (w = w.bgMain)) {
-        styles.push(`.bg-custom:not(figure), .bg-custom img { background: ${w};}`);
-      }
-    }
-    if (!styles.length) {
-      return null;
-    }
-    return (<style dangerouslySetInnerHTML={{__html: styles.join(' ')}} />);
+    const styles = PrintSanitizer.themeStyles(this.state.appSettings, this.getAppTheme() === 'bg-custom');
+    return styles ? <style>{styles}</style> : null;
   }
 
   render() {
