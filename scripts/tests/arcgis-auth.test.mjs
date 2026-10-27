@@ -91,7 +91,7 @@ test('pointer preflight does not catch native startup exceptions or complete the
   const context = {
     URL,
     document: { cookie: '', createElement: () => assert.fail('Native failure rendered as a pointer error') },
-    define: (dependencies, factory) => { plugin = factory({}, { install() {} }); },
+    define: (dependencies, factory) => { plugin = factory({}, { install() {} }, { install() {} }); },
     window: {
       location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
       ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
@@ -120,7 +120,7 @@ test('direct subscription failures show the reason while ordinary access failure
       URL,
       document: { cookie: '', readyState: 'complete', body: { appendChild: panel => panels.push(panel) },
         createElement: () => ({ style: {}, setAttribute() {}, append(...children) { this.children = children; } }) },
-      define: (dependencies, factory) => { plugin = factory({}, { install() {} }); },
+      define: (dependencies, factory) => { plugin = factory({}, { install() {} }, { install() {} }); },
       window: {
         location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
         ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
@@ -161,9 +161,11 @@ for (const masked of [false, true]) for (const change of ['sign-out', 'expiry', 
       document,
       Document: masked ? RuntimeDocument : undefined,
       define: (dependencies, factory) => {
-        assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager', '/viewers/assets/js/arcgis-basemap-compatibility.js']);
+        assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager', '/viewers/assets/js/arcgis-basemap-compatibility.js',
+          '/viewers/assets/js/classic-image-notice.js']);
         factory({ registerToken: () => { registered++; }, destroyCredentials: () => { cleared++; } },
-          { install() { assert.equal(registered, 1, 'Register credentials before installing basemap probes'); } });
+          { install() { assert.equal(registered, 1, 'Register credentials before installing basemap probes'); } },
+          { install() { assert.equal(registered, 1, 'Register credentials before installing image notices'); } });
       },
       window: { ClassicArcgisAuthHelpers: helpers, location: { reload: () => { reloaded++; } },
         ClassicStoryMapsConfig: { basePath: '/viewers' },

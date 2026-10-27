@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
   dependency_security: Four targeted Dependabot fixes verified; three major upgrades and remaining legacy advisories deferred; no deployment
   media_credentials: Inherited provider defaults removed from source and isolated publication; upstream revocation and production publication pending
   basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
@@ -28,6 +29,25 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Image failures have a shared explanation and owner repair guidance locally.**
+
+All eight viewer startups install a once-per-page image-failure modal. It
+explains HTTPS limitations without assuming that every failure is a TLS problem,
+and provides backup, hosting, access and source-link repair guidance. Native
+missing-picture placeholders and Cascade image error states are recognized;
+map tiles and detached probes are excluded. A short recovery grace avoids
+interrupting readers for immediately recovered photos. The original ArcGIS
+items, image URLs and security settings are not changed by this notice.
+
+All 243 Node tests and 20 isolated desktop/mobile Chrome cases passed. The
+supplied Metropolisson story also passed desktop/mobile checks against the
+served isolated HTTPS preview, with the exact published helper and no page
+exceptions. Expanded mobile guidance scrolls while the dismiss button remains
+visible. Cross-origin embedded pages and arbitrary CSS-only failures without
+native error states are outside detection. See
+[session 0064](session-logs/2026-10-27-0064-session-log.md).
+Publication remains pending; shared previews and owner sessions were untouched.
 
 **Targeted dependency fixes preserve the served runtime artifacts.**
 
