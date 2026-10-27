@@ -97,6 +97,30 @@ test('legacy SwipeSpyglass items pass gallery and native startup classification'
   }
 });
 
+test('legacy Basic URL variants pass native startup without relaxing gallery metadata filters', async () => {
+  const config = configuration();
+  for (const [id, url, webmap] of [
+    ['fb12a83afaa943d6a2e91df06e8840dd', 'https://carto.maps.arcgis.com/apps/OnePane/storytelling_basic/index.html', '4bcbb3b6ea1d4560b7682b3dbfc938d9'],
+    ['13c5a58889604931a72c31387e5a4125', 'https://story.maps.arcgis.com/apps/StorytellingTextLegend/index.html', '02a70d47451e4eb38c4ecb7a54d7b5fb']
+  ]) {
+    const candidate = item(1, { id, tags: [],
+      typeKeywords: ['JavaScript', 'Map', 'Mapping Site', 'Online Map', 'Ready To Use', 'Web Map'],
+      url: url + '?appid=' + id });
+    assert.equal(config.classifyClassicRuntimeFromItem(candidate), 'basic');
+    assert.equal(gallery().storyFromItem(candidate, config), null);
+    const resolved = await input().resolveItem(id, { config, client: { json: async endpoint =>
+      endpoint.pathname.endsWith('/data') ? { values: { webmap } } : candidate } });
+    assert.equal(resolved.runtime, 'basic');
+    assert.equal(resolved.appId, id);
+  }
+  for (const url of [
+    'https://example.com/apps/OnePane/storytelling_basic_extra/index.html',
+    'https://example.com/apps/StorytellingTextLegendary/index.html',
+    'https://example.com/index.html?next=/apps/StorytellingTextLegend/',
+    'https://example.com/apps/instant/StorytellingTextLegend/index.html'
+  ]) assert.equal(config.classifyClassicRuntimeFromItem(item(2, { tags: [], typeKeywords: [], url })), null);
+});
+
 test('modern app URLs and conflicting metadata cannot pass Classic classification through tags', async () => {
   const config = configuration();
   const nearby = item(1, { id: '6d580febadc04c7b896568bfaadbcdbf', tags: ['Trail', 'Story Maps', 'Crowdsource'],

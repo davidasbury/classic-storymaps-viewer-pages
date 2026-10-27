@@ -223,7 +223,10 @@
     var matches = runtimes.filter(function(runtime) { return hasAny(APP_REGISTRY[runtime].classifyFragments); });
     if (matches.length > 1) return null;
     if (matches.length === 1) return matches[0];
-    var urlMatches = runtimes.filter(function(runtime) { return itemPath.indexOf("/" + APP_REGISTRY[runtime].runtimeFolder + "/") !== -1; });
+    var urlMatches = runtimes.filter(function(runtime) {
+      return itemPath.indexOf("/" + APP_REGISTRY[runtime].runtimeFolder + "/") !== -1
+        || runtime === "basic" && /\/apps\/(?:onepane\/storytelling_basic|storytellingtextlegend)(?:\/|$)/.test(itemPath);
+    });
     if (urlMatches.length > 1) return null;
     if (urlMatches.length === 1) return urlMatches[0];
 

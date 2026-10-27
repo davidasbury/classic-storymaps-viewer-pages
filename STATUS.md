@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  legacy_basic: Two legacy Basic URL aliases recognized; Traffic Fatalities renders; Mussel services fail DNS; publication pending
   esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
   code_scanning: Inert extraction, Cascade URLs and Map Tour description encoding verified; 254 Node tests passed; thirteen original alerts closed but template warnings and broader review remain open; publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
@@ -33,6 +34,24 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Legacy Basic URL recognition is repaired locally; one supplied story has unavailable services.**
+
+Direct opening now recognizes `/apps/OnePane/storytelling_basic/` and
+`/apps/StorytellingTextLegend/` without requiring newer Classic metadata.
+Both supplied items previously stopped at format classification. Traffic
+Fatalities now renders its map and hundreds of features in desktop/mobile HTTPS
+checks. Invasive Mussel Species reaches Basic but cannot load its thematic
+basemap: both its basemap and popup service use a host that returns DNS
+`ENOTFOUND`, and the referenced basemap item still advertises that endpoint.
+Restoring those services remains unresolved; no substitute thematic data was used.
+
+All 36 focused gallery/classifier tests passed. Four live HTTPS cases confirmed
+the rendering and unavailable-service outcomes without page exceptions or
+horizontal overflow. Gallery metadata constraints, saved items, existing shared
+previews and owner sessions were unchanged. See
+[session 0072](session-logs/2026-10-27-0072-session-log.md).
+Publication remains pending.
 
 **Missing Esri-hosted story URLs have a verified in-memory archive fallback locally.**
 
