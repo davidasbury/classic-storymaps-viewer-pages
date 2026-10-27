@@ -12,6 +12,7 @@ updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
+  maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   phase: Owner editing controls disabled and Cascade print hardened; publication and remaining acceptance pending
 ---
 
@@ -65,6 +66,38 @@ Owner-dispatched Pages run `40453530823` successfully published
 `dfb470f0a206acaef3e85251adacbe4ea397d6a3`, superseding the older deployment
 references below. These new security changes are separate and unpublished.
 The shared preview and Netlify were untouched; remaining acceptance gates stand.
+
+**Map Tour per-story archive discovery verified locally, 2026-10-26.**
+
+Automatic Wayback discovery is opt-in once per saved public story, remembered
+in this browser and revocable. Approved public origins, bounded queues and
+deadlines, positive/negative caching, and a metadata-only same-origin relay
+constrain lookups. Private/unknown-access stories and credential-bearing URLs
+are excluded. Original photos remain first choice; failed recovery retains the
+placeholder. Decoded captures include archive-source links. The earlier exact
+known-photo fallback remains separate from automatic consent.
+
+Twenty-one image/discovery tests and two unmodified-story desktop/mobile scenarios
+now also verify that Almond remains point 1 and Chabot remains point 2, with
+Chabot's own archived thumbnail and full-size photo. The page no longer forces
+the first point into an intro when the saved story does not request one.
+The earlier discovery-fixture scenarios
+passed, including consent after reload, revocation and recovery of a second,
+non-hardcoded photo at 334 by 434 pixels. Original app/map data stayed unchanged;
+no ArcGIS writes occurred. Node 24 compilation passed, and the two new patches
+replayed ten files byte-for-byte over committed source. Existing full-upstream
+reconstruction/lint limits and private-content acceptance remain unchanged.
+See [verification and hosting requirements](docs/testing/maptour-archived-images.md),
+[pilot session 0043](session-logs/2026-10-26-0043-session-log.md) and
+[session 0045](session-logs/2026-10-26-0045-session-log.md), and the native-ordering
+follow-up in [session 0047](session-logs/2026-10-26-0047-session-log.md).
+
+The default static build keeps discovery disabled. GitHub Pages alone cannot
+host the relay; only a separate local preview was configured. David authorized
+commit and push of both image phases and the first-point correction, with
+deployment skipped. The closure check passed all 192 Node tests on Node 24;
+see [session 0048](session-logs/2026-10-26-0048-session-log.md). No production
+hosting, shared-gallery rebuild, deployment or converter change was authorized.
 
 **Map Tour in-memory compatibility verified locally, 2026-10-26.**
 

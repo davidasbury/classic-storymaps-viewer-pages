@@ -2,6 +2,8 @@ define(["storymaps/maptour/core/WebApplicationData",
 		"storymaps/maptour/core/TourPointAttributes",
 		"storymaps/maptour/core/FeatureServiceManager",
 		"storymaps/maptour/core/MapTourHelper",
+		"storymaps/utils/ArchivedImage",
+		"storymaps/utils/ArchivedImageConsent",
 		// Desktop UI
 		"storymaps/ui/multiTips/MultiTips",
 		"storymaps/maptour/ui/desktop/Carousel",
@@ -37,6 +39,8 @@ define(["storymaps/maptour/core/WebApplicationData",
 		TourPointAttributes,
 		FeatureServiceManager,
 		MapTourHelper,
+		ArchivedImage,
+		ArchivedImageConsent,
 		MultiTips,
 		DesktopCarousel,
 		PicturePanel,
@@ -96,6 +100,20 @@ define(["storymaps/maptour/core/WebApplicationData",
 														? urlParams.firstRecordAsIntro == "true"
 														: configOptions.firstRecordAsIntro;
 				configOptions.zoomLevel = urlParams.zoomLevel || configOptions.zoomLevel;
+				topic.subscribe("maptour-ready", function() {
+					var item = app.data.getAppItem();
+					var mapInfo = app.data.getWebMapItem();
+					if ( ! app.isInBuilderMode && item && mapInfo && mapInfo.item && item.created ) {
+						ArchivedImageConsent.init({
+							storyId: item.id,
+							publicStory: item.access === "public" && mapInfo.item.access === "public",
+							date: new Date(item.created).toISOString().slice(0, 10),
+							endpoint: configOptions.waybackLookupUrl,
+							origins: configOptions.waybackPublicOrigins || []
+						});
+						_core.handleWindowResize();
+					}
+				});
 
 				// Desktop UI
 				app.desktopCarousel = new DesktopCarousel("#footerDesktop .carousel", app.isInBuilderMode);
@@ -166,15 +184,14 @@ define(["storymaps/maptour/core/WebApplicationData",
 
 				// Global handler for not found image
 				window.mediaNotFoundHandler = function(that){
-					that.src = MapTourHelper.getNotFoundMedia();
+					if ( ArchivedImage.recover(that, MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode) )
+						return;
 
 					if($("body").hasClass("side-panel")) {
 						setTimeout(function() {
 							$(that).css("object-fit", "contain");
 						}, 500);
 					}
-					// Avoid infinite loop if something is wrong with the not found image
-					that.onerror = '';
 				};
 
 				// Keybord event for previous/next pictures in viewer mode
@@ -1246,9 +1263,7 @@ define(["storymaps/maptour/core/WebApplicationData",
 						} else {
 							if( ! thisPointContent.find('img').attr("src") ) {
 								if ('objectFit' in document.documentElement.style === false) {
-									thisPointContent.find('img').parent().css({
-										backgroundImage: 'url(' + thisAttributes.getURL() + ')'
-									});
+									ArchivedImage.loadBackground(thisPointContent.find('img').parent()[0], thisAttributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
 								} else{
 									thisPointContent.find('img').attr("src", thisAttributes.getURL());
 								}

@@ -1,0 +1,464 @@
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
+index d3c2d6b..ba89d58 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
+@@ -1,3 +1,60 @@
++.archive-recovery-button {
++	width: 32px;
++	height: 32px;
++	padding: 4px;
++	border: 0;
++	background: transparent;
++	color: inherit;
++	font-size: 16px;
++	vertical-align: middle;
++	cursor: pointer;
++}
++
++#headerMobile .archive-control-nav {
++	display: grid;
++	grid-template-columns: repeat(3, minmax(0, 1fr)) 36px;
++	align-items: center;
++}
++
++#headerMobile .archive-control-nav > span {
++	width: auto;
++	float: none;
++	position: static;
++}
++
++.archive-recovery-dialog {
++	box-sizing: border-box;
++	width: 420px;
++	max-width: calc(100% - 24px);
++	max-height: calc(100% - 32px);
++	padding: 20px;
++	border: 1px solid #777;
++	border-radius: 4px;
++	font-family: inherit;
++	font-size: 14px;
++	color: #222;
++	background: #fff;
++	overflow: auto;
++	overflow-wrap: anywhere;
++}
++
++.archive-recovery-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
++.archive-recovery-dialog h2 { font-size: 20px; margin: 0 30px 16px 0; }
++.archive-recovery-dialog label { display: flex; align-items: flex-start; gap: 8px; }
++.archive-recovery-dialog p { margin: 12px 0 0; }
++.archive-recovery-dialog input { flex: 0 0 auto; }
++.archive-recovery-close { float: right; width: 28px; height: 28px; border: 0; background: transparent; }
++.archive-recovery-origins { font-size: 12px; color: #555; }
++.archive-photo-source { display: block; padding: 4px 8px; font-size: 12px; color: #174b73; background: #fff; overflow-wrap: anywhere; }
++.member-image > .archive-photo-source, .media > .archive-photo-source, .scroll-layout > .archive-photo-source {
++	position: absolute;
++	top: 8px;
++	bottom: auto;
++	right: 8px;
++	max-width: calc(100% - 16px);
++	z-index: 3;
++}
++
+ html, body {
+ 	height: 100%;
+ 	width: 100%;
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
+index 14eb9e7..ca9315d 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
+@@ -3,6 +3,7 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 		"storymaps/maptour/core/FeatureServiceManager",
+ 		"storymaps/maptour/core/MapTourHelper",
+ 		"storymaps/utils/ArchivedImage",
++		"storymaps/utils/ArchivedImageConsent",
+ 		// Desktop UI
+ 		"storymaps/ui/multiTips/MultiTips",
+ 		"storymaps/maptour/ui/desktop/Carousel",
+@@ -39,6 +40,7 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 		FeatureServiceManager,
+ 		MapTourHelper,
+ 		ArchivedImage,
++		ArchivedImageConsent,
+ 		MultiTips,
+ 		DesktopCarousel,
+ 		PicturePanel,
+@@ -98,6 +100,20 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 														? urlParams.firstRecordAsIntro == "true"
+ 														: configOptions.firstRecordAsIntro;
+ 				configOptions.zoomLevel = urlParams.zoomLevel || configOptions.zoomLevel;
++				topic.subscribe("maptour-ready", function() {
++					var item = app.data.getAppItem();
++					var mapInfo = app.data.getWebMapItem();
++					if ( ! app.isInBuilderMode && item && mapInfo && mapInfo.item && item.created ) {
++						ArchivedImageConsent.init({
++							storyId: item.id,
++							publicStory: item.access === "public" && mapInfo.item.access === "public",
++							date: new Date(item.created).toISOString().slice(0, 10),
++							endpoint: configOptions.waybackLookupUrl,
++							origins: configOptions.waybackPublicOrigins || []
++						});
++						_core.handleWindowResize();
++					}
++				});
+ 
+ 				// Desktop UI
+ 				app.desktopCarousel = new DesktopCarousel("#footerDesktop .carousel", app.isInBuilderMode);
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js
+index 42ace06..98f600d 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js
+@@ -1,6 +1,89 @@
+ define([], function() {
+ 	var original = "www.ebmud.com/files/cache/bf62da23163b671cde7167cb412824db_f811.png";
+ 	var archived = "https://web.archive.org/web/20150927034152if_/http://" + original;
++	var discovery = null;
++	var images = [];
++
++	function removeLink(image) {
++		if ( image._archiveSourceListener )
++			image.removeEventListener("load", image._archiveSourceListener);
++		image._archiveSourceListener = null;
++		if ( image._archiveLink && image._archiveLink.parentNode )
++			image._archiveLink.parentNode.removeChild(image._archiveLink);
++		image._archiveLink = null;
++	}
++
++	function sourceLink(image, snapshot) {
++		if ( ! image.addEventListener )
++			return;
++		function loaded() {
++			image.removeEventListener("load", loaded);
++			if ( image.getAttribute("src") !== snapshot.url || ! image.naturalWidth
++				|| image._archiveBackgroundContainer && image._archiveBackgroundContainer._archiveBackgroundImage !== image )
++				return;
++			var parent = image._archiveBackgroundContainer || image.parentNode;
++			if ( ! parent || ! (/member-image|media|scroll-layout/.test(parent.className) || /tourPointImg/.test(image.className)) )
++				return;
++			removeLink(image);
++			var link = document.createElement("a");
++			link.className = "archive-photo-source";
++			link.href = snapshot.url.replace(snapshot.timestamp + "if_", snapshot.timestamp);
++			link.target = "_blank";
++			link.rel = "noopener noreferrer";
++			link.textContent = "Archived photo: " + snapshot.timestamp.slice(0, 4) + "-" + snapshot.timestamp.slice(4, 6) + "-" + snapshot.timestamp.slice(6, 8);
++			if ( image.parentNode === parent )
++				parent.insertBefore(link, image.nextSibling);
++			else
++				parent.appendChild(link);
++			image._archiveLink = link;
++			image._archiveSourceListener = function() {
++				if ( image.getAttribute("src") !== snapshot.url )
++					removeLink(image);
++			};
++			image.addEventListener("load", image._archiveSourceListener);
++		}
++		image._archiveSourceListener = loaded;
++		image.addEventListener("load", loaded);
++	}
++
++	function show(image, snapshot, placeholder, automatic) {
++		var attempt = {};
++		image._archiveAttempt = attempt;
++		image._archiveAutomatic = automatic;
++		removeLink(image);
++		sourceLink(image, snapshot);
++		image.setAttribute("referrerpolicy", "no-referrer");
++		image.setAttribute("src", snapshot.url);
++		window.setTimeout(function() {
++			if ( image._archiveAttempt === attempt && image.getAttribute("src") === snapshot.url && ! (image.complete && image.naturalWidth > 0) ) {
++				removeLink(image);
++				image.setAttribute("src", placeholder);
++			}
++		}, 10000);
++	}
++
++	function setDiscovery(client) {
++		discovery = client;
++	}
++
++	function retryFailed() {
++		images.slice().sort(function(left, right) { return (right.offsetWidth || 0) - (left.offsetWidth || 0); }).forEach(function(image) {
++			if ( image.getAttribute("src") === image._archivePlaceholder && image._archiveOriginalSource )
++				image.setAttribute("src", image._archiveOriginalSource);
++		});
++	}
++
++	function revoke() {
++		if ( discovery )
++			discovery.setConsent(false);
++		images.forEach(function(image) {
++			image._archiveLookupAttempt = null;
++			if ( image._archiveAutomatic && /^https:\/\/web\.archive\.org\//.test(image.getAttribute("src") || "") ) {
++				removeLink(image);
++				image.setAttribute("src", image._archivePlaceholder);
++			}
++		});
++	}
+ 
+ 	function target(source) {
+ 		return source === "https://" + original || source === "http://" + original ? archived : null;
+@@ -10,28 +93,42 @@ define([], function() {
+ 		var source = image.getAttribute("src");
+ 		if ( ! source || source === placeholder )
+ 			return false;
++		removeLink(image);
++		image._archivePlaceholder = placeholder;
++		if ( ! /^https:\/\/web\.archive\.org\//.test(source) ) {
++			image._archiveOriginalSource = source;
++			if ( images.indexOf(image) === -1 && images.length < 256 ) {
++				images.push(image);
++			}
++		}
+ 
+ 		var replacement = enabled ? target(source) : null;
+ 		if ( replacement ) {
+-			var attempt = {};
+-			image._archiveAttempt = attempt;
+-			image.setAttribute("referrerpolicy", "no-referrer");
+-			image.setAttribute("src", replacement);
+-			window.setTimeout(function() {
+-				if ( image._archiveAttempt === attempt && image.getAttribute("src") === replacement && ! (image.complete && image.naturalWidth > 0) )
+-					image.setAttribute("src", placeholder);
+-			}, 10000);
++			show(image, { url: replacement, timestamp: "20150927034152" }, placeholder, false);
+ 			return true;
+ 		}
+ 
+ 		image.setAttribute("src", placeholder);
++		if ( enabled && images.indexOf(image) !== -1 && discovery && discovery.isEnabled() && discovery.eligible(source) ) {
++			var client = discovery;
++			var lookupAttempt = {};
++			image._archiveLookupAttempt = lookupAttempt;
++			client.discover(source).then(function(snapshot) {
++				if ( snapshot && discovery === client && client.isEnabled() && image._archiveLookupAttempt === lookupAttempt
++					&& image._archiveOriginalSource === source && image.getAttribute("src") === placeholder )
++					show(image, snapshot, placeholder, true);
++			});
++		}
+ 		return false;
+ 	}
+ 
+ 	function loadBackground(container, source, placeholder, enabled) {
+ 		if ( ! container || container._archiveBackgroundSource === source )
+ 			return;
++		if ( container._archiveBackgroundImage )
++			removeLink(container._archiveBackgroundImage);
+ 		var image = new window.Image();
++		image._archiveBackgroundContainer = container;
+ 		container._archiveBackgroundSource = source;
+ 		container._archiveBackgroundImage = image;
+ 		image.onload = function() {
+@@ -45,5 +142,6 @@ define([], function() {
+ 		image.setAttribute("src", source);
+ 	}
+ 
+-	return { target: target, recover: recover, loadBackground: loadBackground };
++	return { target: target, recover: recover, loadBackground: loadBackground,
++		setDiscovery: setDiscovery, retryFailed: retryFailed, revoke: revoke };
+ });
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImageConsent.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImageConsent.js
+new file mode 100644
+index 0000000..2bda6f2
+--- /dev/null
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImageConsent.js
+@@ -0,0 +1,53 @@
++define(["storymaps/utils/WaybackDiscovery", "storymaps/utils/ArchivedImage"], function(WaybackDiscovery, ArchivedImage) {
++	function init(options) {
++		var dialog = document.createElement("dialog");
++		var client = WaybackDiscovery.create(options);
++		if ( ! client || ! dialog.showModal || document.getElementById("archive-recovery-dialog") )
++			return;
++		ArchivedImage.setDiscovery(client);
++		dialog.id = "archive-recovery-dialog";
++		dialog.className = "archive-recovery-dialog";
++		dialog.setAttribute("aria-labelledby", "archive-recovery-title");
++		dialog.innerHTML = '<button type="button" class="archive-recovery-close" aria-label="Close archive settings" title="Close"><i class="fa fa-times" aria-hidden="true"></i></button>'
++			+ '<h2 id="archive-recovery-title">Archived photos</h2>'
++			+ '<label><input type="checkbox" id="archive-recovery-enabled"> Recover missing photos for this story</label>'
++			+ '<p>Send eligible public image URLs to the Internet Archive. Your choice applies to all eligible photos in this story.</p>'
++			+ '<p class="archive-recovery-origins"></p><p class="archive-recovery-status" role="status"></p>';
++		document.body.appendChild(dialog);
++		dialog.querySelector(".archive-recovery-origins").textContent = "Approved public origins: " + options.origins.join(", ");
++		var checkbox = dialog.querySelector("input");
++		var status = dialog.querySelector(".archive-recovery-status");
++		checkbox.checked = client.isEnabled();
++		function updateStatus() {
++			status.textContent = client.isEnabled() ? (client.isPersistent() ? "Enabled for this story (remembered in this browser)" : "Enabled for this visit (browser storage unavailable)") : "Disabled for this story";
++		}
++		checkbox.addEventListener("change", function() {
++			if ( checkbox.checked ) {
++				client.setConsent(true);
++				ArchivedImage.retryFailed();
++			} else {
++				ArchivedImage.revoke();
++			}
++			updateStatus();
++		});
++		dialog.querySelector("button").addEventListener("click", function() { dialog.close(); });
++		[document.querySelector("#headerDesktop .social"), document.querySelector("#headerMobile .navBar")].forEach(function(container) {
++			if ( ! container )
++				return;
++			var button = document.createElement("button");
++			button.type = "button";
++			button.className = "archive-recovery-button";
++			button.title = "Archived photo settings";
++			button.setAttribute("aria-label", "Archived photo settings");
++			button.innerHTML = '<i class="fa fa-history" aria-hidden="true"></i>';
++			button.addEventListener("click", function() { checkbox.checked = client.isEnabled(); updateStatus(); dialog.showModal(); });
++			container.appendChild(button);
++			if ( container.className.indexOf("navBar") !== -1 )
++				container.className += " archive-control-nav";
++		});
++		updateStatus();
++		if ( client.isEnabled() )
++			ArchivedImage.retryFailed();
++	}
++	return { init: init };
++});
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WaybackDiscovery.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WaybackDiscovery.js
+new file mode 100644
+index 0000000..64821f8
+--- /dev/null
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WaybackDiscovery.js
+@@ -0,0 +1,118 @@
++define([], function() {
++	function create(options) {
++		if ( ! options || ! options.publicStory || ! /^[a-f0-9]{32}$/i.test(options.storyId || "")
++			|| ! options.endpoint || ! window.fetch || ! window.Promise || ! window.URL || ! window.AbortController )
++			return null;
++		var endpoint;
++		try {
++			endpoint = new window.URL(options.endpoint, window.location.href);
++			if ( endpoint.origin !== window.location.origin || endpoint.username || endpoint.password || endpoint.search || endpoint.hash )
++				return null;
++		} catch (error) { return null; }
++
++		var key = "maptour.wayback.v1." + options.storyId.toLowerCase();
++		var consent = false;
++		var persistent = true;
++		try { consent = window.localStorage.getItem(key) === "yes"; } catch (error) { persistent = false; }
++		var cache = Object.create(null);
++		var pending = Object.create(null);
++		var queued = Object.create(null);
++		var queue = [];
++		var controllers = [];
++		var active = 0;
++		var spent = 0;
++		var generation = 0;
++
++		function eligible(source) {
++			if ( typeof source !== "string" || source.length > 2048 || /[\s%\\]/.test(source) )
++				return false;
++			try {
++				var url = new window.URL(source);
++				var authority = source.match(/^https?:\/\/([^/]+)/);
++				return !! authority && ! /[:@]/.test(authority[1]) && (options.origins || []).indexOf(url.origin) !== -1
++					&& ! url.search && ! url.hash && /\.(png|jpe?g|gif|webp|bmp)$/i.test(url.pathname)
++					&& /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(url.hostname)
++					&& ! /(^|\.)(localhost|local|internal|test|invalid|example|home)$/i.test(url.hostname);
++			} catch (error) { return false; }
++		}
++
++		function setConsent(value) {
++			consent = value === true;
++			generation++;
++			cache = Object.create(null);
++			pending = Object.create(null);
++			queue.splice(0).forEach(function(entry) { entry.resolve(null); });
++			queued = Object.create(null);
++			controllers.forEach(function(controller) { controller.abort(); });
++			try { window.localStorage.setItem(key, consent ? "yes" : "no"); persistent = true; } catch (error) { persistent = false; }
++		}
++
++		function validate(source, data) {
++			var snapshot = data && data.snapshot;
++			if ( ! snapshot || ! /^\d{14}$/.test(snapshot.timestamp || "") )
++				return null;
++			var url = new window.URL(source);
++			var variants = ["https://" + url.host + url.pathname, "http://" + url.host + url.pathname];
++			if ( variants.indexOf(snapshot.original) === -1
++				|| snapshot.url !== "https://web.archive.org/web/" + snapshot.timestamp + "if_/" + snapshot.original )
++				return null;
++			return { url: snapshot.url, timestamp: snapshot.timestamp, original: snapshot.original };
++		}
++
++		function discover(source) {
++			if ( ! consent || ! eligible(source) )
++				return window.Promise.resolve(null);
++			if ( cache[source] && cache[source].expires > Date.now() )
++				return window.Promise.resolve(cache[source].snapshot);
++			if ( pending[source] )
++				return pending[source];
++			if ( queued[source] )
++				return queued[source];
++			if ( spent + queue.length >= 20 )
++				return window.Promise.resolve(null);
++			if ( active >= 2 ) {
++				queued[source] = new window.Promise(function(resolve) { queue.push({ source: source, resolve: resolve }); });
++				return queued[source];
++			}
++			active++;
++			spent++;
++			var currentGeneration = generation;
++			var controller = new window.AbortController();
++			controllers.push(controller);
++			var timer = window.setTimeout(function() { controller.abort(); }, 7000);
++			var task = new window.Promise(function(resolve) { resolve(window.fetch(endpoint.href, {
++				method: "POST", credentials: "omit", redirect: "error", referrerPolicy: "no-referrer",
++				headers: { "Content-Type": "application/json" }, signal: controller.signal,
++				body: JSON.stringify({ url: source, date: options.date })
++			})); }).then(function(response) {
++				return response.ok ? response.json() : null;
++			}).then(function(data) {
++				return consent && generation === currentGeneration ? validate(source, data) : null;
++			}).then(null, function() { return null; }).then(function(snapshot) {
++				window.clearTimeout(timer);
++				active--;
++				controllers.splice(controllers.indexOf(controller), 1);
++				if ( pending[source] === task )
++					delete pending[source];
++				if ( Object.keys(cache).length >= 128 )
++					delete cache[Object.keys(cache)[0]];
++				if ( generation === currentGeneration && consent )
++					cache[source] = { snapshot: snapshot, expires: Date.now() + (snapshot ? 3600000 : 300000) };
++				while ( queue.length && active < 2 ) {
++					var entry = queue.shift();
++					delete queued[entry.source];
++					entry.resolve(discover(entry.source));
++				}
++				return snapshot;
++			});
++			pending[source] = task;
++			return task;
++		}
++
++		return { eligible: eligible, discover: discover, setConsent: setConsent,
++			isPersistent: function() { return persistent; },
++			isEnabled: function() { return consent; } };
++	}
++
++	return { create: create };
++});
+diff --git a/runtimes/maptour/upstream/MapTour/src/index.html b/runtimes/maptour/upstream/MapTour/src/index.html
+index 04f685f..5156405 100644
+--- a/runtimes/maptour/upstream/MapTour/src/index.html
++++ b/runtimes/maptour/upstream/MapTour/src/index.html
+@@ -56,6 +56,8 @@
+ 				// Optional deployment profile for public IIS hosting: when true, builder entry points are disabled
+ 				// in production (including ?edit URL usage) and the app stays in viewer mode.
+ 				viewerOnlyInProd: true,
++				waybackLookupUrl: "",
++				waybackPublicOrigins: [],
+ 				// Optional list of authorized application or web map owners
+ 				// Has to be specified when using appid or webmap url parameters (e.g. ["user1"], ["user1", "user2"])
+ 				// To authorize all users you can use ["*"]
+@@ -73,7 +75,7 @@
+ 				// Otherwise the upper visible point layer is used (excluding map notes)
+ 				sourceLayerTitle: "",
+ 				// Use the first data record as an introduction instead of a point (can be overridden through URL)
+-				firstRecordAsIntro: true,
++				firstRecordAsIntro: false,
+ 				// Optional zoom level to be applied for the story points following introduction (can be overridden through URL) (e.g: 0 to 16 for Gray Canvas, 0 to 19 for Street Map, -1 to disable)
+ 				zoomLevel: -1
+ 			};

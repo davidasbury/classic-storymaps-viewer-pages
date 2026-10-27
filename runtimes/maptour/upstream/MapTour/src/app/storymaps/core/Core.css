@@ -1,3 +1,60 @@
+.archive-recovery-button {
+	width: 32px;
+	height: 32px;
+	padding: 4px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font-size: 16px;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+#headerMobile .archive-control-nav {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) 36px;
+	align-items: center;
+}
+
+#headerMobile .archive-control-nav > span {
+	width: auto;
+	float: none;
+	position: static;
+}
+
+.archive-recovery-dialog {
+	box-sizing: border-box;
+	width: 420px;
+	max-width: calc(100% - 24px);
+	max-height: calc(100% - 32px);
+	padding: 20px;
+	border: 1px solid #777;
+	border-radius: 4px;
+	font-family: inherit;
+	font-size: 14px;
+	color: #222;
+	background: #fff;
+	overflow: auto;
+	overflow-wrap: anywhere;
+}
+
+.archive-recovery-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+.archive-recovery-dialog h2 { font-size: 20px; margin: 0 30px 16px 0; }
+.archive-recovery-dialog label { display: flex; align-items: flex-start; gap: 8px; }
+.archive-recovery-dialog p { margin: 12px 0 0; }
+.archive-recovery-dialog input { flex: 0 0 auto; }
+.archive-recovery-close { float: right; width: 28px; height: 28px; border: 0; background: transparent; }
+.archive-recovery-origins { font-size: 12px; color: #555; }
+.archive-photo-source { display: block; padding: 4px 8px; font-size: 12px; color: #174b73; background: #fff; overflow-wrap: anywhere; }
+.member-image > .archive-photo-source, .media > .archive-photo-source, .scroll-layout > .archive-photo-source {
+	position: absolute;
+	top: 8px;
+	bottom: auto;
+	right: 8px;
+	max-width: calc(100% - 16px);
+	z-index: 3;
+}
+
 html, body {
 	height: 100%;
 	width: 100%;

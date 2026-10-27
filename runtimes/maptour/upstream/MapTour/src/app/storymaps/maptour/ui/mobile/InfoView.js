@@ -103,6 +103,8 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
 
 					var imgEl = document.createElement('img');
 					imgEl.className = "tourPointImg";
+					imgEl.onerror = function() { mediaNotFoundHandler(this); };
+					imgEl.onload = function() { checkViewSize(); };
 
 					var iframeEl = document.createElement('iframe');
 					iframeEl.className = "tourPointIframe";
@@ -212,6 +214,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
 				var img = _carousel.masterPages[_carousel.currentMasterPage].querySelector('.tourPointImg');
 				if (img){
 					var imgCheck = new Image();
+					imgCheck.onerror = function() { mediaNotFoundHandler(this); };
 					imgCheck.onload = function(){
 						$("#infoCarousel").height(_carousel.masterPages[_carousel.currentMasterPage].childNodes[0].clientHeight + 15);
 					};

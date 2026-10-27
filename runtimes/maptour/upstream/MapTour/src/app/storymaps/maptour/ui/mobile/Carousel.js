@@ -92,6 +92,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
 					imgPane.appendChild(imgContainer);
 
 					var imgEl = document.createElement('img');
+					imgEl.onerror = function() { mediaNotFoundHandler(this); };
 					imgEl.src = attr.getThumbURL();
 					imgContainer.appendChild(imgEl);
 

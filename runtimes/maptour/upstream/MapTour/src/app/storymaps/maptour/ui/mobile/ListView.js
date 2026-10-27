@@ -1,5 +1,5 @@
-define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/debounce"],
-	function(MapTourHelper, topic, has, debounce)
+define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/debounce", "storymaps/utils/ArchivedImage"],
+	function(MapTourHelper, topic, has, debounce, ArchivedImage)
 	{
 		/**
 		 * MobileListView
@@ -115,7 +115,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
 							var tpEl = $('<div class="tour-point-content">'
 									+'<div class="media">'
 										+ (! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL())
-										? '<img alt="";  src="' + imgSrc + '" />'
+										? '<img alt="" onerror="mediaNotFoundHandler(this)" src="' + imgSrc + '" />'
 										: '<iframe class="mobile-layout-scroll-video" src="' + videoSrc + '"></iframe>')
 									+ '</div>'
 									+ '<div class="text-wrapper">'
@@ -213,6 +213,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
 						imgPane.appendChild(imgContainer);
 
 						var imgEl = document.createElement('img');
+						imgEl.onerror = function() { mediaNotFoundHandler(this); };
 						imgEl.setAttribute(location.hash == "#list" ? 'src' : 'data-src', attributes.getThumbURL());
 						imgContainer.appendChild(imgEl);
 
@@ -448,9 +449,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
 					} else {
 						if( ! thisPointContent.find('img').attr("src") ) {
 							if ('objectFit' in document.documentElement.style === false) {
-								thisPointContent.find('img').parent().css({
-									backgroundImage: 'url(' + thisAttributes.getURL() + ')'
-								});
+								ArchivedImage.loadBackground(thisPointContent.find('img').parent()[0], thisAttributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
 							} else{
 								thisPointContent.find('img').attr("src", thisAttributes.getURL());
 							}

@@ -1,0 +1,214 @@
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
+index 2087488..14eb9e7 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js
+@@ -2,6 +2,7 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 		"storymaps/maptour/core/TourPointAttributes",
+ 		"storymaps/maptour/core/FeatureServiceManager",
+ 		"storymaps/maptour/core/MapTourHelper",
++		"storymaps/utils/ArchivedImage",
+ 		// Desktop UI
+ 		"storymaps/ui/multiTips/MultiTips",
+ 		"storymaps/maptour/ui/desktop/Carousel",
+@@ -37,6 +38,7 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 		TourPointAttributes,
+ 		FeatureServiceManager,
+ 		MapTourHelper,
++		ArchivedImage,
+ 		MultiTips,
+ 		DesktopCarousel,
+ 		PicturePanel,
+@@ -166,15 +168,14 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 
+ 				// Global handler for not found image
+ 				window.mediaNotFoundHandler = function(that){
+-					that.src = MapTourHelper.getNotFoundMedia();
++					if ( ArchivedImage.recover(that, MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode) )
++						return;
+ 
+ 					if($("body").hasClass("side-panel")) {
+ 						setTimeout(function() {
+ 							$(that).css("object-fit", "contain");
+ 						}, 500);
+ 					}
+-					// Avoid infinite loop if something is wrong with the not found image
+-					that.onerror = '';
+ 				};
+ 
+ 				// Keybord event for previous/next pictures in viewer mode
+@@ -1246,9 +1247,7 @@ define(["storymaps/maptour/core/WebApplicationData",
+ 						} else {
+ 							if( ! thisPointContent.find('img').attr("src") ) {
+ 								if ('objectFit' in document.documentElement.style === false) {
+-									thisPointContent.find('img').parent().css({
+-										backgroundImage: 'url(' + thisAttributes.getURL() + ')'
+-									});
++									ArchivedImage.loadBackground(thisPointContent.find('img').parent()[0], thisAttributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
+ 								} else{
+ 									thisPointContent.find('img').attr("src", thisAttributes.getURL());
+ 								}
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/Carousel.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/Carousel.js
+index 78494f0..870bab8 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/Carousel.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/Carousel.js
+@@ -92,6 +92,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+ 					imgPane.appendChild(imgContainer);
+ 
+ 					var imgEl = document.createElement('img');
++					imgEl.onerror = function() { mediaNotFoundHandler(this); };
+ 					imgEl.src = attr.getThumbURL();
+ 					imgContainer.appendChild(imgEl);
+ 
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/InfoView.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/InfoView.js
+index 90c739b..87c70fe 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/InfoView.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/InfoView.js
+@@ -103,6 +103,8 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+ 
+ 					var imgEl = document.createElement('img');
+ 					imgEl.className = "tourPointImg";
++					imgEl.onerror = function() { mediaNotFoundHandler(this); };
++					imgEl.onload = function() { checkViewSize(); };
+ 
+ 					var iframeEl = document.createElement('iframe');
+ 					iframeEl.className = "tourPointIframe";
+@@ -212,6 +214,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+ 				var img = _carousel.masterPages[_carousel.currentMasterPage].querySelector('.tourPointImg');
+ 				if (img){
+ 					var imgCheck = new Image();
++					imgCheck.onerror = function() { mediaNotFoundHandler(this); };
+ 					imgCheck.onload = function(){
+ 						$("#infoCarousel").height(_carousel.masterPages[_carousel.currentMasterPage].childNodes[0].clientHeight + 15);
+ 					};
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/IntroView.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/IntroView.js
+index 8c57a4b..4632216 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/IntroView.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/IntroView.js
+@@ -1,5 +1,5 @@
+-define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+-	function(MapTourHelper, topic){
++define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "storymaps/utils/ArchivedImage"],
++	function(MapTourHelper, topic, ArchivedImage){
+ 		/**
+ 		 * IntroView
+ 		 * @class IntoView
+@@ -32,6 +32,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+ 
+ 				var newUrl = feature.attributes.getURL();
+ 				var img = document.createElement('img');
++				img.onerror = function() { mediaNotFoundHandler(this); };
+ 				img.src = app.data.getIntroData().attributes.getURL();
+ 
+ 				if(app.data.getIntroData().attributes.getURL().indexOf("'")) {
+@@ -62,13 +63,15 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
+ 				+ ' <h2 class="tourPointName">' + ($('<div>' + feature.attributes.getName() + '</div>').html()) + '</h2>'
+ 				+ ' <p class="tourPointDescription">' + feature.attributes.getDescription() + '</p>'
+ 				+ (! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL()) ?
+-					'<img class="tourPointImg" src="' + feature.attributes.getURL() + '" />'
++					'<img class="tourPointImg" onerror="mediaNotFoundHandler(this)" src="' + feature.attributes.getURL() + '" />'
+ 					: '<iframe class="tourPointIframe" src="' + feature.attributes.getURL() + '"></iframe>')
+ 				+ ' <br /><br />'
+ 				+ ' <button class="btn btn-large btn-primary start-button">' +  i18n.viewer.mobileHTML.introStartBtn + '</button>'
+ 				+ '</div>';
+ 
+ 				$("#introPanel").html(scrollHtml + classicHtml);
++				if ( ! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL()) )
++					ArchivedImage.loadBackground($("#introPanel .scroll-layout")[0], feature.attributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
+ 
+ 				if( ! feature.attributes.getName().length ) {
+ 					$("#introPanel .scroll-layout .text-wrapper").hide();
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/ListView.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/ListView.js
+index 615453e..1477237 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/ListView.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/mobile/ListView.js
+@@ -1,5 +1,5 @@
+-define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/debounce"],
+-	function(MapTourHelper, topic, has, debounce)
++define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/debounce", "storymaps/utils/ArchivedImage"],
++	function(MapTourHelper, topic, has, debounce, ArchivedImage)
+ 	{
+ 		/**
+ 		 * MobileListView
+@@ -115,7 +115,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
+ 							var tpEl = $('<div class="tour-point-content">'
+ 									+'<div class="media">'
+ 										+ (! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL())
+-										? '<img alt="";  src="' + imgSrc + '" />'
++										? '<img alt="" onerror="mediaNotFoundHandler(this)" src="' + imgSrc + '" />'
+ 										: '<iframe class="mobile-layout-scroll-video" src="' + videoSrc + '"></iframe>')
+ 									+ '</div>'
+ 									+ '<div class="text-wrapper">'
+@@ -213,6 +213,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
+ 						imgPane.appendChild(imgContainer);
+ 
+ 						var imgEl = document.createElement('img');
++						imgEl.onerror = function() { mediaNotFoundHandler(this); };
+ 						imgEl.setAttribute(location.hash == "#list" ? 'src' : 'data-src', attributes.getThumbURL());
+ 						imgContainer.appendChild(imgEl);
+ 
+@@ -448,9 +449,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "dojo/has", "dojo/
+ 					} else {
+ 						if( ! thisPointContent.find('img').attr("src") ) {
+ 							if ('objectFit' in document.documentElement.style === false) {
+-								thisPointContent.find('img').parent().css({
+-									backgroundImage: 'url(' + thisAttributes.getURL() + ')'
+-								});
++								ArchivedImage.loadBackground(thisPointContent.find('img').parent()[0], thisAttributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
+ 							} else{
+ 								thisPointContent.find('img').attr("src", thisAttributes.getURL());
+ 							}
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js
+new file mode 100644
+index 0000000..42ace06
+--- /dev/null
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/ArchivedImage.js
+@@ -0,0 +1,49 @@
++define([], function() {
++	var original = "www.ebmud.com/files/cache/bf62da23163b671cde7167cb412824db_f811.png";
++	var archived = "https://web.archive.org/web/20150927034152if_/http://" + original;
++
++	function target(source) {
++		return source === "https://" + original || source === "http://" + original ? archived : null;
++	}
++
++	function recover(image, placeholder, enabled) {
++		var source = image.getAttribute("src");
++		if ( ! source || source === placeholder )
++			return false;
++
++		var replacement = enabled ? target(source) : null;
++		if ( replacement ) {
++			var attempt = {};
++			image._archiveAttempt = attempt;
++			image.setAttribute("referrerpolicy", "no-referrer");
++			image.setAttribute("src", replacement);
++			window.setTimeout(function() {
++				if ( image._archiveAttempt === attempt && image.getAttribute("src") === replacement && ! (image.complete && image.naturalWidth > 0) )
++					image.setAttribute("src", placeholder);
++			}, 10000);
++			return true;
++		}
++
++		image.setAttribute("src", placeholder);
++		return false;
++	}
++
++	function loadBackground(container, source, placeholder, enabled) {
++		if ( ! container || container._archiveBackgroundSource === source )
++			return;
++		var image = new window.Image();
++		container._archiveBackgroundSource = source;
++		container._archiveBackgroundImage = image;
++		image.onload = function() {
++			if ( container._archiveBackgroundImage === image )
++				container.style.backgroundImage = "url(" + JSON.stringify(image.src) + ")";
++		};
++		image.onerror = function() {
++			if ( container._archiveBackgroundImage === image )
++				recover(image, placeholder, enabled);
++		};
++		image.setAttribute("src", source);
++	}
++
++	return { target: target, recover: recover, loadBackground: loadBackground };
++});

@@ -1,5 +1,5 @@
-define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
-	function(MapTourHelper, topic){
+define(["storymaps/maptour/core/MapTourHelper", "dojo/topic", "storymaps/utils/ArchivedImage"],
+	function(MapTourHelper, topic, ArchivedImage){
 		/**
 		 * IntroView
 		 * @class IntoView
@@ -32,6 +32,7 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
 
 				var newUrl = feature.attributes.getURL();
 				var img = document.createElement('img');
+				img.onerror = function() { mediaNotFoundHandler(this); };
 				img.src = app.data.getIntroData().attributes.getURL();
 
 				if(app.data.getIntroData().attributes.getURL().indexOf("'")) {
@@ -62,13 +63,15 @@ define(["storymaps/maptour/core/MapTourHelper", "dojo/topic"],
 				+ ' <h2 class="tourPointName">' + ($('<div>' + feature.attributes.getName() + '</div>').html()) + '</h2>'
 				+ ' <p class="tourPointDescription">' + feature.attributes.getDescription() + '</p>'
 				+ (! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL()) ?
-					'<img class="tourPointImg" src="' + feature.attributes.getURL() + '" />'
+					'<img class="tourPointImg" onerror="mediaNotFoundHandler(this)" src="' + feature.attributes.getURL() + '" />'
 					: '<iframe class="tourPointIframe" src="' + feature.attributes.getURL() + '"></iframe>')
 				+ ' <br /><br />'
 				+ ' <button class="btn btn-large btn-primary start-button">' +  i18n.viewer.mobileHTML.introStartBtn + '</button>'
 				+ '</div>';
 
 				$("#introPanel").html(scrollHtml + classicHtml);
+				if ( ! feature.attributes.isVideo() && MapTourHelper.mediaIsSupportedImg(feature.attributes.getURL()) )
+					ArchivedImage.loadBackground($("#introPanel .scroll-layout")[0], feature.attributes.getURL(), MapTourHelper.getNotFoundMedia(), ! app.isInBuilderMode);
 
 				if( ! feature.attributes.getName().length ) {
 					$("#introPanel .scroll-layout .text-wrapper").hide();
