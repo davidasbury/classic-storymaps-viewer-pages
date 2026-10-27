@@ -17,7 +17,7 @@
       runtimeFolder: "swipe",
       label: "Swipe",
       demoType: "Story Map Swipe",
-      classifyFragments: ["story map swipe", "story map spyglass", "storymapswipe", "storymapspyglass", "mapswipe", "mapspyglass"]
+      classifyFragments: ["story map swipe", "story map spyglass", "storymapswipe", "storymapspyglass", "mapswipe", "mapspyglass", "swipespyglass"]
     },
     mapjournal: {
       runtimeFolder: "mapjournal",

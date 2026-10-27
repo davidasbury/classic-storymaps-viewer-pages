@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
   gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
@@ -24,6 +25,23 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Legacy Swipe recognition is repaired and verified locally, 2026-10-27.**
+
+Map Journal already routed the Higher Education story's embedded Swipe URLs to
+the sibling viewer. The shared startup detector then rejected the standard
+`SwipeSpyglass` keyword. The registry now recognizes that keyword, with regression
+coverage for the three accessible Swipe/Spyglass items in the supplied story.
+
+All 213 tests passed against an isolated archive of the exact scoped candidate.
+An anonymous browser reproduced the production rejection, then rendered both
+the tuition embed and the student-loan comparison after changing only this
+keyword in the downloaded configuration. Both maps displayed feature symbols
+and cleared their loading overlays. One separate older embed remains missing
+or inaccessible according to ArcGIS. See
+[session 0057](session-logs/2026-10-27-0057-session-log.md).
+The fix remains unpublished; no original items, shared previews or owner
+sessions were changed. Closure uses `[skip ci]`, not a deployment.
 
 **Verified pointer mapping, Cascade loop fix and explicit archive discovery are implemented, 2026-10-27.**
 

@@ -47,6 +47,27 @@ const item = (number, overrides = {}) => ({
   access: 'public', ...overrides
 });
 
+test('legacy SwipeSpyglass items pass gallery and native startup classification', async () => {
+  const config = configuration();
+  for (const [id, layout] of [
+    ['6b58de911fa44d309431d8b3cf7bba6c', 'swipe'],
+    ['d96143b7a084446ebb0417a111c38016', 'swipe'],
+    ['1ec6194f21744590aa7644e19b3be356', 'spyglass']
+  ]) {
+    const candidate = item(1, { id, tags: [],
+      typeKeywords: ['JavaScript', 'layout-' + layout, 'Map', 'Mapping Site', 'Online Map', 'Ready To Use', 'selfConfigured', 'Story Map', 'Story Maps', 'SwipeSpyglass', 'Web Map'],
+      url: 'https://story.maps.arcgis.com/apps/StorytellingSwipe/index.html?appid=' + id });
+    assert.equal(config.classifyClassicRuntimeFromItem(candidate), 'swipe');
+    assert.equal(gallery().storyFromItem(candidate, config).runtime, 'swipe');
+    const resolved = await input().resolveItem(id, { config, client: { json: async url => {
+      assert.equal(url.pathname, '/sharing/rest/content/items/' + id);
+      return candidate;
+    } } });
+    assert.equal(resolved.runtime, 'swipe');
+    assert.equal(resolved.appId, id);
+  }
+});
+
 test('omni input accepts IDs, hosted URLs, web map overrides and verified legacy aliases', () => {
   const appId = '0a48880ceab64924946a0a15a5383916';
   const webmap = '0c8ae0bb497143db9a29de4fbffaed73';
