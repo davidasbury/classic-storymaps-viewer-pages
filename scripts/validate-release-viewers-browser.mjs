@@ -48,6 +48,118 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('basemap-fallback')) {
+    const mapId = '18af4863d44d45968360795e547cc5d1';
+    const endpoint = 'https://www.arcgis.com/sharing/rest/content/items/' + mapId;
+    const item = await (await fetch(endpoint + '?f=json')).json();
+    const itemData = await (await fetch(endpoint + '/data?f=json')).json();
+    assert.equal(item.id, mapId);
+    assert.equal(itemData.operationalLayers.length, 2);
+    const fixture = { item, itemData };
+    for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
+      const { context, page, errors } = await observePage(runtime === 'basic' ? 390 : 1280);
+      const result = { runtime, check: 'shared-basemap-sdk', writes: [] };
+      results.push(result);
+      const syntheticId = 'e'.repeat(32);
+      await context.route('**/*', async route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (!['GET', 'OPTIONS'].includes(request.method())) {
+          result.writes.push(url.origin + url.pathname);
+          return route.abort();
+        }
+        if (url.pathname.endsWith('/content/items/' + syntheticId)) return route.fulfill({ json: {
+          id: syntheticId, type: 'Web Map', title: 'Stopped native startup fixture', access: 'public' } });
+        return route.continue();
+      });
+      try {
+        await page.goto(origin + basePath + '/viewers/' + runtime + '/?appid=' + syntheticId);
+        await page.getByRole('heading', { name: 'Story unavailable', exact: true }).waitFor({ timeout: 45000 });
+        const rendered = await page.evaluate(info => new Promise((resolve, reject) => {
+          const container = document.createElement('div');
+          container.id = 'basemap-contract-map';
+          container.style.cssText = 'position:fixed;inset:0;';
+          document.body.replaceChildren(container);
+          window.require(['esri/arcgis/utils'], utils => {
+            utils.createMap(info, container, { mapOptions: { showAttribution: true } }).then(response => {
+              window.basemapContractMap = response.map;
+              resolve({ basemap: response.itemInfo.itemData.baseMap,
+                operationalLayers: response.itemInfo.itemData.operationalLayers.map(layer => ({ id: layer.id, url: layer.url })),
+                loaded: response.map.getLayer('classic-topographic-fallback')?.loaded === true });
+            }, reject);
+          });
+        }), fixture);
+        assert.equal(rendered.basemap.baseMapLayers.length, 1);
+        assert.equal(rendered.basemap.baseMapLayers[0].itemId, '7dc6cea0b1764a1f9af2e679f642f0f5');
+        assert.equal(rendered.loaded, true);
+        assert.deepEqual(rendered.operationalLayers, itemData.operationalLayers.map(layer => ({ id: layer.id, url: layer.url })));
+        const notice = page.locator('.classic-basemap-notice');
+        await notice.waitFor();
+        assert.match(await notice.innerText(), /original web map has not been modified/);
+        await notice.locator('summary').click();
+        assert.equal(await notice.getByRole('link', { name: 'Open web map in Map Viewer' }).getAttribute('href'), 'https://www.arcgis.com/apps/mapviewer/index.html?webmap=' + mapId);
+        assert.equal(await notice.evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          return bounds.left >= 0 && bounds.right <= innerWidth && bounds.bottom <= innerHeight && element.scrollWidth <= element.clientWidth;
+        }), true);
+        await page.screenshot({ path: path.join(temporary, 'basemap-' + runtime + '.png') });
+        await notice.getByRole('button', { name: 'Dismiss basemap notice' }).click();
+        assert.equal(await notice.count(), 0);
+        assert.deepEqual(result.writes, []);
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+    for (const width of [1440, 390]) {
+      const { context, page, errors } = await observePage(width);
+      const result = { runtime: 'crowdsource', check: 'live-basemap-fallback', width, writes: [], readOnlyQueries: [] };
+      results.push(result);
+      await context.route('**/*', route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        const attachmentEndpoint = itemData.operationalLayers.find(layer => layer.id === 'crowdsource-layer-1510693645817').url + '/queryAttachments';
+        if (request.method() === 'POST' && url.origin + url.pathname === attachmentEndpoint) {
+          result.readOnlyQueries.push(url.pathname);
+          return route.continue();
+        }
+        if (!['GET', 'OPTIONS'].includes(request.method())) {
+          result.writes.push(new URL(request.url()).pathname);
+          return route.abort();
+        }
+        return route.continue();
+      });
+      try {
+        await page.goto(origin + basePath + '/viewers/crowdsource/?appid=38e18b052b9440a0927a5adb524c2c4a');
+        await page.locator('.classic-basemap-notice').waitFor({ timeout: 60000 });
+        await page.locator('button.explore').waitFor({ state: 'attached' });
+        if (await page.locator('button.explore').isVisible()) await page.locator('button.explore').click();
+        else await page.getByRole('button', { name: 'Map', exact: true }).click();
+        await page.locator('.gallery-item').first().waitFor({ state: 'visible', timeout: 30000 });
+        await page.waitForFunction(() => {
+          const map = document.querySelector('.map-pane');
+          if (!map) return false;
+          const bounds = map.getBoundingClientRect();
+          const splash = document.querySelector('.splash');
+          if (splash && splash.getBoundingClientRect().bottom > bounds.top + 1) return false;
+          const center = document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 3);
+          return bounds.width > 100 && bounds.height > 100 && center && map.contains(center);
+        });
+        assert.ok(await page.locator('.gallery-item').count() > 0);
+        assert.equal(await page.locator('.classic-basemap-notice').evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          return bounds.left >= 0 && bounds.right <= innerWidth && element.scrollWidth <= element.clientWidth;
+        }), true);
+        await page.screenshot({ path: path.join(temporary, 'basemap-crowdsource-live-' + width + '.png') });
+        assert.deepEqual(result.writes, []);
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+  }
   if (selectedRuntimes.has('crowdsource-invalid')) {
     const itemId = '6d580febadc04c7b896568bfaadbcdbf';
     const endpoint = 'https://www.arcgis.com/sharing/rest/content/items/' + itemId;

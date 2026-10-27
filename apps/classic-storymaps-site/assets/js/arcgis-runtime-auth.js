@@ -1,9 +1,10 @@
-define(['esri/IdentityManager'], function(identity) {
+define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/assets/js/arcgis-basemap-compatibility.js'], function(identity, basemapCompatibility) {
   'use strict';
 
   var helpers = window.ClassicArcgisAuthHelpers;
   var initial = helpers.readCatalogCredential(document.cookie);
   if (initial) helpers.registerCatalogCredential(identity, document.cookie);
+  basemapCompatibility.install();
 
   function reconcile() {
     var current = helpers.readCatalogCredential(document.cookie);

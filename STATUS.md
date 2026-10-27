@@ -11,12 +11,13 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
   legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
   gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: Stricter Classic classification and Crowdsource error handling verified locally; publication and remaining acceptance pending
+  phase: Shared vector basemap fallback verified locally; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -25,6 +26,27 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Unavailable vector basemap styles have a verified shared fallback, 2026-10-27.**
+
+All eight viewers install an evidence-gated compatibility wrapper before native
+startup. Missing or inaccessible ArcGIS Online vector style references can use
+the verified public Esri World Topographic Map in memory. Healthy styles and
+transient failures retain the original basemap; operational layers and stored
+ArcGIS items are not changed. A dismissible notice identifies the affected map,
+explains the appearance change, and links owner repair guidance. On phones it
+leaves the Crowdsource bottom navigation accessible.
+
+All 221 Node tests, 24 existing authentication browser cases, eight shared SDK
+integration checks and two native Crowdsource desktop/mobile cases passed.
+Inspected settled screenshots show the supplied story's basemap, district
+boundary and contribution markers; desktop also shows the contribution gallery.
+The original styles returned access-denied responses, not proof of deletion.
+Full native-story acceptance was not repeated for the other seven viewers.
+See [verification](docs/testing/basemap-fallback.md) and
+[session 0059](session-logs/2026-10-27-0059-session-log.md).
+This change remains unpublished. Closure uses `[skip ci]`; no deployment,
+ArcGIS content write, shared-preview change or owner-session access was performed.
 
 **Legacy Swipe recognition is repaired and verified locally, 2026-10-27.**
 

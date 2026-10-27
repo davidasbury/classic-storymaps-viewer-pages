@@ -91,10 +91,11 @@ test('pointer preflight does not catch native startup exceptions or complete the
   const context = {
     URL,
     document: { cookie: '', createElement: () => assert.fail('Native failure rendered as a pointer error') },
-    define: (dependencies, factory) => { plugin = factory({}); },
+    define: (dependencies, factory) => { plugin = factory({}, { install() {} }); },
     window: {
       location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
       ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
+      ClassicStoryMapsConfig: { basePath: '/viewers' },
       ClassicStoryGallery: { createClient: () => ({}) },
       ClassicStoryInput: { resolveItem: async () => ({ chain: ['a'.repeat(32)] }) }
     }
@@ -119,7 +120,7 @@ test('direct subscription failures show the reason while ordinary access failure
       URL,
       document: { cookie: '', readyState: 'complete', body: { appendChild: panel => panels.push(panel) },
         createElement: () => ({ style: {}, setAttribute() {}, append(...children) { this.children = children; } }) },
-      define: (dependencies, factory) => { plugin = factory({}); },
+      define: (dependencies, factory) => { plugin = factory({}, { install() {} }); },
       window: {
         location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
         ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
@@ -150,10 +151,12 @@ for (const change of ['sign-out', 'expiry', 'replacement']) {
     const context = {
       document,
       define: (dependencies, factory) => {
-        assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager']);
-        factory({ registerToken: () => { registered++; }, destroyCredentials: () => { cleared++; } });
+        assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager', '/viewers/assets/js/arcgis-basemap-compatibility.js']);
+        factory({ registerToken: () => { registered++; }, destroyCredentials: () => { cleared++; } },
+          { install() { assert.equal(registered, 1, 'Register credentials before installing basemap probes'); } });
       },
       window: { ClassicArcgisAuthHelpers: helpers, location: { reload: () => { reloaded++; } },
+        ClassicStoryMapsConfig: { basePath: '/viewers' },
         setInterval: callback => { poll = callback; return 1; }, clearInterval: id => assert.equal(id, 1),
         addEventListener: (name, callback) => events.set(name, callback), removeEventListener: name => events.delete(name) }
     };
