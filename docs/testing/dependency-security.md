@@ -14,9 +14,10 @@ audit or certification of the legacy source builds.
 | [#13](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/13) | Cascade qs/Less | Incorporated with #11: qs 6.17.0 and Less 3.13.1. |
 | [#22](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/22) | Crowdsource JSON validation | Incorporated: is-my-json-valid 2.20.6 and jsonpointer 5.0.1. |
 | [#23](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/23) | Crowdsource Handlebars | Incorporated with #22: Handlebars 4.7.10. |
-| [#14](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/14) | Cascade tmp/ESLint | Not incorporated: ESLint 10 removes CLIEngine, which grunt-eslint 18 still requires. |
+| [#14](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/14) | Cascade tmp/ESLint | Not incorporated: ESLint 10 removes CLIEngine, which grunt-eslint 18 still requires. Dependabot subsequently closed it as superseded by #24. |
 | [#20](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/20) | Grouped major upgrades | Not incorporated: coordinated lint/compiler configuration migration is required. |
 | [#21](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/21) | Overlapping grouped upgrades | Not incorporated for the same reason as #20; do not merge both overlapping lockfile replacements. |
+| [#24](https://github.com/davidasbury/classic-storymaps-viewer-pages/pull/24) | Replacement Cascade ESLint upgrade | Not incorporated: ordinary installation fails, and the upgraded plugin rejects the existing configFile option. |
 
 Pinned reviewed heads, in PR-number order:
 
@@ -28,6 +29,7 @@ Pinned reviewed heads, in PR-number order:
 21 af0e140b6f95167f1ba6de289b985dcad93f6c3f
 22 75ff269615910e7f8b14aaa3f2c3f457b77e43e9
 23 f21c85cf1a681fbe075076c472e90a0cbd9bcf90
+24 cf2332bb83a41dabcc17e0aa4712b7211c5cb29e
 ```
 
 ## Installation and Compatibility
@@ -74,6 +76,15 @@ For #20/#21, a diagnostic grunt-eslint task failed with
 the old `configFile` option and Babel 5 `modules` options, and do not supply the
 Sass implementation expected by the new plugin. Green Pages checks can fall
 back to releases and do not establish compatibility of those toolchains.
+
+After the consolidated push, Dependabot closed #14 without merging it, stating
+that the dependencies were updatable another way, and opened #24. The replacement
+does upgrade grunt-eslint to 27, so the old CLIEngine finding does not apply to
+that version pair. Its exact pinned head was separately installed and tested:
+ordinary `npm ci` still failed on grunt-execute's peer range, and after a
+diagnostic `--legacy-peer-deps` install the actual configured `eslint` task
+exited 3 with `Unknown options: configFile`. It therefore remains a migration
+task, not an accepted security-only bump.
 
 ## Remaining Security Work
 
