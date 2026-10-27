@@ -48,6 +48,76 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('crowdsource-invalid')) {
+    const itemId = '6d580febadc04c7b896568bfaadbcdbf';
+    const endpoint = 'https://www.arcgis.com/sharing/rest/content/items/' + itemId;
+    const nearby = await (await fetch(endpoint + '?f=json', { signal: AbortSignal.timeout(20000) })).json();
+    const payload = await (await fetch(endpoint + '/data?f=json', { signal: AbortSignal.timeout(20000) })).json();
+    assert.equal(nearby.id, itemId);
+    assert.equal(payload.authoringApp, 'InstantAppsHomePage');
+    assert.ok(payload.values && !payload.values.settings);
+    const classic = { ...nearby, id: 'd'.repeat(32), title: 'Classic Crowdsource control', tags: ['Story Maps'],
+      typeKeywords: ['Story Map Crowdsource'], url: 'https://www.arcgis.com/apps/Crowdsource/?appid=' + 'd'.repeat(32) };
+    for (const width of [1280, 390]) {
+      for (const mode of ['preflight', 'native']) {
+        const { context, page, errors } = await observePage(width);
+        const result = { runtime: 'crowdsource', check: 'invalid-data-' + mode, width, navigations: [] };
+        results.push(result);
+        let nativeDataReads = 0;
+        await context.route('**/*', async route => {
+          const request = route.request();
+          const url = new URL(request.url());
+          if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+          if (request.isNavigationRequest() && request.frame() === page.mainFrame()) {
+            result.navigations.push(request.url());
+            if (url.searchParams.has('edit')) return route.abort();
+          }
+          if (url.pathname === '/sharing/rest/search') return route.fulfill({ json: { results: [nearby, classic], nextStart: -1 } });
+          if (url.pathname.endsWith('/content/items/' + itemId) && mode === 'native') {
+            const metadata = { ...classic, id: itemId, url: 'https://www.arcgis.com/apps/Crowdsource/?appid=' + itemId };
+            return url.searchParams.has('callback') ? route.fulfill({ contentType: 'application/javascript', body: url.searchParams.get('callback') + '(' + JSON.stringify(metadata) + ')' }) : route.fulfill({ json: metadata });
+          }
+          if (url.pathname.endsWith('/content/items/' + itemId + '/data')) {
+            nativeDataReads++;
+            return url.searchParams.has('callback') ? route.fulfill({ contentType: 'application/javascript', body: url.searchParams.get('callback') + '(' + JSON.stringify(payload) + ')' }) : route.fulfill({ json: payload });
+          }
+          return route.continue();
+        });
+        try {
+          await page.goto(origin + basePath + '/viewers/crowdsource/index.html?appid=' + itemId);
+          const message = mode === 'native' ? 'Something went wrong, the app did not load correctly.' : 'The referenced item is not a supported Classic Story Map.';
+          await page.getByText(message, { exact: true }).waitFor({ timeout: 60000 });
+          if (mode === 'native') await page.waitForFunction(() => {
+            const message = document.querySelector('.loading-error-message .message');
+            if (!message) return false;
+            const bounds = message.getBoundingClientRect();
+            return Number(getComputedStyle(message.closest('.loading-error-message')).opacity) >= 0.99
+              && !document.querySelector('.loadingIndicator') && bounds.width > 0 && bounds.height > 0
+              && message.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2));
+          }, undefined, { timeout: 10000 });
+          assert.equal(result.navigations.length, 1);
+          assert.equal(new URL(page.url()).searchParams.has('edit'), false);
+          assert.equal(nativeDataReads, mode === 'native' ? 1 : 0);
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          await page.screenshot({ path: path.join(temporary, 'crowdsource-invalid-' + mode + '-' + width + '.png') });
+          if (mode === 'preflight') {
+            await page.goto(origin + basePath + '/viewers/');
+            await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+            await page.getByRole('link', { name: 'View ' + classic.title, exact: true }).waitFor();
+            assert.equal(await page.getByRole('link', { name: 'View ' + nearby.title, exact: true }).count(), 0);
+            await page.locator('#omni-appid').fill(itemId);
+            await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+            await page.locator('#omni-status').getByText(message, { exact: true }).waitFor();
+            assert.equal(context.pages().length, 1);
+          }
+          result.pass = true;
+        } catch (error) { result.pass = false; result.failure = error.message; }
+        await context.close();
+        result.pageErrors = errors.filter(message => message.startsWith('page:'));
+        if (result.pageErrors.length) result.pass = false;
+      }
+    }
+  }
   if (selectedRuntimes.has('blank-cascade')) {
     const { context, page, errors } = await observePage(1280);
     const itemId = 'd'.repeat(32);

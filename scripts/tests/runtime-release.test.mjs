@@ -63,6 +63,36 @@ test('Cascade empty stories never redirect editors into the builder', async () =
   assert.doesNotMatch(source, /CommonHelper\.switchToBuilder\(\)/);
 });
 
+test('Crowdsource incompatible data rejects with the native error before login or navigation', () => {
+  const source = readFileSync(path.join(repo, 'runtimes/crowdsource/upstream/src/app/utils/arcgis/items/Item.babel.js'), 'utf8');
+  const block = source.slice(source.indexOf('  const getItemData = function()'), source.indexOf('\n  getItemData();'));
+  const patch = JSON.parse(readFileSync(path.join(repo, 'runtimes/crowdsource/runtime-manifest.json'), 'utf8')).patches.find(entry => entry.name === 'unconfigured-viewer-error');
+  assert.ok(patch);
+  for (const payload of [{ values: {} }, { values: { webmap: 'nearby-map' } }, { values: { settings: {} } }]) {
+    for (const release of [false, true]) {
+      let errorMessage;
+      let rejected;
+      let continued = false;
+      const actions = { displayMainError: message => { errorMessage = message; } };
+      const messages = { errors: { loading: { appLoadingFail: 'Cannot load this Crowdsource story.' } } };
+      const deferred = { reject: value => { rejected = value; } };
+      const proceed = () => { continued = true; return { then() {} }; };
+      const context = { settings: { item: 'app' }, itemUrl: 'https://www.arcgis.com/item',
+        esriRequest: () => ({ then: callback => callback(payload) }), builderText: false, AppActions: actions,
+        viewerText: messages, deferred, _onError() {}, response: {}, checkUserLogin: proceed, getItem() {}, onError() {},
+        window: { location: { reload: () => assert.fail('Unexpected reload') }, history: { replaceState: () => assert.fail('Unexpected navigation') } } };
+      if (release) {
+        Object.assign(context, { e: payload, _: { default: false }, A: { default: actions }, M: { default: messages }, P() {}, n: deferred, proceed });
+        vm.runInNewContext('(function(){if(false){}' + patch.replace + 'proceed();})()', context);
+      } else vm.runInNewContext(block + '\ngetItemData();', context);
+      assert.equal(continued, !!payload.values.settings);
+      assert.equal(errorMessage, payload.values.settings ? undefined : messages.errors.loading.appLoadingFail);
+      assert.equal(rejected, payload.values.settings ? undefined : payload);
+    }
+  }
+  assert.doesNotMatch(block, /addSearch|replaceState|location\.reload/);
+});
+
 test('Crowdsource authenticated editors cannot open the owner banner', async () => {
   const { disableRuntimeEdit } = await import('../patch-runtime-edit-controls.mjs');
   const original = 'function update(){provider["default"].getObject("appState.user.editor",!1,this)&&(this.checkedAdminPanel=!0,actions.showComponent("admin-banner"))}';

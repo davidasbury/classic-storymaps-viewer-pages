@@ -11,6 +11,18 @@
   },
   "patches": [
     {
+      "name": "error-hides-loader",
+      "file": "app/main-app.min.js",
+      "find": "r||this.props.activeDialog?null:b[\"default\"].createElement(T[\"default\"],null)",
+      "replace": "r||this.props.activeDialog||t?null:b[\"default\"].createElement(T[\"default\"],null)"
+    },
+    {
+      "name": "unconfigured-viewer-error",
+      "file": "app/main-app.min.js",
+      "find": "else if(!e.values.settings&&!_[\"default\"]){var t=new T[\"default\"](window.location.href);t.addSearch(\"edit\"),window.history.replaceState({},null,t.href()),window.location.reload()}",
+      "replace": "else if(!e.values.settings&&!_[\"default\"]){return A[\"default\"].displayMainError(M[\"default\"].errors.loading.appLoadingFail),P(e),void n.reject(e)}"
+    },
+    {
       "name": "jquery-3-image-load",
       "file": "app/main-app.min.js",
       "find": "t.find(\"img\").load(this.updateTitleWidth)",

@@ -4,7 +4,6 @@ import Deferred from 'dojo/Deferred';
 import lang from 'dojo/_base/lang';
 import esriRequest from 'esri/request';
 import IdentityManager from 'esri/IdentityManager';
-import URI from 'lib/urijs/src/URI';
 import AppStore from 'babel/store/AppStore';
 import Logger from 'babel/utils/logging/Logger';
 import crowdsourceVersionUpdate from 'babel/utils/appData/CrowdsourceVersionUpdate';
@@ -172,11 +171,10 @@ export const getDataById = function getDataById(options) {
             fromScratch: true
           });
         } else if (!res.values.settings && !builderText) {
-          const newUrl = new URI(window.location.href);
-
-          newUrl.addSearch('edit');
-          window.history.replaceState({},null,newUrl.href());
-          window.location.reload();
+          AppActions.displayMainError(viewerText.errors.loading.appLoadingFail);
+          _onError(res);
+          deferred.reject(res);
+          return;
         }
         response.data = res;
         checkUserLogin().then(getItem);

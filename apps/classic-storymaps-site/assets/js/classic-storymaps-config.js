@@ -192,6 +192,17 @@
     });
     var itemType = String((item && item.type) || "").toLowerCase();
     var itemUrl = String((item && item.url) || "").toLowerCase();
+    if (itemType !== "web mapping application") return null;
+    var itemPath = "";
+    if (itemUrl) {
+      try {
+        var parsedUrl = new URL(itemUrl);
+        if (!["http:", "https:"].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password) return null;
+        itemPath = parsedUrl.pathname;
+        if (/\/apps\/(?:instant|dashboards|experiencebuilder|webappviewer)(?:\/|$)/.test(itemPath)
+          || /^(?:storymaps|experience)\.arcgis\.com$/.test(parsedUrl.hostname)) return null;
+      } catch (_) { return null; }
+    }
 
     function hasFragment(fragment) {
       return normalizedKeywords.some(function(keyword) {
@@ -209,13 +220,12 @@
     }
 
     var runtimes = Object.keys(APP_REGISTRY);
-    for (var j = 0; j < runtimes.length; j += 1) {
-      var runtime = runtimes[j];
-      var runtimeInfo = APP_REGISTRY[runtime];
-      if (hasAny(runtimeInfo.classifyFragments) || itemUrl.indexOf("/" + runtimeInfo.runtimeFolder + "/") !== -1) {
-        return runtime;
-      }
-    }
+    var matches = runtimes.filter(function(runtime) { return hasAny(APP_REGISTRY[runtime].classifyFragments); });
+    if (matches.length > 1) return null;
+    if (matches.length === 1) return matches[0];
+    var urlMatches = runtimes.filter(function(runtime) { return itemPath.indexOf("/" + APP_REGISTRY[runtime].runtimeFolder + "/") !== -1; });
+    if (urlMatches.length > 1) return null;
+    if (urlMatches.length === 1) return urlMatches[0];
 
     if (itemType === "web mapping application" && hasFragment("story map")) {
       return "unknown-classic";

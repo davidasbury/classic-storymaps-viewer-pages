@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const gallery = () => require(new URL('assets/js/classic-story-gallery.js', site).pathname);
 const input = () => require(new URL('assets/js/classic-story-input.js', site).pathname);
 function configuration(pathname = '/viewers/') {
-  const context = vm.createContext({ window: { location: { pathname } } });
+  const context = vm.createContext({ URL, window: { location: { pathname } } });
   vm.runInContext(readFileSync(new URL('assets/js/classic-storymaps-config.js', site), 'utf8'), context);
   return context.window.ClassicStoryMapsConfig;
 }
@@ -66,6 +66,24 @@ test('legacy SwipeSpyglass items pass gallery and native startup classification'
     assert.equal(resolved.runtime, 'swipe');
     assert.equal(resolved.appId, id);
   }
+});
+
+test('modern app URLs and conflicting metadata cannot pass Classic classification through tags', async () => {
+  const config = configuration();
+  const nearby = item(1, { id: '6d580febadc04c7b896568bfaadbcdbf', tags: ['Trail', 'Story Maps', 'Crowdsource'],
+    typeKeywords: ['configurableApp', 'JavaScript', 'Map', 'Mapping Site', 'Online Map', 'Ready To Use', 'Web Map'],
+    url: 'https://baycogis.maps.arcgis.com/apps/instant/nearby/index.html?appid=6d580febadc04c7b896568bfaadbcdbf' });
+  for (const candidate of [nearby,
+    item(2, { url: 'https://www.arcgis.com/apps/dashboards/123' }),
+    item(3, { url: 'https://experience.arcgis.com/experience/123' }),
+    item(4, { url: 'https://storymaps.arcgis.com/stories/123' }),
+    item(5, { typeKeywords: ['Story Map Journal', 'Story Map Tour'] }), item(6, { type: 'Web Map' })]) {
+    assert.equal(config.classifyClassicRuntimeFromItem(candidate), null);
+    assert.equal(gallery().storyFromItem(candidate, config), null);
+    await assert.rejects(input().resolveItem(candidate.id, { config, client: { json: async url => url.pathname.endsWith('/data') ? { values: { webmap: 'synthetic-map' } } : candidate } }), /not a (?:supported Classic|web mapping)/);
+  }
+  assert.equal(config.classifyClassicRuntimeFromItem(item(7, { typeKeywords: [], tags: [], url: 'https://custom.example/MapJournal/index.html?next=/apps/instant/nearby/' })), 'mapjournal');
+  assert.equal(config.classifyClassicRuntimeFromItem(item(8, { url: 'https://custom.example/Cascade/index.html' })), 'mapjournal');
 });
 
 test('omni input accepts IDs, hosted URLs, web map overrides and verified legacy aliases', () => {

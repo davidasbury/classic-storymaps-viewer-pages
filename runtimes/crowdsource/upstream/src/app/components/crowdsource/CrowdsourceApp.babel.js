@@ -40,7 +40,7 @@ class CrowdsourceApp extends React.Component {
             window.location = redirect.href();
           }} /> : null }
         { showViewer ? <Viewer></Viewer> : null }
-        { showViewer || this.props.activeDialog ? null : <Loader></Loader> }
+        { showViewer || this.props.activeDialog || error ? null : <Loader></Loader> }
         <ReactCSSTransitionGroup transitionName="wait-for-action" transitionEnterTimeout={1000} transitionLeaveTimeout={1} >
           {error}
         </ReactCSSTransitionGroup>

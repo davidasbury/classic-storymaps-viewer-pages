@@ -41,13 +41,7 @@
     if (sharing === 'private' ? !['private', 'shared'].includes(item.access) : item.access !== sharing) return null;
     var terms = (Array.isArray(item.tags) ? item.tags : []).concat(Array.isArray(item.typeKeywords) ? item.typeKeywords : []).map(normalize);
     if (!terms.some(function(term) { return term.indexOf('storymap') !== -1 || term.indexOf('storytelling') !== -1; })) return null;
-    var matches = Object.keys(config.appRegistry).filter(function(runtime) {
-      return config.appRegistry[runtime].classifyFragments.some(function(fragment) {
-        return terms.some(function(term) { return term.indexOf(normalize(fragment)) !== -1; });
-      });
-    });
-    if (matches.length > 1) return null;
-    var runtime = matches[0] || config.classifyClassicRuntimeFromItem(item);
+    var runtime = config.classifyClassicRuntimeFromItem(item);
     if (!Object.prototype.hasOwnProperty.call(config.appRegistry, runtime)) return null;
     return {
       id: item.id.toLowerCase(), title: String(item.title || 'Untitled story'), owner: String(item.owner || ''),

@@ -210,6 +210,59 @@ PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
 node --test scripts/tests/*.test.mjs
 ```
 
+## Strict Classification And Crowdsource Errors
+
+Verified at `2026-10-27 09:50:47-07:00[America/Los_Angeles]`; this follow-up
+is not deployed.
+
+Public item `6d580febadc04c7b896568bfaadbcdbf`, "Great Lakes Bay Region Trail
+Finder", is an Instant Apps Nearby application. Its metadata URL names
+`/apps/instant/nearby/`; its data identifies `InstantAppsHomePage` and contains
+`values` without Crowdsource's `values.settings`. Its Story Maps/Crowdsource
+tags previously overrode that conflicting evidence. An independent anonymous
+browser reproduced four production navigations alternating between the viewer
+and `&edit`, without any mutation request or owner session.
+
+The gallery now uses the same classifier as native startup and the main input.
+Only Web Mapping Applications qualify. Known non-Classic URL paths for Instant
+Apps, Dashboards, Experience Builder and Web AppBuilder, plus modern StoryMaps
+and Experience hosts, cannot be overridden by tags. URL matching uses the parsed
+pathname, not query text; invalid schemes, credentials and malformed URLs fail.
+Conflicting Classic runtime metadata is rejected. Unambiguous Classic metadata
+still takes priority over a stale Classic URL, and supported Classic tags,
+custom-host paths and empty-pointer resolution remain available. This is not
+exhaustive identification of every third-party application from metadata alone.
+
+Crowdsource's separate item-loader branch no longer adds `edit`, rewrites the
+URL or reloads when a viewer receives `values` without settings. It displays the
+existing localized loading error, rejects the load and returns before sign-in
+or further item loading. The component hides its loader while an error exists.
+Both changes are mirrored in exact patches for the checksum-pinned 0.10.0
+release; missing or repeated targets stop the build. No item data, permissions
+or owner controls are changed.
+
+All 215 Node tests passed on Node 24, including source/release failure behavior,
+classification regressions and a fresh verified Crowdsource release build.
+Four desktop/mobile browser cases verified direct rejection of the actual
+Nearby item, gallery exclusion, main-input refusal, and the native error path
+using the actual public payload with only metadata replaced in the browser.
+The native cases stayed on one URL, rendered fully opaque unobscured errors,
+and had no loader or page exceptions. Screenshots were inspected.
+
+The existing pointer, input, authentication and gallery cases passed. The first
+owner-control run found that the reused isolated snapshot lacked the earlier
+Crowdsource admin-banner patch. That snapshot was replaced with a fresh pinned
+release carrying all current patches. All nine affected error, owner-control
+and authentication cases then passed, including genuine public Crowdsource
+rendering at desktop/mobile widths. Across the retained and repeated checks,
+49 distinct browser cases passed; the stale-snapshot failure is not counted as
+acceptance. The original opacity/overlay-only test was also corrected after
+visual inspection exposed the loader behind the entering error.
+
+Repeat the focused browser checks with `RUNTIME_FILTER=crowdsource-invalid`.
+Use the fresh runtime build, not a reused snapshot lacking prior patches.
+Existing shared previews, production hosting and ArcGIS content were untouched.
+
 ## Limits
 
 Resolution is for ArcGIS Online Classic app IDs, including supported URL forms
