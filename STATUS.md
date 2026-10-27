@@ -36,6 +36,12 @@ Support, and are used at the user's own risk. The feedback placeholder was
 replaced in source and both local preview entry pages; see
 [session 0033](session-logs/2026-10-26-0033-session-log.md). Production is unchanged.
 
+The archive's header and footer notices also include the owner's exact
+community-project and Esri non-affiliation wording. All three local archive
+entry routes were verified at desktop and mobile widths; see
+[session 0034](session-logs/2026-10-26-0034-session-log.md). Historical audit
+records and the separate viewer-support disclaimer remain unchanged.
+
 The omni-input accepts IDs, explicit app-ID URLs and exact indexed Classic app
 URLs, plus verified aliases for the two supplied self-hosted examples. Web-map
 overrides survive; credentials and arbitrary parameters do not. This is not a

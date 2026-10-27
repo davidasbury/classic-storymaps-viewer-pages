@@ -288,7 +288,7 @@ test('archive root repeats the archive disclaimer below the shared navigation', 
     assert.ok(footer, filename + ': archive disclaimer footer is present');
     const navigationFooter = html.match(/<footer class="footer sticky-footer">[\s\S]*?<\/footer>/);
     assert.ok(navigationFooter && navigationFooter.index + navigationFooter[0].length <= footer.index, 'Disclaimer follows the shared navigation footer');
-    const disclaimer = 'This is a historical archive of the Classic Story Maps website from 2017-12-10.';
+    const disclaimer = 'This is a historical archive of the Classic Story Maps website from 2017-12-10. It is a community project, not affliated with Esri Inc.';
     assert.equal(banner[1], disclaimer);
     assert.match(footer[0], /class="archive-banner"/);
     assert.equal(footer[1].match(/<div class="container">([^<]+)<\/div>/)?.[1], disclaimer);
