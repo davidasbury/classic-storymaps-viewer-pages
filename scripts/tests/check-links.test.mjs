@@ -270,6 +270,16 @@ test('published runtime entry points contain no uncompiled template tags', () =>
   }
 });
 
+test('catalog builds preserve the content availability note exactly once in both entry pages', () => {
+  const note = 'PLEASE NOTE: Story Maps often rely on data, links and resources that may have changed or have become unavailable over time. We have done our best to ensure that viewers work correctly when the orginal sources are available and accessible, but in some cases content may not display as intended if it is no longer shared or has been deleted.';
+  for (const filename of ['viewers/index.html', 'viewers/viewers.html']) {
+    const html = readFileSync(path.join(publish, filename), 'utf8');
+    assert.equal(html.split(note).length, 2, filename);
+    assert.ok(html.indexOf('You can also recreate your stories') < html.indexOf(note));
+    assert.ok(html.indexOf(note) < html.indexOf('<p class="disclaimer">'));
+  }
+});
+
 test('archive sticky-footer layout has no reserved bottom padding or negative footer offset', () => {
   const stylesheet = readFileSync(path.join(publish, 'viewers/assets/css/archive/screen.css'), 'utf8');
   const pageRules = [...stylesheet.matchAll(/\.page\.sticky-footer\s*\{([^}]+)\}/g)];

@@ -36,6 +36,12 @@ Support, and are used at the user's own risk. The feedback placeholder was
 replaced in source and both local preview entry pages; see
 [session 0033](session-logs/2026-10-26-0033-session-log.md). Production is unchanged.
 
+The owner's content-availability paragraph is now in the tracked catalog source,
+`apps/classic-storymaps-site/viewers.html`, rather than only generated output.
+An isolated build verified its exact placement once in both viewer entry pages;
+desktop/mobile preview checks also passed. See
+[session 0036](session-logs/2026-10-26-0036-session-log.md).
+
 The archive's header and footer notices now refer to 2017 and retain the owner's
 exact community-project and Esri non-affiliation wording. The generated-output
 test and rendered notices on all three local archive entry routes passed; see
