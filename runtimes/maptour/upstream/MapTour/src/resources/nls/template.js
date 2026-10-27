@@ -1,6 +1,40 @@
 define({
 	root: ({
 		viewer: {
+			compatibility: {
+				title: "This web map could not be loaded",
+				unchanged: "No changes were saved to the original map or story.",
+				mapId: "Web map ID:",
+				repairSteps: "Repair steps for map owners",
+				technicalDetails: "Technical details",
+				reasonCode: "Diagnostic code:",
+				location: "JSON location:",
+				assistant: "Open ArcGIS Assistant",
+				ownerStep: "Sign in to ArcGIS Assistant with an account authorized to edit this web map. Locate the web map using the ID above.",
+				backupStep: "Back up the map's Item Data JSON and test changes on a disposable copy first. Editing the original can affect other apps that use it.",
+				inspectStep: "Inspect Item Data, not Item Description or the story's configuration.",
+				verifyStep: "Verify the repaired map, then reload this viewer. Prefer supported ArcGIS editing tools when they can make the repair.",
+				nonOwner: "If you cannot edit this map, contact its owner or the story owner with the web map ID and diagnostic code.",
+				accessHelp: "Sign in with an account that can access the map and its layers. Ask the owner to check their sharing settings if access is still denied.",
+				retryHelp: "Check your connection and try loading the story again. If it still fails, contact the owner with the web map ID and diagnostic code.",
+				reasons: {
+					access: "The map request reported an authentication or access error.",
+					network: "A map request timed out. Editing the map JSON may not resolve a connection problem.",
+					basemap_structure: "The map could not load, and its legacy basemap contains settings the viewer cannot safely replace automatically.",
+					basemap_unverified: "The map could not load, and the viewer could not verify the replacement Ocean basemap. The service may be unavailable or the request may be blocked.",
+					layer_type: "The map could not load, and the viewer could not safely determine a layer's type or resolve a conflicting layerType.",
+					schema: "The map could not load, and its structure or version could not be safely upgraded in memory.",
+					https_unverified: "The map could not load, and one or more HTTP URLs could not be verified over HTTPS. This does not establish that the service is permanently unavailable.",
+					unknown: "The viewer could not determine why this map failed to load."
+				},
+				repairs: {
+					basemap_structure: "Review the original basemap settings. The known Ocean replacement uses Ocean/World_Ocean_Base/MapServer and Ocean/World_Ocean_Reference/MapServer on https://services.arcgisonline.com/arcgis/rest/services/. Preserve settings and mark the reference layer isReference: true.",
+					basemap_unverified: "Check HTTPS access to the World Ocean Base and World Ocean Reference services before changing the map. Do not substitute an unrelated basemap to hide an access or network failure.",
+					layer_type: "Check each operational and basemap layer against its service metadata before adding or correcting layerType. A MapServer can be tiled or dynamic; do not guess.",
+					schema: "Review unsupported layers and the web map schema. Set version to the string 2.0 only after confirming that the layer definitions are compatible; changing version alone is not a repair.",
+					https_unverified: "Verify the corresponding HTTPS endpoints and update only those that work. Light Gray Canvas uses Canvas/World_Light_Gray_Base/MapServer and Canvas/World_Light_Gray_Reference/MapServer on https://services.arcgisonline.com/ArcGIS/rest/services/."
+				}
+			},
 			loading: {
 				step1: "LOADING STORY",
 				step2: "LOADING DATA",

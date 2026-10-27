@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
+  maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   phase: Basic Font Awesome implemented; Tailcoat source verified, permission and release acceptance pending
 ---
 
@@ -20,6 +21,31 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Map Tour in-memory compatibility verified locally, 2026-10-26.**
+
+Map Tour now prepares a cloned web map before native loading: verified HTTPS
+upgrades, the exact legacy Ocean base/reference replacement, conservative
+missing-layer-type inference, and eligible version-1.x promotion to `"2.0"`.
+Modern maps still receive independent URL repairs. Unknown structures and
+unverified endpoints remain unchanged; preparation errors retain native loading.
+Failed map loads show safe diagnostics, the web map ID, owner repair steps and
+an ArcGIS Assistant link, with separate access/retry guidance. Legacy locales
+explicitly fall back to the new root message section.
+
+The supplied public story rendered nine tour points and Ocean base/reference
+tiles in isolated desktop/mobile Chrome checks; navigation, failure UI, French
+fallback and unchanged original item data were verified. All 32 focused
+compatibility/release/reconstruction-unit tests passed on Node 24. The new patch
+replayed byte-exactly over committed source. Full upstream reconstruction remains
+blocked by the pre-existing first patch and 182 baseline differences;
+whole-runtime legacy lint also has pre-existing failures. Neither was repaired.
+
+This is Map Tour only. Real private-content acceptance and publication remain
+outstanding. No ArcGIS item, shared preview, Pages or Netlify deployment was
+changed. This implementation and
+[session 0041](session-logs/2026-10-26-0041-session-log.md) were authorized by
+David for commit and push with deployment disabled using `[skip ci]`.
 
 **Basic Fontello replaced in new output; Tailcoat unchanged, 2026-10-26.**
 

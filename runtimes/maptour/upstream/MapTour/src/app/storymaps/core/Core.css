@@ -209,6 +209,50 @@ body.isEmbed ::-webkit-scrollbar-track {
 	background-repeat: no-repeat;
 }
 
+#fatalError.compatibility-error {
+	top: 0;
+	bottom: 0;
+	overflow-y: auto;
+	box-sizing: border-box;
+	padding: 24px 12px;
+}
+
+#fatalError.compatibility-error > table {
+	margin: 0 auto;
+	width: 100%;
+	max-width: 640px;
+	table-layout: fixed;
+}
+
+#fatalError.compatibility-error td {
+	padding: 12px;
+	vertical-align: top;
+}
+
+#fatalError.compatibility-error .compatibility-details,
+#fatalError.compatibility-error .error-msg {
+	overflow-wrap: anywhere;
+	word-wrap: break-word;
+	line-height: 1.5;
+}
+
+#fatalError .compatibility-details details {
+	margin: 12px 0;
+}
+
+#fatalError .compatibility-details summary {
+	cursor: pointer;
+	font-weight: bold;
+}
+
+#fatalError .compatibility-details li {
+	margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+	#fatalError.compatibility-error #fatalError-icon { display: none; }
+}
+
 .reset-btn {
     border: none;
     margin: 0;

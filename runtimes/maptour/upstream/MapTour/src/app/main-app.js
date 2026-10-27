@@ -12,15 +12,18 @@ else {
 	dojo.addOnLoad(function() {
 		require([
 				"dojo/i18n!./resources/nls/template.js?v=" + version,
+				"./resources/nls/template.js?v=" + version,
 				"storymaps/ui/loadingIndicator/LoadingIndicator",
 				"dojo/domReady!",
 				"dojo/ready"
 			], function(
 				_i18n,
+				rootMessages,
 				LoadingIndicator
 			){
 
 				i18n = _i18n;
+				i18n.viewer.compatibility = i18n.viewer.compatibility || rootMessages.root.viewer.compatibility;
 				loadingIndicator = new LoadingIndicator("", "loadingMessage");
 				loadingIndicator.setMessage(i18n.viewer.loading.step1);
 

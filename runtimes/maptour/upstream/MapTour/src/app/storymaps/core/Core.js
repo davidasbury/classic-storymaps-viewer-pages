@@ -31,7 +31,8 @@ define(["esri/map",
 		"dojo/DeferredList",
 		"dojo/query",
 		"esri/geometry/Extent",
-		"storymaps/utils/arcgis-html-sanitizer"],
+		"storymaps/utils/arcgis-html-sanitizer",
+		"storymaps/utils/WebMapCompatibility"],
 	function(
 		Map,
 		arcgisPortal,
@@ -62,7 +63,8 @@ define(["esri/map",
 		DeferredList,
 		query,
 		Extent,
-		Sanitizer)
+		Sanitizer,
+		WebMapCompatibility)
 	{
 		/**
 		 * Core
@@ -824,7 +826,7 @@ define(["esri/map",
 
 		function loadWebMap(webmapIdOrJSON)
 		{
-			console.log("maptour.core.Core - loadWebMap - webmapId:", webmapIdOrJSON);
+			var compatibilityResult = { mapId: typeof webmapIdOrJSON === "string" && /^[a-f0-9]{32}$/i.test(webmapIdOrJSON) ? webmapIdOrJSON : null };
 
 			// Fix a Chrome freeze when map have a large initial extent (level 16 and up)
 			// Set the zoomDuration to 50ms, set back to default in see MainView.displayApp
@@ -834,9 +836,10 @@ define(["esri/map",
 				esriConfig.defaults.map.zoomDuration = 5;
 			}
 
-			sanitizeDeletedOperationalLayers(webmapIdOrJSON).then(
+			sanitizeDeletedOperationalLayers(webmapIdOrJSON).then(prepareCompatibleWebMap).then(
 				function(webmapToLoad){
-					arcgisUtils.createMap(webmapToLoad, "mainMap", {
+					compatibilityResult = webmapToLoad;
+					arcgisUtils.createMap(webmapToLoad.itemInfo, "mainMap", {
 						mapOptions: {
 							slider: true,
 							autoResize: false,
@@ -861,15 +864,59 @@ define(["esri/map",
 						lang.hitch(this, function(response){
 							webMapInitCallback(response);
 						}),
-						lang.hitch(this, function(){
-							initError("createMap");
+						lang.hitch(this, function(error){
+							initError("createMap", { result: compatibilityResult, reason: WebMapCompatibility.failureReason(compatibilityResult, error) });
 						})
 					);
 				},
-				function(){
-					initError("createMap");
+				function(error){
+					initError("createMap", { result: compatibilityResult, reason: WebMapCompatibility.failureReason(compatibilityResult, error) });
 				}
 			);
+		}
+
+		function prepareCompatibleWebMap(itemInfo)
+		{
+			if (!itemInfo || !itemInfo.itemData || app.isInBuilderMode) {
+				return { itemInfo: itemInfo, mapId: typeof itemInfo === "string" && /^[a-f0-9]{32}$/i.test(itemInfo) ? itemInfo : null };
+			}
+			if (!window.Promise || !window.URL || !window.fetch || !window.AbortController) {
+				return { itemInfo: itemInfo, mapId: itemInfo.item && /^[a-f0-9]{32}$/i.test(itemInfo.item.id) ? itemInfo.item.id : null };
+			}
+			return window.Promise.resolve().then(function() {
+				return WebMapCompatibility.prepare(itemInfo, probeCompatibilityURL);
+			}).then(null, function() {
+				return { itemInfo: itemInfo, mapId: itemInfo.item && /^[a-f0-9]{32}$/i.test(itemInfo.item.id) ? itemInfo.item.id : null,
+					issues: [], changes: [] };
+			});
+		}
+
+		function probeCompatibilityURL(url)
+		{
+			var service = WebMapCompatibility.serviceURL(url);
+			var credential = service && IdentityManager.findCredential(url);
+			if (credential) {
+				var request = esriRequest({ url: url, content: { f: "json" } });
+				var authenticated = window.Promise.resolve(request).then(function(data) {
+					return { ok: !!data && !data.error && (data.type || typeof data.singleFusedMapCache === "boolean"), data: data };
+				});
+				authenticated.cancel = function() { if (request.cancel) request.cancel(); };
+				return authenticated;
+			}
+			var controller = new window.AbortController();
+			var target = new window.URL(url);
+			if (service) target.searchParams.set("f", "json");
+			var pending = window.fetch(target.href, { credentials: "omit", redirect: "error", signal: controller.signal }).then(function(response) {
+				if (response.status !== 200 || response.type === "opaque") return { ok: false };
+				if (service) return response.json().then(function(data) {
+					return { ok: !!data && !data.error && !!(data.type || typeof data.singleFusedMapCache === "boolean"), data: data };
+				});
+				var contentType = response.headers.get("content-type") || "";
+				if (response.body && response.body.cancel) response.body.cancel();
+				return { ok: /^(image\/|audio\/|video\/|application\/(?:json|pdf|octet-stream))/i.test(contentType) };
+			});
+			pending.cancel = function() { controller.abort(); };
+			return pending;
 		}
 
 		function sanitizeDeletedOperationalLayers(webmapIdOrJSON)
@@ -902,8 +949,13 @@ define(["esri/map",
 				var webmapItem = results[0] && results[0][0] ? results[0][1] : null;
 				var webmapData = results[1] && results[1][0] ? results[1][1] : null;
 
-				if( ! webmapItem || ! webmapData || ! webmapData.operationalLayers || ! webmapData.operationalLayers.length ) {
+				if( ! webmapItem || ! webmapData ) {
 					resultDeferred.resolve(webmapIdOrJSON);
+					return;
+				}
+				var originalWebmap = { item: webmapItem, itemData: webmapData };
+				if (!Array.isArray(webmapData.operationalLayers) || !webmapData.operationalLayers.length) {
+					resultDeferred.resolve(originalWebmap);
 					return;
 				}
 
@@ -920,7 +972,7 @@ define(["esri/map",
 				});
 
 				if( ! layerChecks.length ) {
-					resultDeferred.resolve(webmapIdOrJSON);
+					resultDeferred.resolve(originalWebmap);
 					return;
 				}
 
@@ -947,7 +999,7 @@ define(["esri/map",
 					});
 
 					if( ! droppedCount ) {
-						resultDeferred.resolve(webmapIdOrJSON);
+						resultDeferred.resolve(originalWebmap);
 						return;
 					}
 
@@ -1178,6 +1230,9 @@ define(["esri/map",
 			hideUI();
 			cleanLoadingTimeout();
 			$("#loadingIndicator, #loadingMessage").hide();
+			$("#fatalError").removeClass("compatibility-error");
+			$("#fatalError .compatibility-details").empty().hide();
+			$("#fatalError .error-title").text(i18n.viewer.errors.boxTitle);
 
 			if( error == "noLayerView" ) {
 				loadingIndicator.setMessage(i18n.viewer.errors[error], true);
@@ -1203,8 +1258,43 @@ define(["esri/map",
 				//loadingIndicator.forceHide();
 
 			$("#fatalError .error-msg").html(i18n.viewer.errors[error]);
+			if (error === "createMap" && message && message.result) renderCompatibilityError(message);
 			if( ! noDisplay )
 				$("#fatalError").show();
+			if (!noDisplay && error === "createMap" && message && message.result) $("#fatalError").focus();
+		}
+
+		function renderCompatibilityError(context)
+		{
+			var text = i18n.viewer.compatibility;
+			var reason = Object.prototype.hasOwnProperty.call(text.reasons, context.reason) ? context.reason : "unknown";
+			var result = context.result;
+			var container = $("#fatalError .compatibility-details").empty().show();
+			$("#fatalError").addClass("compatibility-error");
+			$("#fatalError .error-title").text(text.title);
+			$("#fatalError .error-msg").text(text.reasons[reason]);
+			$("<p>").text(text.unchanged).appendTo(container);
+			if (result.mapId && /^[a-f0-9]{32}$/i.test(result.mapId)) $("<p>").text(text.mapId + " " + result.mapId).appendTo(container);
+			if (reason === "access" || reason === "network" || reason === "unknown") {
+				$("<p>").text(reason === "access" ? text.accessHelp : text.retryHelp).appendTo(container);
+			} else {
+				var details = $("<details>").appendTo(container);
+				$("<summary>").text(text.repairSteps).appendTo(details);
+				var steps = $("<ol>").appendTo(details);
+				[text.ownerStep, text.backupStep, text.inspectStep, text.repairs[reason] || text.repairs.schema, text.verifyStep].forEach(function(step) {
+					$("<li>").text(step).appendTo(steps);
+				});
+				$("<a>", { href: "https://assistant.esri-ps.com/", target: "_blank", rel: "noopener noreferrer" }).text(text.assistant).appendTo(details);
+				$("<p>").text(text.nonOwner).appendTo(container);
+			}
+			var technical = $("<details>").appendTo(container);
+			$("<summary>").text(text.technicalDetails).appendTo(technical);
+			$("<p>").text(text.reasonCode + " " + reason).appendTo(technical);
+			(result.issues || []).slice(0, 12).forEach(function(issue) {
+				if (/^\/(?:operationalLayers\/\d+|baseMap\/baseMapLayers\/\d+|version)(?:\/(?:url|layerType))?$/.test(issue.path)) {
+					$("<p>").text(text.location + " " + issue.path).appendTo(technical);
+				}
+			});
 		}
 
 		function replaceInitErrorMessage(error)

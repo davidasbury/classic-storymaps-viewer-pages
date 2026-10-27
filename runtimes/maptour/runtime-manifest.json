@@ -60,12 +60,13 @@
     "notes": "Capture runtime-specific viewer-only differences as explicit patches."
   },
   "patches": {
-    "patchSetId": "maptour-production-alignment-v2",
+    "patchSetId": "maptour-production-alignment-v3",
     "files": [
       "runtimes/maptour/patches/0001-production-behavior-align.patch",
-      "runtimes/maptour/patches/0002-iis-web-config-addition.patch"
+      "runtimes/maptour/patches/0002-iis-web-config-addition.patch",
+      "runtimes/maptour/patches/0003-runtime-webmap-compatibility.patch"
     ],
-    "rationale": "Align imported runtime behavior and IIS deploy profile with known-working production artifacts."
+    "rationale": "Align imported runtime behavior and IIS deploy profile, with viewer-only in-memory web map compatibility repairs and actionable loading errors."
   },
   "verification": {
     "smokeProfile": "maptour-baseline",

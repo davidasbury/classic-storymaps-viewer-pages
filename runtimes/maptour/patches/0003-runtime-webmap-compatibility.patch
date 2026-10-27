@@ -1,0 +1,575 @@
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/main-app.js b/runtimes/maptour/upstream/MapTour/src/app/main-app.js
+index 174b25f..20af959 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/main-app.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/main-app.js
+@@ -12,15 +12,18 @@ else {
+ 	dojo.addOnLoad(function() {
+ 		require([
+ 				"dojo/i18n!./resources/nls/template.js?v=" + version,
++				"./resources/nls/template.js?v=" + version,
+ 				"storymaps/ui/loadingIndicator/LoadingIndicator",
+ 				"dojo/domReady!",
+ 				"dojo/ready"
+ 			], function(
+ 				_i18n,
++				rootMessages,
+ 				LoadingIndicator
+ 			){
+ 
+ 				i18n = _i18n;
++				i18n.viewer.compatibility = i18n.viewer.compatibility || rootMessages.root.viewer.compatibility;
+ 				loadingIndicator = new LoadingIndicator("", "loadingMessage");
+ 				loadingIndicator.setMessage(i18n.viewer.loading.step1);
+ 
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
+index 747ec11..d3c2d6b 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.css
+@@ -209,6 +209,50 @@ body.isEmbed ::-webkit-scrollbar-track {
+ 	background-repeat: no-repeat;
+ }
+ 
++#fatalError.compatibility-error {
++	top: 0;
++	bottom: 0;
++	overflow-y: auto;
++	box-sizing: border-box;
++	padding: 24px 12px;
++}
++
++#fatalError.compatibility-error > table {
++	margin: 0 auto;
++	width: 100%;
++	max-width: 640px;
++	table-layout: fixed;
++}
++
++#fatalError.compatibility-error td {
++	padding: 12px;
++	vertical-align: top;
++}
++
++#fatalError.compatibility-error .compatibility-details,
++#fatalError.compatibility-error .error-msg {
++	overflow-wrap: anywhere;
++	word-wrap: break-word;
++	line-height: 1.5;
++}
++
++#fatalError .compatibility-details details {
++	margin: 12px 0;
++}
++
++#fatalError .compatibility-details summary {
++	cursor: pointer;
++	font-weight: bold;
++}
++
++#fatalError .compatibility-details li {
++	margin-bottom: 8px;
++}
++
++@media (max-width: 480px) {
++	#fatalError.compatibility-error #fatalError-icon { display: none; }
++}
++
+ .reset-btn {
+     border: none;
+     margin: 0;
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.js
+index 6ad1729..e181b04 100644
+--- a/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.js
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/core/Core.js
+@@ -31,7 +31,8 @@ define(["esri/map",
+ 		"dojo/DeferredList",
+ 		"dojo/query",
+ 		"esri/geometry/Extent",
+-		"storymaps/utils/arcgis-html-sanitizer"],
++		"storymaps/utils/arcgis-html-sanitizer",
++		"storymaps/utils/WebMapCompatibility"],
+ 	function(
+ 		Map,
+ 		arcgisPortal,
+@@ -62,7 +63,8 @@ define(["esri/map",
+ 		DeferredList,
+ 		query,
+ 		Extent,
+-		Sanitizer)
++		Sanitizer,
++		WebMapCompatibility)
+ 	{
+ 		/**
+ 		 * Core
+@@ -824,7 +826,7 @@ define(["esri/map",
+ 
+ 		function loadWebMap(webmapIdOrJSON)
+ 		{
+-			console.log("maptour.core.Core - loadWebMap - webmapId:", webmapIdOrJSON);
++			var compatibilityResult = { mapId: typeof webmapIdOrJSON === "string" && /^[a-f0-9]{32}$/i.test(webmapIdOrJSON) ? webmapIdOrJSON : null };
+ 
+ 			// Fix a Chrome freeze when map have a large initial extent (level 16 and up)
+ 			// Set the zoomDuration to 50ms, set back to default in see MainView.displayApp
+@@ -834,9 +836,10 @@ define(["esri/map",
+ 				esriConfig.defaults.map.zoomDuration = 5;
+ 			}
+ 
+-			sanitizeDeletedOperationalLayers(webmapIdOrJSON).then(
++			sanitizeDeletedOperationalLayers(webmapIdOrJSON).then(prepareCompatibleWebMap).then(
+ 				function(webmapToLoad){
+-					arcgisUtils.createMap(webmapToLoad, "mainMap", {
++					compatibilityResult = webmapToLoad;
++					arcgisUtils.createMap(webmapToLoad.itemInfo, "mainMap", {
+ 						mapOptions: {
+ 							slider: true,
+ 							autoResize: false,
+@@ -861,17 +864,61 @@ define(["esri/map",
+ 						lang.hitch(this, function(response){
+ 							webMapInitCallback(response);
+ 						}),
+-						lang.hitch(this, function(){
+-							initError("createMap");
++						lang.hitch(this, function(error){
++							initError("createMap", { result: compatibilityResult, reason: WebMapCompatibility.failureReason(compatibilityResult, error) });
+ 						})
+ 					);
+ 				},
+-				function(){
+-					initError("createMap");
++				function(error){
++					initError("createMap", { result: compatibilityResult, reason: WebMapCompatibility.failureReason(compatibilityResult, error) });
+ 				}
+ 			);
+ 		}
+ 
++		function prepareCompatibleWebMap(itemInfo)
++		{
++			if (!itemInfo || !itemInfo.itemData || app.isInBuilderMode) {
++				return { itemInfo: itemInfo, mapId: typeof itemInfo === "string" && /^[a-f0-9]{32}$/i.test(itemInfo) ? itemInfo : null };
++			}
++			if (!window.Promise || !window.URL || !window.fetch || !window.AbortController) {
++				return { itemInfo: itemInfo, mapId: itemInfo.item && /^[a-f0-9]{32}$/i.test(itemInfo.item.id) ? itemInfo.item.id : null };
++			}
++			return window.Promise.resolve().then(function() {
++				return WebMapCompatibility.prepare(itemInfo, probeCompatibilityURL);
++			}).then(null, function() {
++				return { itemInfo: itemInfo, mapId: itemInfo.item && /^[a-f0-9]{32}$/i.test(itemInfo.item.id) ? itemInfo.item.id : null,
++					issues: [], changes: [] };
++			});
++		}
++
++		function probeCompatibilityURL(url)
++		{
++			var service = WebMapCompatibility.serviceURL(url);
++			var credential = service && IdentityManager.findCredential(url);
++			if (credential) {
++				var request = esriRequest({ url: url, content: { f: "json" } });
++				var authenticated = window.Promise.resolve(request).then(function(data) {
++					return { ok: !!data && !data.error && (data.type || typeof data.singleFusedMapCache === "boolean"), data: data };
++				});
++				authenticated.cancel = function() { if (request.cancel) request.cancel(); };
++				return authenticated;
++			}
++			var controller = new window.AbortController();
++			var target = new window.URL(url);
++			if (service) target.searchParams.set("f", "json");
++			var pending = window.fetch(target.href, { credentials: "omit", redirect: "error", signal: controller.signal }).then(function(response) {
++				if (response.status !== 200 || response.type === "opaque") return { ok: false };
++				if (service) return response.json().then(function(data) {
++					return { ok: !!data && !data.error && !!(data.type || typeof data.singleFusedMapCache === "boolean"), data: data };
++				});
++				var contentType = response.headers.get("content-type") || "";
++				if (response.body && response.body.cancel) response.body.cancel();
++				return { ok: /^(image\/|audio\/|video\/|application\/(?:json|pdf|octet-stream))/i.test(contentType) };
++			});
++			pending.cancel = function() { controller.abort(); };
++			return pending;
++		}
++
+ 		function sanitizeDeletedOperationalLayers(webmapIdOrJSON)
+ 		{
+ 			var resultDeferred = new Deferred();
+@@ -902,10 +949,15 @@ define(["esri/map",
+ 				var webmapItem = results[0] && results[0][0] ? results[0][1] : null;
+ 				var webmapData = results[1] && results[1][0] ? results[1][1] : null;
+ 
+-				if( ! webmapItem || ! webmapData || ! webmapData.operationalLayers || ! webmapData.operationalLayers.length ) {
++				if( ! webmapItem || ! webmapData ) {
+ 					resultDeferred.resolve(webmapIdOrJSON);
+ 					return;
+ 				}
++				var originalWebmap = { item: webmapItem, itemData: webmapData };
++				if (!Array.isArray(webmapData.operationalLayers) || !webmapData.operationalLayers.length) {
++					resultDeferred.resolve(originalWebmap);
++					return;
++				}
+ 
+ 				var layerChecks = [];
+ 				array.forEach(webmapData.operationalLayers, function(layer, index){
+@@ -920,7 +972,7 @@ define(["esri/map",
+ 				});
+ 
+ 				if( ! layerChecks.length ) {
+-					resultDeferred.resolve(webmapIdOrJSON);
++					resultDeferred.resolve(originalWebmap);
+ 					return;
+ 				}
+ 
+@@ -947,7 +999,7 @@ define(["esri/map",
+ 					});
+ 
+ 					if( ! droppedCount ) {
+-						resultDeferred.resolve(webmapIdOrJSON);
++						resultDeferred.resolve(originalWebmap);
+ 						return;
+ 					}
+ 
+@@ -1178,6 +1230,9 @@ define(["esri/map",
+ 			hideUI();
+ 			cleanLoadingTimeout();
+ 			$("#loadingIndicator, #loadingMessage").hide();
++			$("#fatalError").removeClass("compatibility-error");
++			$("#fatalError .compatibility-details").empty().hide();
++			$("#fatalError .error-title").text(i18n.viewer.errors.boxTitle);
+ 
+ 			if( error == "noLayerView" ) {
+ 				loadingIndicator.setMessage(i18n.viewer.errors[error], true);
+@@ -1203,8 +1258,43 @@ define(["esri/map",
+ 				//loadingIndicator.forceHide();
+ 
+ 			$("#fatalError .error-msg").html(i18n.viewer.errors[error]);
++			if (error === "createMap" && message && message.result) renderCompatibilityError(message);
+ 			if( ! noDisplay )
+ 				$("#fatalError").show();
++			if (!noDisplay && error === "createMap" && message && message.result) $("#fatalError").focus();
++		}
++
++		function renderCompatibilityError(context)
++		{
++			var text = i18n.viewer.compatibility;
++			var reason = Object.prototype.hasOwnProperty.call(text.reasons, context.reason) ? context.reason : "unknown";
++			var result = context.result;
++			var container = $("#fatalError .compatibility-details").empty().show();
++			$("#fatalError").addClass("compatibility-error");
++			$("#fatalError .error-title").text(text.title);
++			$("#fatalError .error-msg").text(text.reasons[reason]);
++			$("<p>").text(text.unchanged).appendTo(container);
++			if (result.mapId && /^[a-f0-9]{32}$/i.test(result.mapId)) $("<p>").text(text.mapId + " " + result.mapId).appendTo(container);
++			if (reason === "access" || reason === "network" || reason === "unknown") {
++				$("<p>").text(reason === "access" ? text.accessHelp : text.retryHelp).appendTo(container);
++			} else {
++				var details = $("<details>").appendTo(container);
++				$("<summary>").text(text.repairSteps).appendTo(details);
++				var steps = $("<ol>").appendTo(details);
++				[text.ownerStep, text.backupStep, text.inspectStep, text.repairs[reason] || text.repairs.schema, text.verifyStep].forEach(function(step) {
++					$("<li>").text(step).appendTo(steps);
++				});
++				$("<a>", { href: "https://assistant.esri-ps.com/", target: "_blank", rel: "noopener noreferrer" }).text(text.assistant).appendTo(details);
++				$("<p>").text(text.nonOwner).appendTo(container);
++			}
++			var technical = $("<details>").appendTo(container);
++			$("<summary>").text(text.technicalDetails).appendTo(technical);
++			$("<p>").text(text.reasonCode + " " + reason).appendTo(technical);
++			(result.issues || []).slice(0, 12).forEach(function(issue) {
++				if (/^\/(?:operationalLayers\/\d+|baseMap\/baseMapLayers\/\d+|version)(?:\/(?:url|layerType))?$/.test(issue.path)) {
++					$("<p>").text(text.location + " " + issue.path).appendTo(technical);
++				}
++			});
+ 		}
+ 
+ 		function replaceInitErrorMessage(error)
+diff --git a/runtimes/maptour/upstream/MapTour/src/index.html b/runtimes/maptour/upstream/MapTour/src/index.html
+index 436e02f..04f685f 100644
+--- a/runtimes/maptour/upstream/MapTour/src/index.html
++++ b/runtimes/maptour/upstream/MapTour/src/index.html
+@@ -1224,13 +1224,14 @@
+ 		</div>
+ 
+ 		<!-- Fatal error box -->
+-		<div id="fatalError">
++		<div id="fatalError" role="alert" tabindex="-1">
+ 			<table border="0">
+ 				<tr>
+ 					<td id="fatalError-icon" style="width:70px; text-align: center"></td>
+ 					<td>
+ 						<strong class="error-title"></strong>
+ 						<p class="error-msg"></p>
++						<div class="compatibility-details" style="display:none"></div>
+ 					</td>
+ 				</tr>
+ 			</table>
+diff --git a/runtimes/maptour/upstream/MapTour/src/resources/nls/template.js b/runtimes/maptour/upstream/MapTour/src/resources/nls/template.js
+index 1b5c7d9..96d53a4 100644
+--- a/runtimes/maptour/upstream/MapTour/src/resources/nls/template.js
++++ b/runtimes/maptour/upstream/MapTour/src/resources/nls/template.js
+@@ -1,6 +1,40 @@
+ define({
+ 	root: ({
+ 		viewer: {
++			compatibility: {
++				title: "This web map could not be loaded",
++				unchanged: "No changes were saved to the original map or story.",
++				mapId: "Web map ID:",
++				repairSteps: "Repair steps for map owners",
++				technicalDetails: "Technical details",
++				reasonCode: "Diagnostic code:",
++				location: "JSON location:",
++				assistant: "Open ArcGIS Assistant",
++				ownerStep: "Sign in to ArcGIS Assistant with an account authorized to edit this web map. Locate the web map using the ID above.",
++				backupStep: "Back up the map's Item Data JSON and test changes on a disposable copy first. Editing the original can affect other apps that use it.",
++				inspectStep: "Inspect Item Data, not Item Description or the story's configuration.",
++				verifyStep: "Verify the repaired map, then reload this viewer. Prefer supported ArcGIS editing tools when they can make the repair.",
++				nonOwner: "If you cannot edit this map, contact its owner or the story owner with the web map ID and diagnostic code.",
++				accessHelp: "Sign in with an account that can access the map and its layers. Ask the owner to check their sharing settings if access is still denied.",
++				retryHelp: "Check your connection and try loading the story again. If it still fails, contact the owner with the web map ID and diagnostic code.",
++				reasons: {
++					access: "The map request reported an authentication or access error.",
++					network: "A map request timed out. Editing the map JSON may not resolve a connection problem.",
++					basemap_structure: "The map could not load, and its legacy basemap contains settings the viewer cannot safely replace automatically.",
++					basemap_unverified: "The map could not load, and the viewer could not verify the replacement Ocean basemap. The service may be unavailable or the request may be blocked.",
++					layer_type: "The map could not load, and the viewer could not safely determine a layer's type or resolve a conflicting layerType.",
++					schema: "The map could not load, and its structure or version could not be safely upgraded in memory.",
++					https_unverified: "The map could not load, and one or more HTTP URLs could not be verified over HTTPS. This does not establish that the service is permanently unavailable.",
++					unknown: "The viewer could not determine why this map failed to load."
++				},
++				repairs: {
++					basemap_structure: "Review the original basemap settings. The known Ocean replacement uses Ocean/World_Ocean_Base/MapServer and Ocean/World_Ocean_Reference/MapServer on https://services.arcgisonline.com/arcgis/rest/services/. Preserve settings and mark the reference layer isReference: true.",
++					basemap_unverified: "Check HTTPS access to the World Ocean Base and World Ocean Reference services before changing the map. Do not substitute an unrelated basemap to hide an access or network failure.",
++					layer_type: "Check each operational and basemap layer against its service metadata before adding or correcting layerType. A MapServer can be tiled or dynamic; do not guess.",
++					schema: "Review unsupported layers and the web map schema. Set version to the string 2.0 only after confirming that the layer definitions are compatible; changing version alone is not a repair.",
++					https_unverified: "Verify the corresponding HTTPS endpoints and update only those that work. Light Gray Canvas uses Canvas/World_Light_Gray_Base/MapServer and Canvas/World_Light_Gray_Reference/MapServer on https://services.arcgisonline.com/ArcGIS/rest/services/."
++				}
++			},
+ 			loading: {
+ 				step1: "LOADING STORY",
+ 				step2: "LOADING DATA",
+diff --git a/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WebMapCompatibility.js b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WebMapCompatibility.js
+new file mode 100644
+index 0000000..90fc85a
+--- /dev/null
++++ b/runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/WebMapCompatibility.js
+@@ -0,0 +1,224 @@
++define([], function() {
++	var oceanSource = "https://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer";
++	var oceanBase = "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer";
++	var oceanReference = "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer";
++
++	function secureURL(value) {
++		try {
++			if (typeof value !== "string") return null;
++			var parsed = new window.URL(value);
++			if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password ||
++				parsed.port || /^https?:\/\/[^/]*:\d+/i.test(value) || /[{}\\\s]/.test(value) ||
++				/(?:https?:\/\/)/i.test(decodeURIComponent(parsed.search)) ||
++				/(?:token|credential|password|signature|api[-_]?key)/i.test(decodeURIComponent(parsed.search))) return null;
++			return value.replace(/^http:/i, "https:");
++		} catch (error) {
++			return null;
++		}
++	}
++
++	function serviceURL(value) {
++		var secure = secureURL(value);
++		return !!secure && (/\/(?:MapServer|ImageServer|FeatureServer(?:\/\d+)?)\/?$/).test(new window.URL(secure).pathname);
++	}
++
++	function scanStrings(value, visitor, location) {
++		location = location || "";
++		if (typeof value === "string") return visitor(value, location);
++		if (value && typeof value === "object") {
++			Object.keys(value).forEach(function(key) {
++				value[key] = scanStrings(value[key], visitor, location + "/" + key.replace(/~/g, "~0").replace(/\//g, "~1"));
++			});
++		}
++		return value;
++	}
++
++	function replaceURLs(text, visitor) {
++		return text.replace(/\bhttp:\/\/[^\s<>"']+/gi, function(match, offset) {
++			var prefix = text.slice(0, offset).split(/[\s"'<>(]/).pop();
++			if (prefix.indexOf("://") !== -1) return match;
++			var url = match.replace(/[.,;!]+$/, "");
++			while (/\)$/.test(url) && (url.match(/\)/g) || []).length > (url.match(/\(/g) || []).length) url = url.slice(0, -1);
++			var decoded = url.replace(/&amp;/g, "&");
++			var replacement = visitor(decoded);
++			if (replacement === decoded) return match;
++			return (url.indexOf("&amp;") !== -1 ? replacement.replace(/&/g, "&amp;") : replacement) + match.slice(url.length);
++		});
++	}
++
++	function roots(data) {
++		return (Array.isArray(data.operationalLayers) ? data.operationalLayers : []).concat(
++			data.baseMap && Array.isArray(data.baseMap.baseMapLayers) ? data.baseMap.baseMapLayers : []);
++	}
++
++	function requests(itemInfo) {
++		var data = JSON.parse(JSON.stringify(itemInfo.itemData || {}));
++		var urls = [];
++		function add(url) {
++			var secure = secureURL(url);
++			if (secure && urls.indexOf(secure) === -1) urls.push(secure);
++		}
++		roots(data).forEach(function(layer) {
++			if (!layer || typeof layer.url !== "string") return;
++			if (secureURL(layer.url) === oceanSource) {
++				add(oceanBase);
++				add(oceanReference);
++			} else if (serviceURL(layer.url) && (!layer.layerType || /^http:/i.test(layer.url))) add(layer.url);
++		});
++		scanStrings(data, function(text) {
++			replaceURLs(text, function(url) { if (secureURL(url) !== oceanSource) add(url); return url; });
++			return text;
++		});
++		return urls;
++	}
++
++	function cached(metadata) {
++		return metadata && !metadata.error && metadata.singleFusedMapCache === true && metadata.tileInfo;
++	}
++
++	function matchingTiles(base, reference) {
++		if (!cached(base) || !cached(reference)) return false;
++		var first = base.tileInfo;
++		var second = reference.tileInfo;
++		if (!first.spatialReference || !second.spatialReference || !first.origin || !second.origin ||
++			!Array.isArray(first.lods) || !first.lods.length || !Array.isArray(second.lods)) return false;
++		return first.rows === second.rows && first.cols === second.cols && first.dpi === second.dpi &&
++			(first.spatialReference.latestWkid || first.spatialReference.wkid) === (second.spatialReference.latestWkid || second.spatialReference.wkid) &&
++			JSON.stringify(first.origin) === JSON.stringify(second.origin) && JSON.stringify(first.lods) === JSON.stringify(second.lods);
++	}
++
++	function normalize(itemInfo, evidence) {
++		evidence = evidence || {};
++		var copy = JSON.parse(JSON.stringify(itemInfo));
++		var data = copy.itemData || {};
++		var issues = [];
++		var changes = [];
++		var mapId = itemInfo.item && /^[a-f0-9]{32}$/i.test(itemInfo.item.id) ? itemInfo.item.id : null;
++		function issue(code, location) { issues.push({ code: code, path: location }); }
++		var baseLayers = data.baseMap && Array.isArray(data.baseMap.baseMapLayers) ? data.baseMap.baseMapLayers : [];
++		baseLayers.forEach(function(layer, index) {
++			if (!layer || secureURL(layer.url) !== oceanSource) return;
++			var allowed = ["id", "url", "opacity", "visibility", "title", "layerType", "baseMapLayer", "basemapLayer"];
++			if (baseLayers.length !== 1 || Object.keys(layer).some(function(key) { return allowed.indexOf(key) === -1; }) ||
++				("baseMapLayer" in layer && layer.baseMapLayer !== true) ||
++				("basemapLayer" in layer && layer.basemapLayer !== true) ||
++				(layer.layerType && layer.layerType !== "ArcGISTiledMapServiceLayer")) {
++				issue("basemap_structure", "/baseMap/baseMapLayers/" + index);
++				return;
++			}
++			if (!evidence[oceanBase] || !evidence[oceanBase].ok || !evidence[oceanReference] || !evidence[oceanReference].ok ||
++				!matchingTiles(evidence[oceanBase].data, evidence[oceanReference].data)) {
++				issue("basemap_unverified", "/baseMap/baseMapLayers/" + index);
++				return;
++			}
++			layer.url = oceanBase;
++			layer.layerType = "ArcGISTiledMapServiceLayer";
++			var referenceId = "compat-ocean-reference";
++			var existingIds = roots(data).map(function(entry) { return entry && entry.id; });
++			while (existingIds.indexOf(referenceId) !== -1) referenceId += "-reference";
++			baseLayers.push({ id: referenceId, url: oceanReference, layerType: "ArcGISTiledMapServiceLayer",
++				title: "World Ocean Reference", isReference: true,
++				opacity: layer.opacity === undefined ? 1 : layer.opacity,
++				visibility: layer.visibility === undefined ? true : layer.visibility });
++			changes.push("ocean_basemap");
++		});
++		scanStrings(data, function(text, location) {
++			return replaceURLs(text, function(url) {
++				var secure = secureURL(url);
++				var proof = secure && evidence[secure];
++				if (proof && proof.ok && (!serviceURL(secure) || proof.data && !proof.data.error)) {
++					changes.push("https");
++					return secure;
++				}
++				issue("https_unverified", location);
++				return url;
++			});
++		});
++		var schemaReady = true;
++		if (!Array.isArray(data.operationalLayers) || !data.baseMap || !Array.isArray(data.baseMap.baseMapLayers) ||
++			(data.tables && (!Array.isArray(data.tables) || data.tables.length))) schemaReady = false;
++		roots(data).forEach(function(layer, index) {
++			var operationalCount = Array.isArray(data.operationalLayers) ? data.operationalLayers.length : 0;
++			var location = index < operationalCount ? "/operationalLayers/" + index : "/baseMap/baseMapLayers/" + (index - operationalCount);
++			if (!layer || layer.layers || layer.featureCollection || !layer.url) {
++				schemaReady = false;
++				issue("layer_structure", location);
++				return;
++			}
++			var secure = secureURL(layer.url);
++			var metadata = secure && evidence[secure] && evidence[secure].data;
++			var pathname = secure ? new window.URL(secure).pathname : "";
++			var expected = /\/FeatureServer\/\d+\/?$/.test(pathname) ? "ArcGISFeatureLayer" :
++				/\/ImageServer\/?$/.test(pathname) ? "ArcGISImageServiceLayer" : null;
++			if (/\/MapServer\/?$/.test(pathname) && metadata && !metadata.error) {
++				if (cached(metadata)) expected = "ArcGISTiledMapServiceLayer";
++				else if (metadata.singleFusedMapCache === false) expected = "ArcGISMapServiceLayer";
++			}
++			if (!metadata && /\/MapServer\/?$/.test(pathname) &&
++				["ArcGISTiledMapServiceLayer", "ArcGISMapServiceLayer"].indexOf(layer.layerType) !== -1) expected = layer.layerType;
++			if (!expected || layer.layerType && layer.layerType !== expected) {
++				schemaReady = false;
++				issue("layer_type", location);
++			} else if (!layer.layerType) {
++				layer.layerType = expected;
++				changes.push("layer_type");
++			}
++		});
++		if (typeof data.version === "string" && /^1\.\d+$/.test(data.version) && schemaReady) {
++			data.version = "2.0";
++			changes.push("version");
++		} else if (typeof data.version !== "string" || !/^2\.\d+(?:\.\d+)?$/.test(data.version)) issue("schema", "/version");
++		return { itemInfo: copy, mapId: mapId, issues: issues, changes: changes };
++	}
++
++	function prepare(itemInfo, probe, options) {
++		options = options || {};
++		var timeout = options.timeout || 4000;
++		var deadline = Date.now() + (options.budget || 12000);
++		var pending = requests(itemInfo).slice(0, 32);
++		var evidence = {};
++		var next = 0;
++		function worker() {
++			if (next >= pending.length || Date.now() >= deadline) return window.Promise.resolve();
++			var url = pending[next++];
++			return new window.Promise(function(resolve) {
++				var finished = false;
++				var cancel;
++				var timer = setTimeout(function() {
++					try { if (cancel) cancel(); } catch (error) { complete({ ok: false }); }
++					complete({ ok: false });
++				}, Math.min(timeout, Math.max(1, deadline - Date.now())));
++				function complete(result) {
++					if (finished) return;
++					finished = true;
++					clearTimeout(timer);
++					evidence[url] = result || { ok: false };
++					resolve();
++				}
++				try {
++					var request = probe(url);
++					cancel = request.cancel;
++					window.Promise.resolve(request).then(complete, function() { complete({ ok: false }); });
++				} catch (error) { complete({ ok: false }); }
++			}).then(worker);
++		}
++		return window.Promise.all([worker(), worker(), worker(), worker()]).then(function() { return normalize(itemInfo, evidence); });
++	}
++
++	function failureReason(result, error) {
++		var code = error && (error.code || error.status || error.response && error.response.status);
++		if ([401, 403, 498, 499].indexOf(Number(code)) !== -1) return "access";
++		if (error && (error.dojoType === "timeout" || error.name === "TimeoutError")) return "network";
++		var issues = result && result.issues || [];
++		var codes = issues.map(function(entry) { return entry.code; });
++		if (codes.indexOf("basemap_structure") !== -1) return "basemap_structure";
++		if (codes.indexOf("basemap_unverified") !== -1) return "basemap_unverified";
++		if (codes.indexOf("layer_type") !== -1) return "layer_type";
++		if (codes.indexOf("layer_structure") !== -1 || codes.indexOf("schema") !== -1) return "schema";
++		if (codes.indexOf("https_unverified") !== -1) return "https_unverified";
++		return "unknown";
++	}
++
++	return { requests: requests, normalize: normalize, prepare: prepare, failureReason: failureReason,
++		secureURL: secureURL, serviceURL: serviceURL };
++});
+\ No newline at end of file
