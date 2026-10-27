@@ -1,7 +1,7 @@
 (function() {
   "use strict";
 
-  var viewerPath = String(window.location.pathname || "").match(/^(.*\/viewers)(?:\/[^/]*)?$/i);
+  var viewerPath = String(window.location.pathname || "").match(/^(.*?\/viewers)(?:\/.*)?$/i);
   var BASE_PATH = viewerPath ? viewerPath[1] : "/viewers";
   var SITE_BASE_PATH = BASE_PATH.slice(0, -"/viewers".length);
   var LEGACY_BASE_PATHS = [SITE_BASE_PATH + "/templates/classic-storymaps"];

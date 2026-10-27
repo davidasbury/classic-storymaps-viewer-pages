@@ -85,6 +85,29 @@ test('runtime registration rejects absent, expired and malformed catalog cookies
   }
 });
 
+test('pointer preflight does not catch native startup exceptions or complete the loader twice', async () => {
+  let plugin;
+  let completions = 0;
+  const context = {
+    URL,
+    document: { cookie: '', createElement: () => assert.fail('Native failure rendered as a pointer error') },
+    define: (dependencies, factory) => { plugin = factory({}); },
+    window: {
+      location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
+      ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
+      ClassicStoryGallery: { createClient: () => ({}) },
+      ClassicStoryInput: { resolveItem: async () => ({ chain: ['a'.repeat(32)] }) }
+    }
+  };
+  vm.runInNewContext(readFileSync(new URL('../../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js', import.meta.url), 'utf8'), context);
+  await assert.rejects(plugin.load('story', null, permitted => {
+    assert.equal(permitted, true);
+    completions++;
+    throw new Error('Native startup failure');
+  }), /Native startup failure/);
+  assert.equal(completions, 1);
+});
+
 for (const change of ['sign-out', 'expiry', 'replacement']) {
   test('an open runtime clears inherited credentials on catalog ' + change, () => {
     const helpers = require(helperUrl.pathname);

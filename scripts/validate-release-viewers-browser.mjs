@@ -32,6 +32,97 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('pointers')) {
+    for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
+      const { context, page, errors } = await observePage(1280);
+      const pointer = 'a'.repeat(32);
+      const target = 'b'.repeat(32);
+      const result = { runtime, check: 'pointer-startup', wrapperDataRequests: 0 };
+      results.push(result);
+      await context.route('**/*', route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+        if (url.pathname.endsWith('/content/items/' + pointer + '/data')) {
+          result.wrapperDataRequests++;
+          return route.fulfill({ json: {} });
+        }
+        if (url.pathname.endsWith('/content/items/' + pointer)) {
+          return route.fulfill({ json: { id: pointer, type: 'Web Mapping Application', typeKeywords: ['Story Map Cascade'],
+            url: 'https://other-org.maps.arcgis.com/apps/Cascade/?appid=' + target } });
+        }
+        if (url.pathname.endsWith('/content/items/' + target)) {
+          return route.fulfill({ json: { id: target, type: 'Web Mapping Application', typeKeywords: ['Story Map Journal'],
+            url: 'https://www.arcgis.com/apps/MapJournal/?appid=' + target } });
+        }
+        if (url.origin === origin && url.searchParams.get('appid') === target) {
+          return route.fulfill({ contentType: 'text/html', body: '<title>Resolved target</title>' });
+        }
+        return route.continue();
+      });
+      try {
+        await page.goto(origin + basePath + '/viewers/' + runtime + '/index.html?appid=' + pointer + '&embed#section', { waitUntil: 'domcontentloaded' });
+        await page.waitForURL(url => url.searchParams.get('appid') === target, { timeout: 60000 });
+        const destination = new URL(page.url());
+        assert.equal(destination.pathname, basePath + '/viewers/mapjournal/index.html');
+        assert.equal(destination.searchParams.has('embed'), true);
+        assert.equal(destination.hash, '#section');
+        assert.equal(result.wrapperDataRequests, 1);
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+    for (const width of [1280, 390]) {
+      for (const mode of ['public-story', 'unavailable', 'loop']) {
+        const { context, page, errors } = await observePage(width);
+        const pointer = 'a'.repeat(32);
+        const target = mode === 'public-story' ? 'f2e8448fef064238ace4f324ffc16fde' : 'b'.repeat(32);
+        const result = { runtime: 'cascade', width, check: 'pointer-' + mode, wrapperDataRequests: 0 };
+        results.push(result);
+        await context.route('**/*', route => {
+          const request = route.request();
+          const url = new URL(request.url());
+          if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+          if (url.pathname.endsWith('/content/items/' + pointer + '/data')) {
+            result.wrapperDataRequests++;
+            return route.fulfill({ contentType: 'application/json', body: '' });
+          }
+          if (mode === 'loop' && url.pathname.endsWith('/content/items/' + target + '/data')) return route.fulfill({ json: {} });
+          if (url.pathname.endsWith('/content/items/' + pointer)) {
+            return route.fulfill({ json: { id: pointer, type: 'Web Mapping Application',
+              url: 'https://other-org.maps.arcgis.com/apps/Cascade/?appid=' + target } });
+          }
+          if (mode !== 'public-story' && url.pathname.endsWith('/content/items/' + target)) {
+            return route.fulfill({ json: mode === 'unavailable' ? { error: { code: 403, message: 'Not accessible' } }
+              : { id: target, type: 'Web Mapping Application', url: 'https://www.arcgis.com/apps/Cascade/?appid=' + pointer } });
+          }
+          return route.continue();
+        });
+        try {
+          await page.goto(origin + basePath + '/viewers/cascade/index.html?appid=' + pointer, { waitUntil: 'domcontentloaded' });
+          if (mode === 'public-story') {
+            await page.waitForFunction(id => window.app?.data?.appItem?.item?.id === id, target, { timeout: 60000 });
+            await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: 60000 });
+            assert.equal(new URL(page.url()).searchParams.get('appid'), target);
+            assert.ok((await page.locator('body').innerText()).length > 100);
+          } else {
+            await page.getByRole('heading', { name: 'Story unavailable', exact: true }).waitFor({ state: 'visible', timeout: 60000 });
+            assert.match(await page.getByRole('alert').innerText(), mode === 'loop' ? /loop/ : /referenced story is unavailable/);
+            assert.equal(new URL(page.url()).searchParams.get('appid'), pointer);
+            assert.equal(await page.getByRole('link', { name: 'Back to Viewers' }).getAttribute('href'), basePath + '/viewers/');
+          }
+          assert.equal(result.wrapperDataRequests, 1);
+          await page.screenshot({ path: path.join(temporary, 'pointer-' + mode + '-' + width + '.png') });
+          result.pass = true;
+        } catch (error) { result.pass = false; result.failure = error.message; }
+        await context.close();
+        result.pageErrors = errors.filter(message => message.startsWith('page:'));
+        if (result.pageErrors.length) result.pass = false;
+      }
+    }
+  }
   if (selectedRuntimes.has('owner-controls')) {
     const targets = [
       { runtime: 'maptour', appid: '10c62c6bd29f4175b26386aa46cf5a40' },
@@ -175,7 +266,7 @@ try {
           requestPaths.add(url.origin + url.pathname);
           if (url.origin === origin) {
             if (mode === 'cookie-only' && url.pathname.endsWith('/arcgis-runtime-auth.js')) {
-              return route.fulfill({ contentType: 'application/javascript', body: 'define([], function() {});' });
+              return route.fulfill({ contentType: 'application/javascript', body: 'define([], function() { return { load: function(name, require, loaded) { loaded(true); } }; });' });
             }
             return route.continue();
           }
@@ -205,8 +296,11 @@ try {
           })), url: origin, secure: true, sameSite: 'Lax' }]);
           const firstItem = page.waitForResponse(response => response.url().includes('/content/items/' + itemId), { timeout: 30000 });
           firstItem.catch(() => {});
+          const nativeData = mode === 'catalog' ? page.waitForResponse(response => response.url().includes('/content/items/' + itemId + '/data'), { timeout: 30000 }) : null;
+          if (nativeData) nativeData.catch(() => {});
           await page.goto(origin + basePath + '/viewers/' + runtime + '/?appid=' + itemId);
           await firstItem;
+          if (nativeData) await nativeData;
           assert.ok(itemRequests.length, 'Native runtime requested the synthetic private item');
           if (mode === 'catalog') {
             assert.ok(itemRequests.every(Boolean), 'Every private-item request uses the catalog credential');

@@ -664,15 +664,17 @@
       const submit = omniForm.querySelector('button[type="submit"]');
       submit.disabled = true;
       try {
-        resolved = await window.ClassicStoryInput.resolve(submitted, { config: CLASSIC_CONFIG,
+        resolved = await window.ClassicStoryInput.resolveItem(submitted, { config: CLASSIC_CONFIG,
           client: window.ClassicStoryGallery.createClient(), token });
-        item = await fetchArcgisItem(resolved.appId, token);
+        item = resolved.item;
       } catch (error) {
         if (token !== getStoredToken() || submitted !== omniInput.value) return;
         if ([401, 498, 499].includes(error.code) && token) {
           clearStoredToken();
           setAuthUi(null);
           setOmniStatus("Your session expired. Sign in again and retry.", "error");
+        } else if (error.referencedStory) {
+          setOmniStatus(error.message, "error");
         } else if (error.code) {
           setOmniStatus("Item was not found or is not accessible. Sign in if it is restricted.", "error");
         } else {

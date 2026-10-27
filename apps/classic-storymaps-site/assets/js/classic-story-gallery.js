@@ -88,10 +88,14 @@
       return response;
     }
     return {
-      json: async function(url, token, signal) {
+      json: async function(url, token, signal, allowEmpty) {
         var response = await request(url, token, signal);
-        var data = await response.json();
-        if (data.error) {
+        var data;
+        if (allowEmpty) {
+          var text = await response.text();
+          data = text.trim() ? JSON.parse(text) : null;
+        } else data = await response.json();
+        if (data && data.error) {
           var error = new Error('ArcGIS Online could not return these stories.');
           error.code = data.error.code;
           throw error;

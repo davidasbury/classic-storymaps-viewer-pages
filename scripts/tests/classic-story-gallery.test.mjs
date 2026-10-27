@@ -37,6 +37,8 @@ test('runtime classification also recognizes Classic tags', () => {
   const config = configuration('/classic-storymaps-viewer-pages/viewers/');
   assert.equal(config.classifyClassicRuntimeFromItem({ type: 'Web Mapping Application', tags: ['Story Map', 'Story Map Journal'] }), 'mapjournal');
   assert.equal(config.runtimeViewerByApp.mapjournal, '/classic-storymaps-viewer-pages/viewers/mapjournal/index.html');
+  assert.equal(configuration('/classic-storymaps-viewer-pages/viewers/cascade/index.html').runtimeViewerByApp.cascade,
+    '/classic-storymaps-viewer-pages/viewers/cascade/index.html');
 });
 
 const item = (number, overrides = {}) => ({
@@ -88,6 +90,69 @@ test('gallery membership validates owner, type, ID, public access and Classic me
   assert.equal(accept(item(1, { access: 'private' }), ''), null);
   assert.equal(accept(item(1, { access: 'private' })), null);
   assert.equal(accept(item(1, { access: 'private' }), 'owner', 'private').id, item(1).id);
+});
+
+test('story references follow item URLs before selecting the actual runtime', async () => {
+  const config = configuration();
+  const wrapper = item(1, { url: 'https://projectbaseline.maps.arcgis.com/apps/Cascade/index.html?appid=' + item(2).id });
+  const target = item(2, { typeKeywords: ['Story Map Cascade'], url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(2).id });
+  const calls = [];
+  const client = { json: async (url, token) => {
+    assert.equal(url.origin, 'https://www.arcgis.com');
+    assert.equal(token, 'synthetic-pointer-credential');
+    assert.equal(url.searchParams.has('token'), false);
+    calls.push(url.pathname);
+    if (url.pathname.endsWith('/data')) return null;
+    return url.pathname.endsWith(wrapper.id) ? wrapper : target;
+  } };
+  const result = await input().resolveItem(wrapper.id, { client, config, token: 'synthetic-pointer-credential' });
+  assert.equal(result.appId, target.id);
+  assert.equal(result.runtime, 'cascade');
+  assert.deepEqual(result.chain, [wrapper.id, target.id]);
+  assert.equal(calls.length, 3);
+});
+
+test('story references reject loops, unsafe URLs and inaccessible targets', async () => {
+  const config = configuration();
+  const wrapper = item(1, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(2).id });
+  const target = item(2, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + wrapper.id });
+  const client = { json: async url => url.pathname.endsWith('/data') ? null : url.pathname.endsWith(wrapper.id) ? wrapper : target };
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), /loop/);
+  target.url = 'javascript:alert(1)';
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), /HTTP/);
+  client.json = async url => {
+    if (url.pathname.endsWith('/data')) return null;
+    if (url.pathname.endsWith(wrapper.id)) return wrapper;
+    const error = new Error('Denied');
+    error.code = 403;
+    throw error;
+  };
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), error => error.code === 403 && /referenced story is unavailable/.test(error.message));
+});
+
+test('real story data takes precedence over a stale copied URL and references stay bounded', async () => {
+  const config = configuration();
+  const wrapper = item(1, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(2).id });
+  const client = { json: async url => url.pathname.endsWith('/data') ? { values: { story: 'original copy' } } : wrapper };
+  assert.equal((await input().resolveItem(wrapper.id, { client, config })).appId, wrapper.id);
+  let requests = 0;
+  client.json = async url => {
+    requests++;
+    if (url.pathname.endsWith('/data')) return {};
+    const number = parseInt(url.pathname.split('/').pop(), 16);
+    return item(number, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(number + 1).id });
+  };
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), /five-item limit/);
+  assert.equal(requests, 10);
+});
+
+test('REST data reads accept empty pointer bodies but retain ArcGIS errors', async () => {
+  let text = '';
+  const client = gallery().createClient(async () => ({ ok: true, text: async () => text }));
+  const url = new URL('https://www.arcgis.com/sharing/rest/content/items/' + item(1).id + '/data?f=json');
+  assert.equal(await client.json(url, null, null, true), null);
+  text = '{"error":{"code":403}}';
+  await assert.rejects(client.json(url, null, null, true), error => error.code === 403);
 });
 
 test('scope and sharing searches preserve escaping and public-only online searches', () => {

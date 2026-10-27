@@ -60,5 +60,47 @@
     return { appId: [...ids][0], webmap: null };
   }
 
-  return { parse: parse, resolve: resolve };
+  async function resolveItem(value, options) {
+    var input = await resolve(value, options);
+    var visited = new Set();
+    var chain = [];
+    for (var depth = 0; depth < 5; depth++) {
+      if (visited.has(input.appId)) throw new Error('This story reference contains a loop.');
+      visited.add(input.appId);
+      var url = new URL('https://www.arcgis.com/sharing/rest/content/items/' + input.appId);
+      url.searchParams.set('f', 'json');
+      var item;
+      try {
+        item = await options.client.json(url, options.token, options.signal);
+      } catch (error) {
+        if (!chain.length || options.signal && options.signal.aborted) throw error;
+        var unavailable = new Error('The referenced story is unavailable or is not shared with your account.');
+        unavailable.code = error.code;
+        unavailable.referencedStory = true;
+        throw unavailable;
+      }
+      if (!item || String(item.id).toLowerCase() !== input.appId || item.type !== 'Web Mapping Application') {
+        throw new Error('The referenced item is not a web mapping application.');
+      }
+      chain.push(item.id.toLowerCase());
+      var target = item.url ? parse(item.url) : null;
+      if (target && target.appId && target.appId !== input.appId) {
+        var dataUrl = new URL(url);
+        dataUrl.pathname += '/data';
+        var data = await options.client.json(dataUrl, options.token, options.signal, true);
+        if (data === null || typeof data === 'object' && Object.keys(data).length === 0) {
+          input = { appId: target.appId, webmap: input.webmap || target.webmap };
+          continue;
+        }
+      }
+      var runtime = options.config.classifyClassicRuntimeFromItem(item);
+      if (!Object.prototype.hasOwnProperty.call(options.config.runtimeViewerByApp, runtime)) {
+        throw new Error('The referenced item is not a supported Classic Story Map.');
+      }
+      return { appId: input.appId, webmap: input.webmap, item: item, runtime: runtime, chain: chain };
+    }
+    throw new Error('This story reference exceeds the five-item limit.');
+  }
+
+  return { parse: parse, resolve: resolve, resolveItem: resolveItem };
 });

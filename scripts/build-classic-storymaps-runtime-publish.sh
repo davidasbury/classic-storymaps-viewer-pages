@@ -104,6 +104,9 @@ mkdir -p "$PUBLISH_ROOT/assets/js"
 cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/social-link-policy.js" "$PUBLISH_ROOT/assets/js/social-link-policy.js"
 cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/arcgis-auth-helpers.js" "$PUBLISH_ROOT/assets/js/arcgis-auth-helpers.js"
 cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js" "$PUBLISH_ROOT/assets/js/arcgis-runtime-auth.js"
+for helper in classic-storymaps-config classic-story-gallery classic-story-input; do
+  cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/$helper.js" "$PUBLISH_ROOT/assets/js/$helper.js"
+done
 
 for runtime_name in "${runtime_names[@]}"; do
   require_runtime_build "$runtime_name"

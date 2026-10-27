@@ -71,7 +71,7 @@ function htmlFiles(directory) {
   });
 }
 
-test('private-story runtimes wait for catalog credential registration before startup', () => {
+test('all runtimes wait for catalog credentials and pointer resolution before startup', () => {
   for (const runtime of runtimes) {
     const directory = path.join(publish, 'viewers', runtime);
     const mainFile = path.join(directory, runtime === 'basic' ? 'index.html'
@@ -82,13 +82,18 @@ test('private-story runtimes wait for catalog credential registration before sta
     execFileSync(process.execPath, [path.join(repo, 'scripts/stage-runtime-auth.mjs'), runtime, directory], { env: { ...process.env, SITE_BASE_PATH: base } });
     assert.equal(readFileSync(mainFile, 'utf8'), original);
     if (!process.env.PUBLISH_CHECK_ROOT) {
+      let permitted = true;
       const context = { window: {}, require(dependencies, callback) {
-        assert.deepEqual(Array.from(dependencies), [runtime === 'crowdsource' ? 'dojo/_base/kernel' : 'synthetic-dependency', `${base}/viewers/assets/js/arcgis-runtime-auth.js`]);
-        callback('original-value');
+        assert.deepEqual(Array.from(dependencies), [runtime === 'crowdsource' ? 'dojo/_base/kernel' : 'synthetic-dependency', `${base}/viewers/assets/js/arcgis-runtime-auth.js!story`]);
+        callback('original-value', permitted);
       } };
       const script = runtime === 'basic' ? original.match(/<script>([\s\S]*?)<\/script>/)[1] : original;
       vm.runInNewContext(script, context);
       assert.equal(context.window.started, 'original-value');
+      permitted = false;
+      delete context.window.started;
+      vm.runInNewContext(script, context);
+      assert.equal(context.window.started, undefined);
     }
   }
 });

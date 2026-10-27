@@ -8,12 +8,12 @@ state: active
 health: green
 priority: 2
 next_action: "link converter and viewer pages"
-updated: 2026-10-26
+updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
-  phase: Cascade print uses React nodes and owner controls are disabled; publication and remaining acceptance pending
+  phase: Classic pointer resolution, print rendering and owner controls verified; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -22,6 +22,28 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Classic pointer items resolve before viewer startup, 2026-10-27.**
+
+All eight native viewers now check item metadata before startup. When an item's
+URL names a different app and its own data is empty, the shared resolver follows
+that reference and selects the target's actual runtime. Gallery identity stays
+with the original catalog item; rendering uses the target item. Real story copies
+with nonempty data retain their own content even if their URL is stale. Loops,
+excessive chains and inaccessible targets produce a readable error instead of
+loading an empty wrapper. The main ID/URL input uses the same resolver.
+
+All 197 Node tests and 39 browser cases passed: eight native startup paths,
+desktop/mobile public-story and failure screens, 24 authentication cases and
+the input-form regression. A real public Cascade story rendered through a
+synthetic pointer. The supplied item `430123c37f694274b3e84250d70b3168` was
+confirmed as an empty public pointer, but its target currently returns ArcGIS
+403 because the subscription is canceled; this fix cannot restore that content.
+See [verification](docs/testing/story-pointer-resolution.md) and
+[session 0050](session-logs/2026-10-27-0050-session-log.md).
+
+These changes remain unpublished. Shared previews, signed-in browser sessions,
+ArcGIS content and Netlify were not changed.
 
 **Owner editing controls disabled; all eight viewers checked, 2026-10-26.**
 
