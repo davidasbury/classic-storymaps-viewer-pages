@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
   code_scanning: Inert extraction, Cascade URLs and Map Tour description encoding verified; 254 Node tests passed; thirteen original alerts closed but template warnings and broader review remain open; publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
@@ -32,6 +33,25 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Missing Esri-hosted story URLs have a verified in-memory archive fallback locally.**
+
+For exact `storymaps.esri.com/stories/` URLs, a credential-free HTTPS HEAD
+response of 404 or 410 permits trying the corresponding `/archives/stories/`
+URL. Only a 200 HTML archive response replaces the URL in returned SDK JSON
+or the existing sandboxed source frame; saved items and original input objects
+remain unchanged. Working URLs, queries, authentication failures, redirects,
+unobservable responses and other hosts remain untouched. Probes share a
+four-second deadline, four workers and a sixteen-URL limit.
+
+The full 258-test Node suite passed, followed by all seven focused helper tests
+after adding budget and error-propagation coverage. Four new desktop/mobile
+browser cases and all eighteen existing source-frame cases passed. Live Chrome
+requests independently confirmed the supplied Warming Cities original 404 and
+archive 200. The archived document loaded, but its map was still showing a
+loading notice at inspection; complete archived-app functionality is not verified.
+See [session 0071](session-logs/2026-10-27-0071-session-log.md).
+Publication remains pending; owner sessions and ArcGIS content were not changed.
 
 **Visitor-code root-cause repairs are verified locally; broader remediation remains open.**
 

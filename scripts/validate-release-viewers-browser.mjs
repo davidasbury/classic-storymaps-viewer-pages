@@ -49,6 +49,78 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('story-url-fallback')) {
+    for (const runtime of ['catalog', 'mapjournal']) {
+      for (const width of [1280, 390]) {
+        const { context, page, errors } = await observePage(width);
+        const result = { runtime, check: 'Esri story URL fallback', width };
+        results.push(result);
+        const itemId = 'b'.repeat(32);
+        const jsonId = 'c'.repeat(32);
+        const original = 'https://storymaps.esri.com/stories/2012/warming-cities/';
+        const archived = 'https://storymaps.esri.com/archives/stories/2012/warming-cities/';
+        const healthy = 'https://storymaps.esri.com/stories/healthy/';
+        const requests = [];
+        const payload = { nested: [{ url: original + '#cities' }], other: 'https://other.example/stories/2012/warming-cities/',
+          html: '<p><a href="' + original + '">Story</a><iframe src="' + original + '"></iframe></p>',
+          inert: '<img src="https://storymaps.esri.com/must-not-load.png" onerror="window.unexpectedExecution=true">',
+          text: 'Keep this text exactly.', version: '1.9' };
+        await context.route('https://storymaps.esri.com/**', route => {
+          const request = route.request();
+          requests.push({ url: request.url(), method: request.method() });
+          if (request.method() === 'HEAD') {
+            assert.equal(request.headers().authorization, undefined);
+            assert.equal(request.headers()['x-esri-authorization'], undefined);
+            assert.equal(request.headers().cookie, undefined);
+            assert.equal(request.headers().referer, undefined);
+          }
+          return route.fulfill({ status: [archived, healthy].includes(request.url()) ? 200 : 404,
+            contentType: 'text/html', headers: { 'Access-Control-Allow-Origin': '*' },
+            body: '<!doctype html><title>Esri archived story</title><h1>Archived Warming Cities</h1>' });
+        });
+        await context.route('https://www.arcgis.com/sharing/rest/content/items/**', route => {
+          const pathname = new URL(route.request().url()).pathname;
+          if (pathname.endsWith('/' + itemId + '/data')) return route.fulfill({ json: {} });
+          if (pathname.endsWith('/' + jsonId + '/data')) return route.fulfill({ json: payload });
+          return route.fulfill({ json: { id: pathname.endsWith('/' + jsonId) ? jsonId : itemId,
+            title: 'Original story', access: 'public', type: 'Web Mapping Application', url: original, typeKeywords: [] } });
+        });
+        try {
+          await page.goto(origin + basePath + '/viewers/' + (runtime === 'catalog' ? '' : runtime + '/?appid=' + itemId));
+          if (runtime === 'catalog') {
+            await page.locator('#omni-appid').fill(itemId);
+            await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+          }
+          await page.getByRole('link', { name: 'Open Esri archived website', exact: true }).waitFor({ timeout: 60000 });
+          assert.equal(await page.getByRole('link', { name: 'Open source website', exact: true }).getAttribute('href'), original);
+          assert.equal(await page.locator('iframe[title="Source website"]').getAttribute('src'), archived);
+          await page.frameLocator('iframe[title="Source website"]').getByRole('heading', { name: 'Archived Warming Cities' }).waitFor();
+          const transformed = runtime === 'catalog'
+            ? await page.evaluate(payload => window.ClassicStoryUrlFallback.prepare(payload), payload)
+            : (await page.evaluate(jsonId => new Promise((resolve, reject) => require(['esri/arcgis/utils'], utils => utils.getItem(jsonId).then(resolve, reject))), jsonId)).itemData;
+          assert.equal(transformed.nested[0].url, archived + '#cities');
+          assert.equal(transformed.other, payload.other);
+          assert.equal(transformed.text, payload.text);
+          assert.equal(transformed.version, payload.version);
+          assert.equal(transformed.inert, payload.inert);
+          assert.ok(transformed.html.includes('href="' + archived + '"'));
+          assert.ok(transformed.html.includes('src="' + archived + '"'));
+          assert.equal(await page.evaluate(() => window.unexpectedExecution), undefined);
+          assert.equal(requests.some(request => request.url.includes('must-not-load')), false);
+          assert.equal(await page.evaluate(async healthy => {
+            const input = { url: healthy };
+            return await window.ClassicStoryUrlFallback.prepare(input) === input;
+          }, healthy), true);
+          assert.equal(requests.some(request => request.url.includes('/archives/stories/healthy/')), false);
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          await page.screenshot({ path: path.join(temporary, 'story-url-fallback-' + runtime + '-' + width + '.png') });
+          assert.equal(errors.filter(error => error.startsWith('page:')).length, 0);
+          result.pass = true;
+        } catch (error) { result.pass = false; result.failure = error.message; }
+        await context.close();
+      }
+    }
+  }
   if (selectedRuntimes.has('source-iframe')) {
     for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic', 'catalog']) {
       if (process.env.SOURCE_RUNTIME_FILTER && !process.env.SOURCE_RUNTIME_FILTER.split(',').includes(runtime)) continue;

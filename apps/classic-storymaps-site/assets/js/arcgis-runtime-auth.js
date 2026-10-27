@@ -1,5 +1,6 @@
 define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/assets/js/arcgis-basemap-compatibility.js',
-  window.ClassicStoryMapsConfig.basePath + '/assets/js/classic-image-notice.js'], function(identity, basemapCompatibility, imageNotice) {
+  window.ClassicStoryMapsConfig.basePath + '/assets/js/classic-image-notice.js',
+  window.ClassicStoryMapsConfig.basePath + '/assets/js/classic-story-url-fallback.js'], function(identity, basemapCompatibility, imageNotice, storyUrlFallback) {
   'use strict';
 
   var cookieDescriptor = typeof Document === 'undefined' ? null : Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
@@ -14,6 +15,7 @@ define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/asset
   if (initial) helpers.registerCatalogCredential(identity, readCatalogCookie());
   basemapCompatibility.install();
   imageNotice.install();
+  storyUrlFallback.install();
 
   function reconcile() {
     var current = helpers.readCatalogCredential(readCatalogCookie());

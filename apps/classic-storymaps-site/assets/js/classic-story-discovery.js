@@ -29,6 +29,13 @@
       section.appendChild(frame);
     }
     container.appendChild(section);
+    if (window.ClassicStoryUrlFallback && window.ClassicStoryUrlFallback.candidate(sourceUrl.href)) {
+      window.ClassicStoryUrlFallback.prepare({ url: sourceUrl.href }).then(function(prepared) {
+        if (!section.isConnected || options.isCurrent && !options.isCurrent() || prepared.url === sourceUrl.href) return;
+        section.appendChild(link('Open Esri archived website', prepared.url));
+        if (frame) frame.src = prepared.url;
+      });
+    }
     if (!window.ClassicStoryInput.archiveEndpoint(source, options)) return function() { section.remove(); };
     var consent = document.createElement('input');
     consent.type = 'checkbox';
