@@ -902,6 +902,45 @@ try {
               }), payload);
               assert.deepEqual(result.nativeShares, [['A & B', 'A & B'], ['A & B']]);
             }
+            if (target.runtime === 'mapseries') {
+              result.mobileTitle = await page.evaluate(payload => new Promise((resolve, reject) => {
+                require(['storymaps/tpl/ui/mobile/Header'], Header => {
+                  const container = $('<div><div class="title"></div><button class="menu-btn"></button><div class="menu" style="display:none"></div></div>').appendTo(document.body);
+                  const navigation = [];
+                  const previousAnimations = $.fx.off;
+                  try {
+                    $.fx.off = true;
+                    const header = new Header(container, false, index => navigation.push(index));
+                    const params = { headerCfg: { logoURL: 'NO_LOGO', linkText: '', compactSize: true, socialBtn: { facebook: false, twitter: false, bitly: false } },
+                      entries: [{ title: 'First' }, { title: 'Second' }], entryIndex: 0, appLayout: 'tab', layoutOpt: {},
+                      appColors: { headerTitle: '#ffffff', header: '#333333', text: '#000000', panel: '#ffffff' } };
+                    const encoded = $('<div>').text(payload).html();
+                    const checks = [];
+                    for (const [title, expected, bold] of [
+                      ['<b>A &amp; B</b>', 'A & B', 1], [payload, 'A & B', 1], [encoded, payload, 0],
+                      ['<span style="color:red" onclick="window.__htmlTextProbe++">Text</span>', 'Text', 0],
+                      ['<script>window.__htmlTextProbe++</script><iframe src="/__html_text_probe__candidate"></iframe>OK', 'OK', 0],
+                      ['', '', 0]
+                    ]) {
+                      header.init({ ...params, title });
+                      const heading = container.find('.title');
+                      checks.push({ text: heading.text() === expected, bold: heading.find('b').length === bold,
+                        safe: heading.find('img,svg,script,iframe,object,math,style').length === 0
+                          && [...heading[0].querySelectorAll('*')].every(element => element.attributes.length === 0) });
+                    }
+                    container.find('.menu-btn').trigger('click');
+                    const menuOpened = container.find('.menu').css('display') !== 'none';
+                    container.find('.menu-entry').eq(1).trigger('click');
+                    resolve({ checks, menuOpened, navigation, menuClosed: container.find('.menu').css('display') === 'none' });
+                  } catch (error) { reject(error); }
+                  finally { $.fx.off = previousAnimations; container.remove(); }
+                }, reject);
+              }), payload);
+              assert.ok(result.mobileTitle.checks.every(check => check.text && check.bold && check.safe));
+              assert.equal(result.mobileTitle.menuOpened, true);
+              assert.equal(result.mobileTitle.menuClosed, true);
+              assert.deepEqual(result.mobileTitle.navigation, [1]);
+            }
             await page.waitForLoadState('networkidle');
             assert.equal(await page.evaluate(() => window.__htmlTextProbe), 0);
             assert.equal(probeRequests.length, 0);

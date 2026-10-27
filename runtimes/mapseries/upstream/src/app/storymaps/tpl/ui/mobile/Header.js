@@ -2,15 +2,23 @@ define(["lib-build/css!./Header",
         "lib-build/tpl!./HeaderMenuTpl",
         "lib-build/tpl!./HeaderMenuEntryTpl",
         "storymaps/common/utils/HeaderHelper",
-        "storymaps/common/utils/CommonHelper"
+		"storymaps/common/utils/CommonHelper",
+		"lib-app/arcgis-html-sanitizer/umd/arcgis-html-sanitizer"
     ], 
 	function(
 		viewCss,
 		menuTpl,
 		menuEntryTpl,
 		HeaderHelper,
-		CommonHelper
+		CommonHelper,
+		Sanitizer
 	){
+		var titleSanitizer = new Sanitizer({
+			whiteList: { b: [], strong: [], i: [], em: [], u: [], s: [], sub: [], sup: [], br: [], span: [] },
+			stripIgnoreTag: true,
+			stripIgnoreTagBody: ['script', 'style', 'iframe', 'object', 'svg', 'math']
+		});
+
 		return function Header(container, isInBuilder, navigationCallback)
 		{
 			/*
@@ -29,7 +37,7 @@ define(["lib-build/css!./Header",
 			{
 				params = params || {};
 				
-				container.find('.title').html(params.title);
+				container.find('.title').html(titleSanitizer.sanitize(params.title || ''));
 				
 				renderShare(params.headerCfg);
 				

@@ -24,12 +24,80 @@ alerts fixed at `2026-10-27 14:38:55-07:00[America/Los_Angeles]`. However, the
 JavaScript analysis and open-alert inventory still contained 184 findings:
 thirteen new records, 185-197, replaced the thirteen closed records.
 
-Twelve new records flag innerHTML assignments to inert templates. The standard
-and browser evidence below explain why these nodes do not execute, but the records
-remain open for explicit review; they were not hidden with scanning exclusions,
-suppression comments or dismissals. The thirteenth, alert 193, exposed an additional
+Twelve new records flagged innerHTML assignments to inert templates. The standard
+and browser evidence below explain why these nodes do not execute. They initially
+remained open for explicit review; the subsequent owner-approved disposition is
+recorded below. The thirteenth, alert 193, exposed an additional
 Map Tour output boundary and received the follow-up repair below. Closing the old
 records alone is not a net reduction or a clean security audit.
+
+## Reviewed False Positives
+
+The owner authorized dismissal after a downstream review at
+`970068553beb1112d92c85fb45d511779a777e3e`. All twelve records were changed to
+`dismissed` with reason `false positive`, and each state, reason and scoped comment
+was verified by a separate GitHub API read. The last readback followed dismissal at
+`2026-10-27 16:03:09-07:00[America/Los_Angeles]`.
+
+| Path under each viewer's common modules | Journal | Series | Shortlist | Final consumer |
+| --- | ---: | ---: | ---: | --- |
+| Core.js | 185 | 189 | 194 | document.title text setter |
+| ui/share/ShareDialog.js | 186 | 190 | 195 | Twitter text query parameter through encodeURIComponent |
+| utils/HeaderHelper.js, Facebook handler | 187 | 191 | 196 | Facebook function ignores extracted title/subtitle arguments |
+| utils/HeaderHelper.js, Twitter handler | 188 | 192 | 197 | Twitter text query parameter through encodeURIComponent |
+
+The temporary template and its contents are never attached. None of these
+extracted values returns to an HTML sink in the traced application paths. Journal's
+common-Core title assignment is also disabled by its default configuration; its
+boundary was exercised explicitly, not claimed as a normal startup path.
+
+Six isolated Chrome cases exercised current source and retained release-candidate
+modules: 48 title checks and 192 captured sharing calls passed. Tests included raw
+and encoded image/SVG markup, closing-title text, entities, quotes, empty values,
+and query/fragment delimiters. No candidate resource request, active element or
+execution occurred; live-HTML positive controls executed in every case. Sharing
+destinations were captured, not opened. Unrelated UI dependencies and URL parsing
+were stubbed; these were boundary checks, not fresh full-viewer acceptance.
+
+This disposition applies only to these twelve reviewed alert records. No query,
+directory, file or scanning rule was excluded. Inert extraction is not a general
+HTML sanitizer, and other uses of the original title or subtitle remain separate
+review targets. The adjacent HTTP Facebook sharer URL remains unresolved.
+
+## Map Series Mobile Title
+
+Alert 48 identified a separate live HTML insertion in mobile Header.init. The
+repair sanitizes the title immediately before insertion using the existing
+vendored ArcGIS sanitizer with a separate, non-extended allowlist: b, strong, i,
+em, u, s, sub, sup, br and span. All attributes are removed. Unsupported tags are
+stripped, with script, style, iframe, object, SVG and MathML bodies removed.
+Links become text; encoded markup remains literal. The broader application
+sanitizer, raw story data, subtitles and menu-entry rendering are unchanged.
+
+The tracked source declares the sanitizer dependency. Two exact-match manifest
+patches protect official release 1.27.0 without changing its archive checksum.
+The release registers Header before the sanitizer, so its adapter obtains the
+already-loaded sanitizer through local AMD require at Header construction.
+MainView's existing dependency completes before that construction. An eager
+dependency caused a missing-file request in the first native check; the corrected
+release passed the same check without that request.
+
+Verification included eight source/release policy cases using the actual vendor
+sanitizer, a fresh checksum-verified release build, and native Map Series checks
+at 1280 and 390 pixels. Each native case exercised six title payloads, rejected
+active elements and attributes, preserved expected text/bold formatting, and
+opened, navigated and closed the mobile menu. Existing extraction/sharing checks
+and their execution positive controls also passed. Both screenshots were inspected.
+Blocked OAuth platformSelf requests, an external portal-detector image failure,
+and the intentional positive-control 404 were recorded; no page exceptions occurred.
+
+All 262 Node 24 tests passed in an isolated HEAD-plus-scoped-changes snapshot.
+The exact staged snapshot subsequently passed all 263 discovered Node tests.
+An earlier shared-worktree run saw a concurrent Basic classification test failure;
+those unrelated edits were not repaired or reverted here. Full legacy source-build,
+private-content and all-layout acceptance remain unverified. Publication requires
+separate owner authorization; GitHub must analyze the implementation commit before
+alert 48 can be reported as fixed by the scanner.
 
 ## Map Tour Description Follow-Up
 
@@ -148,8 +216,9 @@ node scripts/validate-release-viewers-browser.mjs
 
 ## Remaining Work
 
-1. Reconcile GitHub's next CodeQL analysis with these source changes. Do not use
-   suppression or source-only fixes as a substitute for delivered-code evidence.
+1. Reconcile GitHub's next CodeQL analysis with the mobile-title change and verify
+   the twelve scoped false-positive dismissals remain recorded. Do not use
+   source-only fixes as a substitute for delivered-code evidence.
 2. Trace remaining visitor DOM-XSS sinks, beginning with mobile titles and detail
    panels. Preserve intentional story formatting through an explicit safe policy.
 3. Repair URL/hostname validation by comparing parsed components and test deceptive

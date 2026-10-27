@@ -3,6 +3,18 @@
   "appId": "mapseries",
   "patches": [
     {
+      "name": "mobile-title-sanitizer",
+      "file": "app/viewer-min.js",
+      "find": "define(\"storymaps/tpl/ui/mobile/Header\",[\"lib-build/css!./Header\",\"lib-build/tpl!./HeaderMenuTpl\",\"lib-build/tpl!./HeaderMenuEntryTpl\",\"storymaps/common/utils/HeaderHelper\",\"storymaps/common/utils/CommonHelper\"],function(e,t,n,r,i){return function(s,o,u){",
+      "replace": "define(\"storymaps/tpl/ui/mobile/Header\",[\"lib-build/css!./Header\",\"lib-build/tpl!./HeaderMenuTpl\",\"lib-build/tpl!./HeaderMenuEntryTpl\",\"storymaps/common/utils/HeaderHelper\",\"storymaps/common/utils/CommonHelper\",\"require\"],function(e,t,n,r,i,require){return function(s,o,u){var Sanitizer=require(\"lib-app/arcgis-html-sanitizer/umd/arcgis-html-sanitizer\"),titleSanitizer=new Sanitizer({whiteList:{b:[],strong:[],i:[],em:[],u:[],s:[],sub:[],sup:[],br:[],span:[]},stripIgnoreTag:true,stripIgnoreTagBody:['script','style','iframe','object','svg','math']});"
+    },
+    {
+      "name": "mobile-title-html-boundary",
+      "file": "app/viewer-min.js",
+      "find": "s.find(\".title\").html(e.title),a(e.headerCfg)",
+      "replace": "s.find(\".title\").html(titleSanitizer.sanitize(e.title||\"\")),a(e.headerCfg)"
+    },
+    {
       "name": "valid-url-appid-precedence",
       "file": "app/viewer-min.js",
       "find": "getAppID:function(e){var t=this.getUrlParams();if(app.indexCfg",

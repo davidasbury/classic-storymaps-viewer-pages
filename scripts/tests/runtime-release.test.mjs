@@ -10,6 +10,53 @@ import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
+test('Map Series mobile title sanitizes source and release HTML with a formatting-only policy', () => {
+  const base = path.join(repo, 'runtimes/mapseries/upstream/src');
+  let Sanitizer;
+  const define = (dependencies, factory) => { Sanitizer = factory(); };
+  define.amd = true;
+  vm.runInNewContext(readFileSync(path.join(base, 'lib-app/arcgis-html-sanitizer/umd/arcgis-html-sanitizer.js'), 'utf8'), { define, window: {} });
+  const manifest = JSON.parse(readFileSync(path.join(repo, 'runtimes/mapseries/runtime-manifest.json'), 'utf8'));
+  const modulePatch = manifest.patches.find(patch => patch.name === 'mobile-title-sanitizer');
+  const boundaryPatch = manifest.patches.find(patch => patch.name === 'mobile-title-html-boundary');
+  const original = modulePatch.find + 'this.init=function(e){e=e||{},' + boundaryPatch.find + '};function a(){};}});';
+  const released = original.replace(modulePatch.find, modulePatch.replace).replace(boundaryPatch.find, boundaryPatch.replace);
+  for (const source of [readFileSync(path.join(base, 'app/storymaps/tpl/ui/mobile/Header.js'), 'utf8'), released]) {
+    let Header;
+    const received = [];
+    const container = {
+      find() { return this; }, click() { return this; },
+      html(value) { received.push(value); return this; },
+      toggle() { return this; }, addClass() { return this; }, eq() { return this; }, css() { return this; }
+    };
+    const helper = { setSocial() {}, initEvents() {}, setLink() {}, setLogo() {} };
+    vm.runInNewContext(source, { define: (...args) => {
+      const factory = args.pop();
+      const dependency = args.pop().at(-1);
+      const sanitizerModule = 'lib-app/arcgis-html-sanitizer/umd/arcgis-html-sanitizer';
+      assert.ok(dependency === sanitizerModule || dependency === 'require');
+      Header = factory({}, () => '', () => '', helper, { addCSSRule() {} }, dependency === 'require' ? name => {
+        assert.equal(name, sanitizerModule);
+        return Sanitizer;
+      } : Sanitizer);
+    }, $: { each() {} } });
+    const header = new Header(container, false, () => {});
+    for (const [title, expected] of [
+      ['<b onclick="probe()">A &amp; B</b>', '<b>A &amp; B</b>'],
+      ['<img src=x onerror="probe()"><script>probe()</script><em>OK</em>', '<em>OK</em>'],
+      ['<svg onload="probe()"><text>hidden</text></svg><iframe src=x>hidden</iframe>Visible', 'Visible'],
+      ['<span style="color:red" id="title" class="other">Text</span>', '<span>Text</span>'],
+      ['<a href="javascript:probe()">Link text</a>', 'Link text'],
+      ['&lt;img src=x onerror=probe()&gt;', '&lt;img src=x onerror=probe()&gt;'],
+      [undefined, ''], ['', '']
+    ]) {
+      received.length = 0;
+      header.init({ title, headerCfg: {}, entries: [], appColors: {} });
+      assert.equal(received[0], expected);
+    }
+  }
+});
+
 test('HTML text extraction patch changes only wrapped jQuery text reads', async () => {
   const { patchHtmlText } = await import('../patch-runtime-html-text.mjs');
   const original = 'var title=$("<div>"+(getTitle()||"")+"</div>").text();'

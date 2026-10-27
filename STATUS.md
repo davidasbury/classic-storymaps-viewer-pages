@@ -13,7 +13,7 @@ extra:
   agents: [claude, copilot-enterprise]
   legacy_basic: Two legacy Basic URL aliases recognized; Traffic Fatalities renders; Mussel services fail DNS; publication pending
   esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
-  code_scanning: Inert extraction, Cascade URLs and Map Tour description encoding verified; 254 Node tests passed; thirteen original alerts closed but template warnings and broader review remain open; publication pending
+  code_scanning: Twelve inert-template alerts dismissed as owner-approved false positives; Map Series mobile title sanitized in source/release and browser-verified; 263 staged Node tests passed; broader review and publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
@@ -25,7 +25,7 @@ extra:
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: First CodeQL root-cause fixes verified locally; remaining security review and publication pending
+  phase: Scoped template dispositions and Map Series title repair verified; remaining security review and publication pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -79,18 +79,23 @@ expressions across six viewers. Cascade sharing now filters query parameters
 without the flagged backtracking regex, including the pinned release and print
 bundle. Existing checksum, print sanitization and authentication protections remain.
 
-The first batch passed 253 Node tests and twelve desktop/mobile browser cases. Native sharing
-handlers and a freshly built Cascade Controller received additional hostile-input
-checks, and screenshots from all six viewers were inspected. CodeQL subsequently
-closed twelve original DOM-XSS alerts and one ReDoS alert, but raised thirteen new
-records, leaving 184 open in that analysis. Twelve flag inert-template assignments
-and remain open for review. The remaining record exposed Map Tour's description
-being inserted back into HTML; that boundary now encodes the extracted text and
-passed both native browser cases plus all 254 Node tests. Other rich-HTML sinks,
-library findings and URL checks remain open; no scanner warnings were suppressed.
+The first batch passed 253 Node tests and twelve desktop/mobile browser cases.
+CodeQL closed thirteen original records but raised thirteen new records. One
+exposed Map Tour's description being reinserted into HTML; the output-encoding
+repair passed both native cases and 254 Node tests, and CodeQL marked it fixed.
+The other twelve were reviewed through their final text/URL consumers and, with
+owner approval, dismissed as scoped false positives. Each dismissal was read back
+from GitHub; no scanning rules or files were excluded.
+
+Map Series' separate live mobile-title insertion now uses a formatting-only
+sanitizer in source and the checksum-verified official release. Both native
+desktop/mobile cases passed hostile-title and menu checks, and 263 Node tests
+passed in the exact staged snapshot. Its next CodeQL result remains to be reconciled.
+Other rich-HTML sinks, library findings and URL checks remain open.
 See [scope and evidence](docs/testing/code-scanning-remediation.md) and
 [session 0069](session-logs/2026-10-27-0069-session-log.md) with
-[follow-up 0070](session-logs/2026-10-27-0070-session-log.md). Nothing was deployed;
+[follow-up 0070](session-logs/2026-10-27-0070-session-log.md) and
+[session 0073](session-logs/2026-10-27-0073-session-log.md). Nothing was deployed;
 owner sessions, ArcGIS content and scanner coverage were unchanged.
 
 **The gallery supports explicit advanced ArcGIS search locally.**
