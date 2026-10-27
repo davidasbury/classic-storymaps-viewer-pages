@@ -12,7 +12,7 @@ updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
   gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
-  maptour_compatibility: Night-style repair and owner notice verified locally; publication and private-content acceptance pending
+  maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
   phase: Verified pointer mapping, Cascade loop fix and explicit archive discovery implemented; publication and remaining acceptance pending
@@ -61,23 +61,6 @@ or ArcGIS writes. See [verification](docs/testing/gallery-pagination-sorting.md)
 and [session 0053](session-logs/2026-10-27-0053-session-log.md).
 The owner authorized commit/push closure with `[skip ci]`; publication remains
 pending. Existing shared previews and signed-in browser sessions were preserved.
-
-**Map Tour repairs the unavailable Night style in memory, 2026-10-27.**
-
-The NYC story now loads its 46 points using the verified current Night style,
-without changing the original map, story or web-map version. A dismissible
-notice explains why substitution was necessary, warns that appearance may
-differ, and links to Map Viewer and ArcGIS Assistant with owner repair steps.
-Unverified replacements produce actionable guidance instead of entering the
-native SDK's stalled loading path. Other styles are not substituted.
-
-All 202 shared-worktree Node tests passed, alongside eight accumulated native
-browser cases covering desktop/mobile rendering, French fallback, failure
-guidance and existing Ocean behavior. The incremental runtime patch replayed
-byte-exactly over committed source. See [verification](docs/testing/maptour-night-style-repair.md)
-and [session 0052](session-logs/2026-10-27-0052-session-log.md).
-The owner authorized commit/push closure with `[skip ci]`. The repair remains
-unpublished; no deployment or ArcGIS write occurred.
 
 **Classic pointers resolve before startup and expose inactive source subscriptions, 2026-10-27.**
 
