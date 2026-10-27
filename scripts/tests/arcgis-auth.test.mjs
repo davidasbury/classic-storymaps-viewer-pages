@@ -137,19 +137,29 @@ test('direct subscription failures show the reason while ordinary access failure
   }
 });
 
-for (const change of ['sign-out', 'expiry', 'replacement']) {
-  test('an open runtime clears inherited credentials on catalog ' + change, () => {
+for (const masked of [false, true]) for (const change of ['sign-out', 'expiry', 'replacement', 'renewal', 'denied']) {
+  test('an open runtime clears inherited credentials on catalog ' + change + (masked ? ' despite cookie masking' : ''), () => {
     const helpers = require(helperUrl.pathname);
-    const cookie = token => 'esri_auth=' + encodeURIComponent(JSON.stringify({ token, expires: Date.now() + 60000 }));
+    const expires = Date.now() + 60000;
+    const cookie = (token, expiry = expires) => 'esri_auth=' + encodeURIComponent(JSON.stringify({ token, expires: expiry }));
+    let storedCookie = cookie('synthetic-runtime-session');
+    let denied = false;
+    class RuntimeDocument {
+      get cookie() {
+        if (denied) throw new Error('Cookie access denied');
+        return storedCookie;
+      }
+    }
     const events = new Map();
-    const document = { cookie: cookie('synthetic-runtime-session'),
-      addEventListener: (name, callback) => events.set(name, callback), removeEventListener: name => events.delete(name) };
+    const document = new RuntimeDocument();
+    Object.assign(document, { addEventListener: (name, callback) => events.set(name, callback), removeEventListener: name => events.delete(name) });
     let registered = 0;
     let cleared = 0;
     let reloaded = 0;
     let poll;
     const context = {
       document,
+      Document: masked ? RuntimeDocument : undefined,
       define: (dependencies, factory) => {
         assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager', '/viewers/assets/js/arcgis-basemap-compatibility.js']);
         factory({ registerToken: () => { registered++; }, destroyCredentials: () => { cleared++; } },
@@ -162,16 +172,27 @@ for (const change of ['sign-out', 'expiry', 'replacement']) {
     };
     vm.runInNewContext(readFileSync(new URL('../../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js', import.meta.url), 'utf8'), context);
     assert.equal(registered, 1);
+    if (masked) {
+      Object.defineProperty(document, 'cookie', { get: () => '', set() {} });
+      Object.defineProperty(RuntimeDocument.prototype, 'cookie', { get: () => '' });
+    }
     poll();
+    events.get('focus')();
+    events.get('visibilitychange')();
     assert.equal(cleared, 0);
-    document.cookie = change === 'sign-out' ? '' : change === 'replacement' ? cookie('synthetic-replacement')
-      : 'esri_auth=' + encodeURIComponent(JSON.stringify({ token: 'synthetic-runtime-session', expires: Date.now() - 1 }));
+    assert.equal(reloaded, 0);
+    if (masked) assert.equal(document.cookie, '');
+    storedCookie = change === 'sign-out' ? '' : change === 'replacement' ? cookie('synthetic-replacement')
+      : change === 'renewal' ? cookie('synthetic-runtime-session', expires + 60000)
+      : change === 'expiry' ? cookie('synthetic-runtime-session', Date.now() - 1) : storedCookie;
+    denied = change === 'denied';
     events.get('focus')();
     assert.equal(cleared, 1);
     assert.equal(reloaded, 1);
     assert.equal(events.size, 0);
-    assert.equal(helpers.registerCatalogCredential({ registerToken: () => { registered++; } }, document.cookie), change === 'replacement');
-    assert.equal(registered, change === 'replacement' ? 2 : 1);
+    const valid = change === 'replacement' || change === 'renewal';
+    assert.equal(helpers.registerCatalogCredential({ registerToken: () => { registered++; } }, denied ? '' : storedCookie), valid);
+    assert.equal(registered, valid ? 2 : 1);
   });
 }
 

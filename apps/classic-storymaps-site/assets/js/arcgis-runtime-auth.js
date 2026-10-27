@@ -1,13 +1,20 @@
 define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/assets/js/arcgis-basemap-compatibility.js'], function(identity, basemapCompatibility) {
   'use strict';
 
+  var cookieDescriptor = typeof Document === 'undefined' ? null : Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+  var cookieGetter = cookieDescriptor && cookieDescriptor.get;
+  function readCatalogCookie() {
+    try { return cookieGetter ? cookieGetter.call(document) : document.cookie; }
+    catch (_) { return ''; }
+  }
+
   var helpers = window.ClassicArcgisAuthHelpers;
-  var initial = helpers.readCatalogCredential(document.cookie);
-  if (initial) helpers.registerCatalogCredential(identity, document.cookie);
+  var initial = helpers.readCatalogCredential(readCatalogCookie());
+  if (initial) helpers.registerCatalogCredential(identity, readCatalogCookie());
   basemapCompatibility.install();
 
   function reconcile() {
-    var current = helpers.readCatalogCredential(document.cookie);
+    var current = helpers.readCatalogCredential(readCatalogCookie());
     if (!current || current.token !== initial.token || current.expires !== initial.expires) {
       window.clearInterval(timer);
       window.removeEventListener('focus', reconcile);
@@ -40,7 +47,7 @@ define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/asset
       document.body.appendChild(panel);
       if (source) window.ClassicStoryDiscovery.mount(panel, source, {
         config: window.ClassicStoryMapsConfig, token: token,
-        isCurrent: function() { var latest = helpers.readCatalogCredential(document.cookie); return (latest && latest.token) === token; }
+        isCurrent: function() { var latest = helpers.readCatalogCredential(readCatalogCookie()); return (latest && latest.token) === token; }
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render, { once: true });
@@ -50,18 +57,18 @@ define(['esri/IdentityManager', window.ClassicStoryMapsConfig.basePath + '/asset
   return { load: function(name, require, loaded) {
     var current = new URL(window.location.href);
     if (!current.searchParams.has('appid')) { loaded(true); return; }
-    var credential = helpers.readCatalogCredential(document.cookie);
+    var credential = helpers.readCatalogCredential(readCatalogCookie());
     var token = credential && credential.token;
     return window.ClassicStoryInput.resolveItem(current.href, {
       config: window.ClassicStoryMapsConfig,
       client: window.ClassicStoryGallery.createClient(),
       token: token,
       onSourceStatus: function(item, inactive) {
-        var latest = helpers.readCatalogCredential(document.cookie);
+        var latest = helpers.readCatalogCredential(readCatalogCookie());
         if ((latest && latest.token) === token) window.ClassicStoryGallery.rememberSourceStatus(item, inactive);
       }
     }).then(function(result) {
-      var latest = helpers.readCatalogCredential(document.cookie);
+      var latest = helpers.readCatalogCredential(readCatalogCookie());
       if ((latest && latest.token) !== token) { window.location.reload(); return; }
       if (result.chain.length === 1) { loaded(true); return; }
       var destination = new URL(window.ClassicStoryMapsConfig.runtimeViewerByApp[result.runtime], current);

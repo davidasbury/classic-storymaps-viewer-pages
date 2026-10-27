@@ -17,7 +17,7 @@ extra:
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: Shared vector basemap fallback verified locally; publication and remaining acceptance pending
+  phase: Shared sign-in cookie isolation and vector basemap fallback verified locally; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -27,7 +27,23 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Unavailable vector basemap styles have a verified shared fallback, 2026-10-27.**
+**Shared sign-in and basemap compatibility fixes are verified locally.**
+
+The sign-in monitor captures the browser's cookie getter before native startup.
+Legacy viewer overrides of `document.cookie` no longer appear to be sign-outs,
+while real sign-out, expiry, credential replacement and renewal still clear
+inherited SDK credentials and reload. Cookie access errors fail closed; native
+cookie masking remains in place. This fixes the signed-in reload loop in the
+Oakland Series' Zone 1-4 Map Tour embeds without changing story data or permissions.
+
+All 228 Node tests and 24 native authentication browser cases passed. Every
+viewer now has a browser regression for cookie masking followed by real sign-out.
+The four real Zone embeds loaded once and stayed stable across multiple monitor
+polls with the exact edited source, synthetic credentials and no page errors;
+genuine cookie removal still reloaded the parent. Full native-story acceptance
+was not repeated for the other seven viewers. See
+[session 0060](session-logs/2026-10-27-0060-session-log.md).
+The fix is unpublished; existing owner sessions and shared previews were untouched.
 
 All eight viewers install an evidence-gated compatibility wrapper before native
 startup. Missing or inaccessible ArcGIS Online vector style references can use
@@ -37,8 +53,8 @@ ArcGIS items are not changed. A dismissible notice identifies the affected map,
 explains the appearance change, and links owner repair guidance. On phones it
 leaves the Crowdsource bottom navigation accessible.
 
-All 221 Node tests, 24 existing authentication browser cases, eight shared SDK
-integration checks and two native Crowdsource desktop/mobile cases passed.
+The basemap fallback acceptance passed 221 Node tests, 24 authentication browser
+cases, eight shared SDK integration checks and two native Crowdsource desktop/mobile cases.
 Inspected settled screenshots show the supplied story's basemap, district
 boundary and contribution markers; desktop also shows the contribution gallery.
 The original styles returned access-denied responses, not proof of deletion.

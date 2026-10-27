@@ -721,6 +721,13 @@ try {
           if (mode === 'catalog') {
             assert.ok(itemRequests.every(Boolean), 'Every private-item request uses the catalog credential');
             assert.equal(await page.locator('.esriSignInDialog:visible').count(), 0);
+            await page.evaluate(() => {
+              Object.defineProperty(document, 'cookie', { configurable: true, get: () => '', set() {} });
+              window.__catalogMaskStarted = Date.now();
+            });
+            await page.waitForFunction(() => Date.now() - window.__catalogMaskStarted >= 2500, undefined, { timeout: 5000 });
+            assert.equal(await page.evaluate(() => document.cookie), '');
+            assert.equal((await context.cookies()).some(cookie => cookie.name === 'esri_auth'), true);
             const reload = page.waitForNavigation();
             const requestsBeforeSignOut = itemRequests.length;
             const signedOutItem = page.waitForResponse(response => response.url().includes('/content/items/' + itemId)
