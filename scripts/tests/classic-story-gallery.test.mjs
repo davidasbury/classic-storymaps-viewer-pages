@@ -80,10 +80,19 @@ test('modern app URLs and conflicting metadata cannot pass Classic classificatio
     item(5, { typeKeywords: ['Story Map Journal', 'Story Map Tour'] }), item(6, { type: 'Web Map' })]) {
     assert.equal(config.classifyClassicRuntimeFromItem(candidate), null);
     assert.equal(gallery().storyFromItem(candidate, config), null);
-    await assert.rejects(input().resolveItem(candidate.id, { config, client: { json: async url => url.pathname.endsWith('/data') ? { values: { webmap: 'synthetic-map' } } : candidate } }), /not a (?:supported Classic|web mapping)/);
+    await assert.rejects(input().resolveItem(candidate.id, { config, client: { json: async url => url.pathname.endsWith('/data') ? { values: { webmap: 'synthetic-map' } } : candidate } }), /could not determine which Classic Story Map format|not a web mapping application/);
   }
   assert.equal(config.classifyClassicRuntimeFromItem(item(7, { typeKeywords: [], tags: [], url: 'https://custom.example/MapJournal/index.html?next=/apps/instant/nearby/' })), 'mapjournal');
   assert.equal(config.classifyClassicRuntimeFromItem(item(8, { url: 'https://custom.example/Cascade/index.html' })), 'mapjournal');
+});
+
+test('unrecognized Classic metadata reports uncertainty rather than declaring the story non-Classic', async () => {
+  const config = configuration();
+  const candidate = item(9, { typeKeywords: ['Story Map'], tags: [] });
+  assert.equal(config.classifyClassicRuntimeFromItem(candidate), 'unknown-classic');
+  await assert.rejects(input().resolveItem(candidate.id, { config, client: { json: async () => candidate } }), {
+    message: 'This viewer could not determine which Classic Story Map format to use for this item. The item may still be a Classic story.'
+  });
 });
 
 test('omni input accepts IDs, hosted URLs, web map overrides and verified legacy aliases', () => {

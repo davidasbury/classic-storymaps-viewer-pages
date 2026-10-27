@@ -85,7 +85,7 @@ try {
         });
         try {
           await page.goto(origin + basePath + '/viewers/crowdsource/index.html?appid=' + itemId);
-          const message = mode === 'native' ? 'Something went wrong, the app did not load correctly.' : 'The referenced item is not a supported Classic Story Map.';
+          const message = mode === 'native' ? 'Something went wrong, the app did not load correctly.' : 'This viewer could not determine which Classic Story Map format to use for this item. The item may still be a Classic story.';
           await page.getByText(message, { exact: true }).waitFor({ timeout: 60000 });
           if (mode === 'native') await page.waitForFunction(() => {
             const message = document.querySelector('.loading-error-message .message');

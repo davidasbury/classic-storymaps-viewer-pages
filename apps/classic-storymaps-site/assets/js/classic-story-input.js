@@ -115,7 +115,7 @@
       }
       var runtime = options.config.classifyClassicRuntimeFromItem(item);
       if (!Object.prototype.hasOwnProperty.call(options.config.runtimeViewerByApp, runtime)) {
-        throw new Error('The referenced item is not a supported Classic Story Map.');
+        throw new Error('This viewer could not determine which Classic Story Map format to use for this item. The item may still be a Classic story.');
       }
       if (options.onSourceStatus) options.onSourceStatus(sourceItem, false);
       return { appId: input.appId, webmap: input.webmap, item: item, runtime: runtime, chain: chain };

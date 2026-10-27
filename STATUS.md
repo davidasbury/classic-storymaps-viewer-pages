@@ -49,10 +49,15 @@ Known non-Classic app URLs and ambiguous Classic metadata are now rejected by
 one shared classifier for the gallery, main input and native startup. This
 excludes the supplied Nearby app despite its Crowdsource tag. Genuine Classic
 tags and nonempty copies with stale Classic URLs retain support.
+When metadata cannot identify a viewer format, the error now explicitly allows
+that the item may still be a Classic story instead of declaring otherwise.
+This wording-only follow-up passed 30 focused tests and four desktop/mobile
+browser cases; classification and loading decisions are unchanged. See
+[session 0058](session-logs/2026-10-27-0058-session-log.md).
 
 Crowdsource now rejects incompatible settings with its localized error instead
 of opening the builder, and hides the loader on error. Source and pinned-release
-patches agree. All 215 Node tests passed; 49 distinct browser cases passed across
+patches agree. That implementation passed 215 Node tests and 49 distinct browser cases across
 the new desktop/mobile failures and existing startup, gallery and auth checks.
 A stale isolated Crowdsource snapshot was replaced with a fresh verified release
 before final owner-control acceptance. See
