@@ -416,5 +416,7 @@ while IFS= read -r landing_page; do
 done < <(find "$OUT_DIR" -maxdepth 1 -type f -name '*.html' | sort)
 
 node "$SCRIPT_DIR/apply-site-base-path.mjs" "$OUT_DIR" "$COMPAT_OUT_DIR_STORIES" "$COMPAT_OUT_DIR_STORYMAPS" "$ROOT_PAGE_OUT" "$(dirname "$ARCHIVE_PAGE_OUT")"
+node "$SCRIPT_DIR/stage-site-favicons.mjs" "$OUT_DIR" "$COMPAT_OUT_DIR_STORIES" "$COMPAT_OUT_DIR_STORYMAPS" "$ROOT_PAGE_OUT" "$(dirname "$ARCHIVE_PAGE_OUT")"
+cp "$SRC_DIR/favicon.ico" "$(dirname "$ROOT_PAGE_OUT")/favicon.ico"
 
 echo "Classic Storymaps canonical landing build output copied to $OUT_DIR"

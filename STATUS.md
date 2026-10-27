@@ -21,6 +21,18 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
+**Shared tab favicon, 2026-10-26.**
+
+David directed using the existing `publish/viewers/favicon.ico` image for all
+page favicons. Its tracked source is `apps/classic-storymaps-site/favicon.ico`.
+Landing and runtime publication now normalize full HTML documents to the shared
+local ICO, including archive, compatibility, print and notice pages. A root
+fallback is included. Upstream sources and existing image bytes are unchanged.
+All 139 tests passed; all 68 published-link checks passed both for the local
+project prefix and for production-root output, the latter under Node 24.
+This is a source change, not a deployment or integration approval; font-specific
+findings remain open. See [session 0029](session-logs/2026-10-26-0029-session-log.md).
+
 **Viewer cutover accepted by the owner, 2026-10-26.**
 
 - The public canonical repository is [davidasbury/classic-storymaps-viewer-pages](https://github.com/davidasbury/classic-storymaps-viewer-pages). Production is [classicstorymaps.com](https://classicstorymaps.com/), hosted by GitHub Pages with Cloudflare authoritative DNS. The owner performed the transfer, binding, variable removal and workflow dispatch; the agent performed read-only verification.

@@ -848,18 +848,23 @@ test('Resources section illustrations are local PNG assets rather than missing W
 });
 
 test('site pages use the shared local folded-map favicon', () => {
-  const files = ['index.html', 'archive/index.html', 'viewers/index.html',
-    ...runtimes.map(runtime => `viewers/${runtime}-launcher.html`),
-    'archive/2017-12-10-pages/en__app-list__shortlist.html'];
-  for (const file of files) {
-    const html = readFileSync(path.join(publish, file), 'utf8');
+  for (const file of htmlFiles(publish)) {
+    const html = readFileSync(file, 'utf8');
+    if (!/<html\b/i.test(html)) continue;
     const icons = [...html.matchAll(/<link\b[^>]*rel="(?:shortcut )?icon"[^>]*>/g)];
-    assert.ok(icons.length > 0, file + ': favicon exists');
+    assert.equal(icons.length, 1, file + ': one canonical favicon');
     for (const icon of icons) assert.ok(icon[0].includes(`href="${base}/viewers/assets/images/favicon.ico?v=folded-map"`), file);
   }
   const icon = readFileSync(path.join(publish, 'viewers/assets/images/favicon.ico'));
   assert.equal(icon.readUInt16LE(2), 1);
   assert.deepEqual(readFileSync(path.join(publish, 'viewers/favicon.ico')), icon);
+  assert.deepEqual(readFileSync(path.join(publish, 'favicon.ico')), icon);
+  assert.deepEqual(readFileSync(path.join(repo, 'apps/classic-storymaps-site/favicon.ico')), icon);
+  const before = htmlFiles(publish).map(file => readFileSync(file, 'utf8'));
+  execFileSync(process.execPath, [path.join(repo, 'scripts/stage-site-favicons.mjs'), publish], {
+    env: { ...process.env, SITE_BASE_PATH: base }
+  });
+  assert.deepEqual(htmlFiles(publish).map(file => readFileSync(file, 'utf8')), before);
 });
 
 test('Map Series layout options retain their compact layout illustrations', () => {
