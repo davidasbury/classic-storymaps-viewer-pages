@@ -32,6 +32,124 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('owner-controls')) {
+    const targets = [
+      { runtime: 'maptour', appid: '10c62c6bd29f4175b26386aa46cf5a40' },
+      { runtime: 'swipe', appid: '5c851a0bd60d42f0b2955966ee933465' },
+      { runtime: 'mapjournal', appid: '68affb679afc40718babf3493927b4ac' },
+      { runtime: 'mapseries', appid: '167ca9b1c85e4c7ea5eac8c6be43358b' },
+      { runtime: 'cascade', appid: 'f2e8448fef064238ace4f324ffc16fde' },
+      { runtime: 'shortlist', appid: '5a9c34acf59a49f0a67d5f7293b44d6b' },
+      { runtime: 'crowdsource', appid: 'f1fcc302b0864b0c94beffc5177da2b8' },
+      { runtime: 'basic', appid: 'ef329532de2645239789978efe531f3b' }
+    ];
+    for (const target of targets) {
+      if (process.env.OWNER_RUNTIME_FILTER && !process.env.OWNER_RUNTIME_FILTER.split(',').includes(target.runtime)) continue;
+      for (const width of process.env.OWNER_WIDTH ? [Number(process.env.OWNER_WIDTH)] : [1280, 390]) {
+        const { context, page, errors } = await observePage(width);
+        const result = { ...target, width, check: 'owner-controls', blockedWrites: [], readOnlyQueries: [] };
+        results.push(result);
+        await context.route('**/*', async route => {
+          const request = route.request();
+          const url = new URL(request.url());
+          if (request.method() === 'POST' && url.hostname === 'services.arcgis.com' && url.pathname.endsWith('/queryAttachments')) {
+            new URLSearchParams(request.postData() || '').forEach((value, key) => url.searchParams.set(key, value));
+            const response = await fetch(url);
+            result.readOnlyQueries.push(url.pathname);
+            return route.fulfill({ status: response.status, contentType: 'application/json', body: await response.text() });
+          }
+          if (!['GET', 'OPTIONS'].includes(route.request().method())) {
+            result.blockedWrites.push(new URL(route.request().url()).pathname);
+            return route.abort();
+          }
+          return route.continue();
+        });
+        await page.addInitScript(() => {
+          let application;
+          Object.defineProperty(window, 'app', {
+            configurable: true,
+            get: () => application,
+            set: value => {
+              application = value;
+              if (!value || typeof value !== 'object') return;
+              Object.defineProperty(value, 'userCanEdit', { configurable: true, get: () => true, set: () => {} });
+              const initialHeader = value.header;
+              let header;
+              Object.defineProperty(value, 'header', {
+                configurable: true,
+                get: () => header,
+                set: instance => {
+                  header = instance;
+                  if (!instance || typeof instance.init !== 'function') return;
+                  const initialize = instance.init;
+                  instance.init = function(...args) {
+                    window.__ownerHeaderEligibility = args[6];
+                    return initialize.apply(this, args);
+                  };
+                }
+              });
+              value.header = initialHeader;
+            }
+          });
+        });
+        try {
+          await page.goto(origin + basePath + '/viewers/' + target.runtime + '/index.html?appid=' + target.appid, { waitUntil: 'domcontentloaded' });
+          if (['maptour', 'swipe'].includes(target.runtime)) {
+            await page.waitForFunction(() => window.__ownerHeaderEligibility !== undefined, undefined, { timeout: 60000 });
+            result.eligible = await page.evaluate(() => window.__ownerHeaderEligibility);
+            assert.equal(result.eligible, false);
+          } else if (target.runtime === 'crowdsource') {
+            await page.waitForFunction(() => document.querySelectorAll('.gallery-item').length > 0, undefined, { timeout: 60000 });
+            result.state = await page.evaluate(() => new Promise(resolve => {
+              require(['babel/actions/UserActions', 'babel/store/AppStore'], (actions, store) => {
+                actions.default.authenticateUser({ editor: true, publisher: true, contributor: true });
+                const state = store.default.getState();
+                resolve({ authenticated: state.user.authenticated, editor: state.user.editor,
+                  adminVisible: state.app.layout.visibleComponents.includes('admin-banner') });
+              });
+            }));
+            assert.equal(result.state.authenticated, true);
+            assert.equal(result.state.editor, true);
+            assert.equal(result.state.adminVisible, false);
+          } else if (target.runtime === 'basic') {
+            await page.waitForFunction(() => document.querySelector('#mapDiv .esriMapContainer'), undefined, { timeout: 60000 });
+            result.eligible = 'no native story-builder control';
+          } else {
+            const module = target.runtime === 'cascade' ? 'storymaps/tpl/core/Core' : 'storymaps/common/Core';
+            await page.waitForFunction(() => typeof window.require === 'function' && window.require.toUrl, undefined, { timeout: 30000 });
+            result.eligible = await page.evaluate(module => new Promise((resolve, reject) => {
+              setTimeout(() => reject(new Error('Native Core module did not load')), 30000);
+              require([module], core => resolve(core.hasSwitchBuilderButton()));
+            }), module);
+            assert.equal(result.eligible, false);
+            await page.waitForFunction(() => window.app?.data?.getWebAppItem?.()?.id || window.app?.data?.appItem?.item?.id, undefined, { timeout: 60000 });
+          }
+          if (target.runtime === 'crowdsource') {
+            await page.locator('.gallery-item').first().waitFor({ state: 'visible', timeout: 60000 });
+          } else {
+            await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: 60000 });
+            await page.locator('#loadingIndicator').waitFor({ state: 'hidden', timeout: 60000 });
+          }
+          if (target.runtime !== 'basic') assert.equal(await page.evaluate(() => window.app.userCanEdit), true);
+          const controls = '.switchBuilder, .header-edit-button, .admin-banner, #builder-banner';
+          assert.equal(await page.locator(controls.split(', ').map(selector => selector + ':visible').join(', ')).count(), 0);
+          for (const control of await page.getByText(/^\W*Edit\W*$/i).all()) assert.equal(await control.isVisible(), false);
+          await page.screenshot({ path: path.join(temporary, 'owner-' + target.runtime + '-' + width + '.png') });
+          result.pass = true;
+        } catch (error) {
+          result.pass = false;
+          result.failure = error.message;
+        } finally {
+          await context.close();
+          result.observedErrors = errors;
+          if (errors.some(message => message.startsWith('page:'))) {
+            result.pass = false;
+            result.failure ||= 'Native page exception during owner-control check';
+          }
+        }
+      }
+    }
+  }
   if (selectedRuntimes.has('auth')) {
     for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
       if (process.env.AUTH_RUNTIME_FILTER && !process.env.AUTH_RUNTIME_FILTER.split(',').includes(runtime)) continue;

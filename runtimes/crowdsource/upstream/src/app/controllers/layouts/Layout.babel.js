@@ -39,10 +39,6 @@ export default class LayoutController {
 
     const currentLayout = lang.getObject('appState.items.app.data.values.settings.layout.id',false,this);
 
-    if (!this.checkedAdminPanel && !lang.getObject('appState.mode.isMobile',false,this) && !lang.getObject('appState.mode.isBuilder',false,this) && lang.getObject('appState.user.editor',false,this)) {
-      this.checkedAdminPanel = true;
-      AppActions.showComponent(componentNames.ADMIN_BANNER);
-    }
     if (lang.getObject('appState.mode.isMobile',false,this) && lang.getObject('appState.app.layout.visibleComponents',false,this).indexOf(componentNames.ADMIN_BANNER) >= 0) {
       this.checkedAdminPanel = false;
       AppActions.hideComponent(componentNames.ADMIN_BANNER);

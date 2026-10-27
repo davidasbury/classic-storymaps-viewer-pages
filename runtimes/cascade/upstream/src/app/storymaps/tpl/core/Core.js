@@ -1006,10 +1006,7 @@ define([
   //
 
   function hasSwitchBuilderButton() {
-    return ! app.isInBuilder && (
-      (! isProd() && !! CommonHelper.getAppID(isProd()))
-      || isProd() && app.userCanEdit)
-      && (_urlParams.preview === undefined || _urlParams.preview == 'false');
+    return false;
   }
 
   function redirectToSignIn() {

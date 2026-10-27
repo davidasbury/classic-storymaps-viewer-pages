@@ -9,6 +9,65 @@ import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
+for (const runtime of ['cascade', 'mapjournal', 'mapseries']) {
+test(runtime + ' never enables the builder button for an authenticated owner', async () => {
+  const corePath = runtime === 'cascade' ? 'tpl/core' : 'common';
+  const source = readFileSync(path.join(repo, 'runtimes', runtime, 'upstream/src/app/storymaps', corePath, 'Core.js'), 'utf8');
+  const gate = source.match(/function hasSwitchBuilderButton\(\)\s*\{[^{}]*\}/);
+  assert.ok(gate);
+  for (const userCanEdit of [true, false]) {
+    const eligible = vm.runInNewContext('(' + gate[0] + ')', { app: { userCanEdit, isInBuilder: false } });
+    assert.equal(eligible(), false);
+  }
+  const { disableRuntimeEdit } = await import('../patch-runtime-edit-controls.mjs');
+  const disableEdit = original => disableRuntimeEdit(runtime, original);
+  const original = 'define("storymaps/' + corePath + '/Core",[],function(){function gate(){return app.userCanEdit;}return{hasSwitchBuilderButton:gate}}),define("other",[],function(){function gate(){return true;}return gate})';
+  const patched = disableEdit(original);
+  for (const userCanEdit of [true, false]) {
+    const modules = new Map();
+    vm.runInNewContext(patched, { app: { userCanEdit }, define: (name, dependencies, factory) => modules.set(name, factory()) });
+    assert.equal(modules.get('storymaps/' + corePath + '/Core').hasSwitchBuilderButton(), false);
+    assert.equal(modules.get('other')(), true);
+  }
+  assert.equal(disableEdit(patched), patched);
+  assert.throws(() => disableEdit(original.replace('app.userCanEdit', 'unknown()')), /Unrecognized/);
+  assert.throws(() => disableEdit(original + ',' + original), /exactly once/);
+  assert.equal(disableEdit(original.replace('return app.userCanEdit;', 'return!1')), patched);
+  if (runtime === 'mapjournal') {
+    const header = original.replace('return{hasSwitchBuilderButton:gate}', 'app.ui.headerDesktop.init(false,"title","subtitle",{},"black",gate);return{hasSwitchBuilderButton:gate}');
+    let eligible;
+    vm.runInNewContext(disableEdit(header), {
+      app: { userCanEdit: true, ui: { headerDesktop: { init: (...args) => { eligible = args[5]; } } } },
+      define: (name, dependencies, factory) => factory()
+    });
+    assert.equal(eligible, false);
+    assert.equal(disableEdit(disableEdit(header)), disableEdit(header));
+  }
+  assert.match(readFileSync(path.join(repo, 'scripts/build-' + runtime + '-runtime.sh'), 'utf8'), new RegExp('patch-runtime-edit-controls\\.mjs" ' + runtime));
+});
+}
+
+test('Crowdsource authenticated editors cannot open the owner banner', async () => {
+  const { disableRuntimeEdit } = await import('../patch-runtime-edit-controls.mjs');
+  const original = 'function update(){provider["default"].getObject("appState.user.editor",!1,this)&&(this.checkedAdminPanel=!0,actions.showComponent("admin-banner"))}';
+  const patched = disableRuntimeEdit('crowdsource', original);
+  for (const editor of [false, true]) {
+    for (const [bundle, expected] of [[original, editor], [patched, false]]) {
+      let shown = false;
+      const update = vm.runInNewContext('(' + bundle + ')', {
+        provider: { default: { getObject: () => editor } }, actions: { showComponent: () => { shown = true; } }
+      });
+      update.call({});
+      assert.equal(shown, expected);
+    }
+  }
+  assert.throws(() => disableRuntimeEdit('crowdsource', patched), /exactly once/);
+  assert.throws(() => disableRuntimeEdit('unknown', original), /Unsupported/);
+  const source = readFileSync(path.join(repo, 'runtimes/crowdsource/upstream/src/app/controllers/layouts/Layout.babel.js'), 'utf8');
+  assert.doesNotMatch(source, /showComponent\(componentNames.ADMIN_BANNER\)/);
+  assert.match(readFileSync(path.join(repo, 'scripts/build-crowdsource-runtime.sh'), 'utf8'), /patch-runtime-edit-controls\.mjs" crowdsource/);
+});
+
 test('Cascade print release adapter wires both HTML sinks and CSS through security policy', async () => {
   const { patchCascadePrintBundle, secureCascadePrint } = await import('../../runtimes/cascade/patches/print-security.mjs');
   const text = 'define("storymaps-react/tpl/print/media/Text",["module","exports","react"],function(e,t,n){var a={default:n};t.default={render:function(){var e=this.createMarkup(this.props.text);return a.default.createElement(this.props.tag,{dangerouslySetInnerHTML:e})}}})';
@@ -301,7 +360,7 @@ for (const runtime of ['cascade', 'shortlist', 'mapseries']) {
         assert.deepEqual(JSON.parse(html.match(expression)[1]), JSON.parse(source.match(expression)[1]));
       }
       const bundle = readFileSync(path.join(output, 'app/viewer-min.js'), 'utf8');
-      if (runtime === 'shortlist') {
+      if (['shortlist', 'cascade', 'mapseries'].includes(runtime)) {
         const gateName = bundle.match(/hasSwitchBuilderButton:([\w$]+)/)?.[1];
         assert.ok(gateName, 'Shortlist edit-button eligibility must be identifiable');
         const gates = [...bundle.matchAll(new RegExp('function ' + gateName.replace(/\$/g, '\\$') + '\\(\\)\\{([^{}]*)\\}', 'g'))];
@@ -312,6 +371,8 @@ for (const runtime of ['cascade', 'shortlist', 'mapseries']) {
           const eligible = vm.runInNewContext('(' + gate[0] + ')', { app: { userCanEdit, isInBuilder: false } });
           assert.equal(eligible(), false);
         }
+      }
+      if (runtime === 'shortlist') {
         const switchFunction = bundle.match(/switchToBuilder:(function\(\)\{[^{}]*\}),isArcGISHosted/);
         assert.ok(switchFunction, 'Builder transition helper must be identifiable');
         const switchToBuilder = vm.runInNewContext('(' + switchFunction[1] + ')', {

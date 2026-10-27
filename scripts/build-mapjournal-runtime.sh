@@ -59,5 +59,6 @@ else
 fi
 
 node "$(dirname "${BASH_SOURCE[0]}")/../runtimes/mapjournal/patches/embedded-base-path.mjs" "$OUTPUT_PATH"
+node "$(dirname "${BASH_SOURCE[0]}")/patch-runtime-edit-controls.mjs" mapjournal "$OUTPUT_PATH"
 
 echo "Map Journal build output copied to $OUTPUT_PATH"

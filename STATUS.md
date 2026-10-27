@@ -12,7 +12,7 @@ updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
-  phase: Cascade print hardened and runners pinned; deployment and remaining acceptance pending
+  phase: Owner editing controls disabled and Cascade print hardened; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -21,6 +21,26 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Owner editing controls disabled; all eight viewers checked, 2026-10-26.**
+
+Cascade, Map Journal and Map Series now reject owner Edit eligibility in source
+and generated bundles. Crowdsource no longer opens its owner/admin banner.
+Journal's alternate desktop header now receives the eligibility result rather
+than a truthy function. Existing Map Tour, Swipe and Shortlist restrictions
+passed; Basic has no equivalent story-builder entry point. User ownership and
+content-access permissions are preserved.
+
+All sixteen desktop/mobile native owner-state checks passed in an isolated site,
+with no page exceptions. All four original affected bundles failed the matching
+negative controls. The shared tree passed 192 Node tests, including concurrent
+Map Tour tests. Known media/logo failures and blocked metadata requests remain
+separate from this control-specific acceptance. See
+[verification](docs/testing/viewer-edit-controls.md) and
+[session 0046](session-logs/2026-10-26-0046-session-log.md).
+
+These changes are unpublished. The shared preview, signed-in browser sessions,
+ArcGIS content, Netlify and concurrent Map Tour work were not changed.
 
 **Cascade print hardened and runners pinned; not deployed, 2026-10-26.**
 
