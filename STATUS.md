@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Gallery scope/sharing and URL input implemented locally; owner acceptance and versioned release pending
+  phase: Viewer technical preflight passed; retained-content decisions, attribution and owner acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,25 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Viewer-only release preflight passed; publication remains gated, 2026-10-26.**
+
+Candidate `c005ec7463e98261ebb261253b30814b694a0008` passed a fresh isolated
+Node 24 build of all eight runtimes, 149 tests, 70 published-link checks and
+53 Chrome checks. This covers the pending favicon, shared sign-in, gallery,
+URL-input and text changes. Production-root paths, the existing production
+OAuth client, disabled conversion integration and transparent favicon were
+verified. The owner preview was not rebuilt. See
+[session 0037](session-logs/2026-10-26-0037-session-log.md) for the artifact
+digest, scope, independent checks and limits.
+
+The eight unresolved Tailcoat/Basic social font files remain byte-identical
+and present in the candidate. Their keep/replace decision, the archive-image
+disposition, open attribution checks and owner acceptance with real private
+content remain release gates. Synthetic browser checks do not clear them.
+No workflow was dispatched: accepted Pages run `40416446662` remains live.
+Netlify was untouched. The full intended publication SHA must be selected and
+rechecked after documentation closure; this preflight is not release approval.
 
 **Gallery scope, sharing and URL input implemented locally, 2026-10-26.**
 
@@ -55,9 +74,10 @@ general self-hosted configuration scraper. Unknown or ambiguous URLs require
 the app ID. The supplied Cascade item was inaccessible or absent anonymously;
 its actual authorized rendering remains unverified.
 
-All 148 Node tests passed under Node 24, and five isolated browser scenarios
-passed: three public-gallery widths, signed-in filter/session transitions, and
-URL routing. Screenshots were inspected at desktop and narrow-phone widths.
+The implementation checkpoint passed 148 Node tests under Node 24 and five
+isolated browser scenarios: three public-gallery widths, signed-in filter/session
+transitions, and URL routing. The broader candidate preflight above supersedes
+those counts. Screenshots were inspected at desktop and narrow-phone widths.
 Public service responses independently confirmed the two legacy app IDs and
 the Map Tour URL. Private access checks used synthetic sessions, not the owner's
 credentials; real permission and full story-rendering acceptance remain pending.
