@@ -6,6 +6,7 @@
   'use strict';
 
   var REST = 'https://www.arcgis.com/sharing/rest/';
+  var SORT_FIELDS = ['modified', 'created', 'title', 'owner', 'numviews', 'avgrating', 'numratings', 'numcomments', 'scorecompleteness'];
   var ID = /^[a-f0-9]{32}$/i;
   var STATUS_KEY = 'classic-public-source-status-v1';
   var STATUS_TTL = 30 * 60 * 1000;
@@ -64,10 +65,13 @@
     else throw new Error('A valid gallery source is required.');
     if (options.scope !== 'online') source += ' AND ' + (sharing === 'private' ? '(access:private OR access:shared)' : 'access:' + sharing);
     var url = new URL(REST + 'search');
+    var sortField = SORT_FIELDS.includes(options.sort) ? options.sort : 'modified';
+    var sortOrder = ['asc', 'desc'].includes(options.sortOrder) ? options.sortOrder
+      : ['title', 'owner'].includes(sortField) ? 'asc' : 'desc';
     var query = source + ' AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)';
     if (String(options.title || '').trim()) query += ' AND title:' + quote(options.title.trim());
     url.search = new URLSearchParams({ f: 'json', q: query, num: '100', start: String(options.start || 1),
-      sortField: options.sort === 'title' ? 'title' : 'modified', sortOrder: options.sort === 'title' ? 'asc' : 'desc' }).toString();
+      sortField: sortField, sortOrder: sortOrder }).toString();
     return url;
   }
 
@@ -144,14 +148,15 @@
     var seen = new Set();
     var limited = false;
     var pageSize = options.pageSize || 24;
-    return { next: async function(signal) {
+    return { bufferedPages: function() { return Math.ceil(buffer.length / pageSize); }, next: async function(signal, requestLimit) {
       var nextCursor = cursor;
       var nextBuffer = buffer.slice();
       var nextSeen = new Set(seen);
       var nextLimited = limited;
       var requests = 0;
       var skipped = 0;
-      while (nextBuffer.length < pageSize && nextCursor !== -1 && requests < 3) {
+      var budget = requestLimit === undefined ? 3 : Math.max(0, Math.min(3, requestLimit));
+      while (nextBuffer.length < pageSize && nextCursor !== -1 && requests < budget) {
         var response = await options.fetchPage(nextCursor, signal);
         if (signal) signal.throwIfAborted();
         if (!Array.isArray(response.results) || !Number.isInteger(response.nextStart)) throw new Error('Invalid search response.');
@@ -172,8 +177,20 @@
       seen = nextSeen;
       limited = nextLimited;
       return { items: items, hasMore: buffer.length > 0 || cursor !== -1, limited: limited,
-        continuation: items.length < pageSize && cursor !== -1, skipped: skipped };
+        continuation: items.length < pageSize && cursor !== -1, skipped: skipped, requests: requests };
     } };
+  }
+
+  function pageNumbers(current, count) {
+    if (count < 1) return [];
+    if (count <= 5) return Array.from({ length: count }, function(_, index) { return index + 1; });
+    var start = Math.max(1, Math.min(current - 1, count - 2));
+    var numbers = [1];
+    for (var page = start; page <= Math.min(count, start + 2); page++) {
+      if (!numbers.includes(page)) numbers.push(page);
+    }
+    if (!numbers.includes(count)) numbers.push(count);
+    return numbers;
   }
 
   function mount(options) {
@@ -190,8 +207,12 @@
     var sharingFilter = document.getElementById('stories-sharing');
     var runtimeFilter = document.getElementById('stories-runtime');
     var sort = document.getElementById('stories-sort');
+    var sortOrder = document.getElementById('stories-sort-order');
     var previous = document.getElementById('stories-previous');
     var next = document.getElementById('stories-next');
+    var backward = document.getElementById('stories-backward');
+    var forward = document.getElementById('stories-forward');
+    var numberedPages = document.getElementById('stories-pages');
     var refresh = document.getElementById('stories-refresh');
     var pageLabel = document.getElementById('stories-page');
     var token = null;
@@ -227,9 +248,30 @@
     function updateButtons() {
       previous.disabled = loading || pageIndex <= 0;
       next.disabled = loading || pageIndex < 0 || !(pageIndex < pages.length - 1 || pages[pageIndex].hasMore);
+      backward.disabled = previous.disabled;
+      forward.disabled = next.disabled;
       refresh.disabled = loading;
       section.setAttribute('aria-busy', String(loading));
       pageLabel.textContent = pageIndex >= 0 ? 'Page ' + (pageIndex + 1) : '';
+      if (pages.length && !pages[pages.length - 1].hasMore) pageLabel.textContent += ' of ' + pages.length;
+      numberedPages.replaceChildren();
+      var knownPages = pages.length + (pager ? pager.bufferedPages() : 0);
+      var previousNumber = 0;
+      pageNumbers(pageIndex + 1, knownPages).forEach(function(number) {
+        if (previousNumber && number > previousNumber + 1) {
+          var gap = element('span', 'story-page-gap', '...');
+          gap.setAttribute('aria-hidden', 'true');
+          numberedPages.appendChild(gap);
+        }
+        var button = element('button', 'story-control', String(number));
+        button.type = 'button';
+        button.disabled = loading;
+        button.setAttribute('aria-label', 'Page ' + number);
+        if (number === pageIndex + 1) button.setAttribute('aria-current', 'page');
+        button.addEventListener('click', function() { navigate(number - 1); });
+        numberedPages.appendChild(button);
+        previousNumber = number;
+      });
     }
     function invalidate() {
       clearTimeout(debounce);
@@ -332,10 +374,17 @@
       return (!runtimeFilter.value || story.runtime === runtimeFilter.value)
         && story.title.toLowerCase().includes(search.value.trim().toLowerCase());
     }
-    async function load() {
+    async function load(targetIndex) {
       if (loading || section.hidden) return;
       var currentToken = options.getToken();
       if (currentToken !== token) { setSession(currentToken); return; }
+      if (!Number.isInteger(targetIndex)) targetIndex = pages.length;
+      targetIndex = Math.max(0, Math.min(targetIndex, pages.length + 4));
+      if (targetIndex < pages.length) {
+        pageIndex = targetIndex;
+        render(pages[pageIndex]);
+        return true;
+      }
       var epoch = generation;
       var signal = controller.signal;
       loading = true;
@@ -360,7 +409,7 @@
             return;
           }
           heading.textContent = { mine: 'My Content', org: 'My Organization', online: 'ArcGIS Online' }[scopeFilter.value];
-          var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value, sort: sort.value };
+          var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value, sort: sort.value, sortOrder: sortOrder.value };
           pager = createPager({
             fetchPage: function(start, pageSignal) { return client.json(searchUrl(Object.assign({}, queryOptions, { start: start })), queryOptions.scope === 'online' ? null : token, pageSignal); },
             accept: function(candidate) {
@@ -369,17 +418,32 @@
             }
           });
         }
-        var page = await pager.next(signal);
-        if (signal.aborted || epoch !== generation) return;
-        pages.push(page);
+        var budget = 3;
+        while (pages.length <= targetIndex && (budget > 0 || pager.bufferedPages() > 0)) {
+          var page = await pager.next(signal, budget);
+          if (signal.aborted || epoch !== generation) return;
+          budget -= page.requests;
+          if (page.items.length && pages.length === 1 && !pages[0].items.length) pages[0] = page;
+          else if (page.items.length || !pages.length) pages.push(page);
+          else Object.assign(pages[pages.length - 1], { hasMore: page.hasMore, limited: page.limited, continuation: page.continuation });
+          if (!page.hasMore || page.continuation) break;
+        }
         pageIndex = pages.length - 1;
-        render(page);
+        render(pages[pageIndex]);
+        return true;
       } catch (error) {
         if (signal.aborted || epoch !== generation) return;
         if (token && [401, 498, 499].includes(error.code)) { options.onExpired(); return; }
         status.textContent = 'Stories could not be loaded. Try Refresh.';
       } finally {
         if (epoch === generation) { loading = false; updateButtons(); }
+      }
+    }
+    async function navigate(index) {
+      var epoch = generation;
+      if (await load(index) && epoch === generation) {
+        heading.focus({ preventScroll: true });
+        heading.scrollIntoView({ block: 'start', behavior: 'instant' });
       }
     }
     function restart() { invalidate(); if (!section.hidden) load(); }
@@ -397,6 +461,7 @@
       search.value = '';
       runtimeFilter.value = '';
       sort.value = 'modified';
+      sortOrder.value = 'desc';
       scopeFilter.value = value ? 'mine' : 'online';
       sharingFilter.value = 'public';
       updateFilters();
@@ -420,13 +485,12 @@
     scopeFilter.addEventListener('change', function() { updateFilters(); restart(); });
     sharingFilter.addEventListener('change', restart);
     sort.addEventListener('change', restart);
+    sortOrder.addEventListener('change', restart);
     refresh.addEventListener('click', restart);
-    previous.addEventListener('click', function() { if (!loading && pageIndex > 0) { pageIndex--; render(pages[pageIndex]); } });
-    next.addEventListener('click', function() {
-      if (loading) return;
-      if (pageIndex < pages.length - 1) { pageIndex++; render(pages[pageIndex]); }
-      else load();
-    });
+    previous.addEventListener('click', function() { navigate(pageIndex - 1); });
+    next.addEventListener('click', function() { navigate(pageIndex + 1); });
+    backward.addEventListener('click', function() { navigate(Math.max(0, pageIndex - 5)); });
+    forward.addEventListener('click', function() { navigate(pageIndex + 5); });
     window.addEventListener('pagehide', invalidate);
     window.addEventListener('storage', function(event) { if (event.key === STATUS_KEY || event.key === null) updateSourceBadges(); });
     window.addEventListener('classic-source-status', updateSourceBadges);
@@ -440,6 +504,6 @@
   }
 
   return { storyFromItem: storyFromItem, searchUrl: searchUrl, convertUrl: convertUrl,
-    thumbnailUrl: thumbnailUrl, createClient: createClient, createPager: createPager, mount: mount,
+    thumbnailUrl: thumbnailUrl, createClient: createClient, createPager: createPager, pageNumbers: pageNumbers, mount: mount,
     rememberSourceStatus: rememberSourceStatus };
 });

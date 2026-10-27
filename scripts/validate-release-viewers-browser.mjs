@@ -475,6 +475,157 @@ try {
       await context.close();
     }
   }
+  if (selectedRuntimes.has('gallery-pagination')) {
+    for (const width of [1440, 390, 320]) {
+      const { context, page, errors } = await observePage(width);
+      const result = { runtime: 'gallery-pagination', width };
+      results.push(result);
+      const fields = { modified: 'modified', created: 'created', title: 'title', owner: 'owner', numviews: 'numViews', avgrating: 'avgRating', numratings: 'numRatings', numcomments: 'numComments', scorecompleteness: 'scoreCompleteness' };
+      const stories = Array.from({ length: 245 }, (_, index) => ({
+        id: (index + 1).toString(16).padStart(32, '0'), title: 'Story ' + String(index + 1).padStart(3, '0'),
+        owner: 'owner-' + index % 7, type: 'Web Mapping Application', access: 'public', typeKeywords: ['Story Map Journal'],
+        modified: index, created: 245 - index, numViews: index * 3, avgRating: index % 6,
+        numRatings: index % 13, numComments: index % 17, scoreCompleteness: index % 101
+      }));
+      const ordered = (field, direction) => [...stories].sort((first, second) => {
+        const left = first[fields[field]];
+        const right = second[fields[field]];
+        const comparison = typeof left === 'string' ? left.localeCompare(right) : left - right;
+        return direction === 'asc' ? comparison : -comparison;
+      });
+      const requests = [];
+      let mode = 'normal';
+      let held;
+      let releaseHeld;
+      let heldFinished;
+      await context.route('https://www.arcgis.com/sharing/rest/search?**', async route => {
+        const url = new URL(route.request().url());
+        const start = Number(url.searchParams.get('start'));
+        const field = url.searchParams.get('sortField');
+        const direction = url.searchParams.get('sortOrder');
+        requests.push({ start, field, direction });
+        assert.equal(route.request().headers()['x-esri-authorization'], undefined);
+        assert.equal(url.searchParams.has('token'), false);
+        if (mode === 'error' && start > 1) {
+          mode = 'normal';
+          return route.fulfill({ json: { error: { code: 500 } } });
+        }
+        if (mode === 'held' && start > 1) {
+          mode = 'normal';
+          held();
+          await new Promise(resolve => { releaseHeld = resolve; });
+          await route.fulfill({ json: { results: ordered(field, direction).slice(start - 1, start + 99), nextStart: -1 } }).catch(() => {});
+          heldFinished();
+          return;
+        }
+        if (mode === 'sparse') return route.fulfill({ json: start <= 600
+          ? { results: [{ ...stories[0], type: 'StoryMap' }], nextStart: start + 100, total: 10000 }
+          : { results: stories.slice(0, 24), nextStart: -1, total: 10000 } });
+        const sorted = ordered(field, direction);
+        return route.fulfill({ json: { results: sorted.slice(start - 1, start + 99), nextStart: start + 100 > sorted.length ? -1 : start + 100, total: 10000 } });
+      });
+      const settled = () => page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false' && document.querySelectorAll('.story-card').length > 0);
+      try {
+        await page.goto(origin + basePath + '/viewers/');
+        await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+        await settled();
+        assert.deepEqual(await page.locator('#stories-pages button').allTextContents(), ['1', '2', '3', '4', '5']);
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+        assert.equal(requests.length, 1);
+        await page.getByRole('button', { name: 'Page 5', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('.story-title').first().innerText(), 'Story 149');
+        assert.equal(await page.locator('#stories-pages [aria-current="page"]').innerText(), '5');
+        const beforeForward = requests.length;
+        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 10');
+        assert.ok(requests.length - beforeForward <= 3);
+        await page.getByRole('button', { name: 'Page 11', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 11 of 11');
+        assert.equal(await page.locator('.story-card').count(), 5);
+        assert.equal(await page.getByRole('button', { name: 'Next page', exact: true }).isDisabled(), true);
+        const beforeBack = requests.length;
+        await page.getByRole('button', { name: 'Back up to five pages', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 6 of 11');
+        assert.equal(requests.length, beforeBack);
+        await page.locator('.story-pagination').scrollIntoViewIfNeeded();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        assert.equal(await page.locator('.story-pagination').evaluate(element => [...element.querySelectorAll('button')].every(button => {
+          const bounds = button.getBoundingClientRect();
+          return bounds.left >= 0 && bounds.right <= innerWidth && button.scrollWidth <= button.clientWidth;
+        })), true);
+        await page.screenshot({ path: path.join(temporary, 'gallery-pages-' + width + '.png') });
+        await page.getByRole('button', { name: 'Page 1', exact: true }).focus();
+        await page.keyboard.press('Enter');
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1 of 11');
+        assert.equal(requests.length, beforeBack);
+        for (const field of Object.keys(fields)) {
+          await page.getByLabel('Sort', { exact: true }).selectOption(field);
+          await settled();
+          assert.equal(await page.locator('#stories-sort').evaluate(select => {
+            const style = getComputedStyle(select);
+            const context = document.createElement('canvas').getContext('2d');
+            context.font = style.font;
+            return context.measureText(select.selectedOptions[0].textContent).width + 32 <= select.clientWidth;
+          }), true, 'Selected sort label fits');
+          for (const direction of ['asc', 'desc']) {
+            await page.getByLabel('Sort direction', { exact: true }).selectOption(direction);
+            await settled();
+            assert.deepEqual(requests.at(-1), { start: 1, field, direction });
+            assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+            assert.deepEqual(await page.locator('.story-title').allTextContents(), ordered(field, direction).slice(0, 24).map(story => story.title));
+          }
+        }
+        await page.locator('.story-toolbar').scrollIntoViewIfNeeded();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        await page.screenshot({ path: path.join(temporary, 'gallery-sort-' + width + '.png') });
+        mode = 'error';
+        await page.getByRole('button', { name: 'Page 5', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('could not be loaded'));
+        await page.getByRole('button', { name: 'Page 5', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 5');
+        await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+        await settled();
+        mode = 'held';
+        const heldRequest = new Promise(resolve => { held = resolve; });
+        const released = new Promise(resolve => { heldFinished = resolve; });
+        await page.getByRole('button', { name: 'Page 5', exact: true }).click();
+        await heldRequest;
+        assert.equal(await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).isDisabled(), true);
+        await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');
+        await settled();
+        releaseHeld();
+        await released;
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+        assert.deepEqual(await page.locator('.story-title').allTextContents(), ordered('scorecompleteness', 'asc').slice(0, 24).map(story => story.title));
+        mode = 'sparse';
+        let beforeSparse = requests.length;
+        await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false' && !document.querySelector('.story-card'));
+        assert.equal(requests.length - beforeSparse, 3);
+        beforeSparse = requests.length;
+        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
+        assert.equal(requests.length - beforeSparse, 3);
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
+        await settled();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1 of 1');
+        assert.equal(await page.getByRole('button', { name: 'Previous page', exact: true }).isDisabled(), true);
+        assert.deepEqual(errors.filter(message => message.startsWith('page:')), []);
+        result.pass = true;
+      } catch (error) {
+        result.pass = false;
+        result.failure = error.stack;
+        await page.screenshot({ path: path.join(temporary, 'gallery-pages-failure-' + width + '.png') });
+      } finally { if (releaseHeld) releaseHeld(); await context.close(); }
+    }
+  }
   if (selectedRuntimes.has('gallery')) {
     for (const width of [1440, 390, 320]) {
       const { context, page, errors } = await observePage(width);
@@ -494,6 +645,7 @@ try {
           assert.match(url.searchParams.get('q'), /^access:public AND/);
           assert.equal(route.request().headers()['x-esri-authorization'], undefined);
           const stories = url.searchParams.get('sortField') === 'title' ? [...examples].sort((first, second) => first.title.localeCompare(second.title)) : examples;
+          if (url.searchParams.get('sortField') === 'title' && url.searchParams.get('sortOrder') === 'desc') stories.reverse();
           return route.fulfill({ json: { results: stories, nextStart: -1 } });
         });
         assert.equal(await page.locator('#story-gallery').isVisible(), false);
@@ -537,6 +689,7 @@ try {
         await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'No matching stories found.');
         await page.getByLabel('Search stories', { exact: true }).fill('');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
+        await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');
         await page.getByLabel('Sort', { exact: true }).selectOption('title');
         await page.waitForFunction(() => document.querySelector('.story-title')?.textContent === 'Palau');
         await page.locator('.story-image').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));

@@ -231,6 +231,49 @@ test('organization results allow accessible other-owner items without granting c
   assert.equal(gallery().storyFromItem(item(1, { access: 'private', orgId: 'other-org' }), config, selection), null);
 });
 
+test('gallery sorting uses documented fields and explicit directions with safe defaults', () => {
+  for (const sort of ['modified', 'created', 'title', 'owner', 'numviews', 'avgrating', 'numratings', 'numcomments', 'scorecompleteness']) {
+    for (const sortOrder of ['asc', 'desc']) {
+      const url = gallery().searchUrl({ scope: 'online', sort, sortOrder });
+      assert.equal(url.searchParams.get('sortField'), sort);
+      assert.equal(url.searchParams.get('sortOrder'), sortOrder);
+      assert.equal(url.searchParams.has('token'), false);
+    }
+  }
+  const invalid = gallery().searchUrl({ scope: 'online', sort: 'arbitrary', sortOrder: 'arbitrary' });
+  assert.equal(invalid.searchParams.get('sortField'), 'modified');
+  assert.equal(invalid.searchParams.get('sortOrder'), 'desc');
+  assert.equal(gallery().searchUrl({ scope: 'online', sort: 'title' }).searchParams.get('sortOrder'), 'asc');
+});
+
+test('page shortcuts include the current neighborhood and known endpoints without invented pages', () => {
+  assert.deepEqual(gallery().pageNumbers(0, 0), []);
+  assert.deepEqual(gallery().pageNumbers(1, 1), [1]);
+  assert.deepEqual(gallery().pageNumbers(1, 5), [1, 2, 3, 4, 5]);
+  assert.deepEqual(gallery().pageNumbers(8, 20), [1, 7, 8, 9, 20]);
+  assert.deepEqual(gallery().pageNumbers(20, 20), [1, 18, 19, 20]);
+});
+
+test('pager exposes only filtered buffered pages and shares a bounded jump request budget', async () => {
+  let requests = 0;
+  const pager = gallery().createPager({ pageSize: 2, accept: candidate => candidate.keep && candidate,
+    fetchPage: async start => {
+      requests++;
+      return { results: Array.from({ length: 10 }, (_, offset) => ({ id: start + offset, keep: offset % 2 === 0 })), nextStart: start + 10, total: 10000 };
+    }
+  });
+  assert.equal(pager.bufferedPages(), 0);
+  const first = await pager.next();
+  assert.equal(first.requests, 1);
+  assert.equal(pager.bufferedPages(), 2);
+  await pager.next(undefined, 0);
+  const partial = await pager.next(undefined, 0);
+  assert.equal(partial.items.length, 1);
+  assert.equal(partial.hasMore, true);
+  assert.equal(pager.bufferedPages(), 0);
+  assert.equal(requests, 1);
+});
+
 test('conversion is gated by identity, deployment approval and supported runtime', () => {
   const config = configuration();
   assert.equal(gallery().convertUrl(item(1, { runtime: 'mapjournal' }), config, 'owner'), null);

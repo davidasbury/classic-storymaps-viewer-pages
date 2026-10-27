@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
   maptour_compatibility: Night-style repair and owner notice verified locally; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   phase: Classic pointer resolution and source-status badges, print rendering and owner controls verified; publication and remaining acceptance pending
@@ -22,6 +23,23 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Gallery page shortcuts and expanded sorting are verified locally, 2026-10-27.**
+
+The gallery now provides numbered shortcuts, first/discovered-end page links,
+and bounded five-page forward/backward jumps. Page numbers expand as filtered
+results become available instead of treating ArcGIS's raw search total as a
+Classic-story count. Nine server-side sort fields have explicit ascending and
+descending controls, including modified/created dates and view counts.
+
+All 205 Node tests passed. Seven browser scenarios passed for each of the root
+and project-prefix layouts, including narrow phones, cancellation, retry and
+synthetic account changes. All 18 live public sort requests succeeded; a live
+anonymous preview loaded 24 cards and four numbered pages without page errors
+or ArcGIS writes. See [verification](docs/testing/gallery-pagination-sorting.md)
+and [session 0053](session-logs/2026-10-27-0053-session-log.md).
+The owner authorized commit/push closure with `[skip ci]`; publication remains
+pending. Existing shared previews and signed-in browser sessions were preserved.
 
 **Map Tour repairs the unavailable Night style in memory, 2026-10-27.**
 
