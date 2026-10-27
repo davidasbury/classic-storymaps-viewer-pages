@@ -60,15 +60,16 @@
     "notes": "Capture runtime-specific viewer-only differences as explicit patches."
   },
   "patches": {
-    "patchSetId": "maptour-production-alignment-v5",
+    "patchSetId": "maptour-production-alignment-v6",
     "files": [
       "runtimes/maptour/patches/0001-production-behavior-align.patch",
       "runtimes/maptour/patches/0002-iis-web-config-addition.patch",
       "runtimes/maptour/patches/0003-runtime-webmap-compatibility.patch",
       "runtimes/maptour/patches/0004-archived-photo-fallback.patch",
-      "runtimes/maptour/patches/0005-opt-in-wayback-discovery.patch"
+      "runtimes/maptour/patches/0005-opt-in-wayback-discovery.patch",
+      "runtimes/maptour/patches/0006-streets-night-style-repair.patch"
     ],
-    "rationale": "Align imported runtime behavior and IIS deploy profile, with viewer-only in-memory web map compatibility repairs, actionable loading errors, a verified archived-photo fallback, and optional per-story-consent Wayback discovery through a configured same-origin metadata relay."
+    "rationale": "Align imported runtime behavior and IIS deploy profile, with viewer-only in-memory web map compatibility repairs, actionable loading errors, a verified archived-photo fallback, optional per-story-consent Wayback discovery through a configured same-origin metadata relay, and verified Streets (Night) style replacement with a visible owner-repair notice."
   },
   "verification": {
     "smokeProfile": "maptour-baseline",

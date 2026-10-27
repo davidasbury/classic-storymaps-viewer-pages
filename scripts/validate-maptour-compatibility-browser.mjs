@@ -27,7 +27,7 @@ const results = [];
 const selectedCase = process.env.COMPAT_CASE;
 const selectedWidth = Number(process.env.COMPAT_WIDTH || 0);
 
-async function observe(width, rejectOcean = false) {
+async function observe(width, rejectOcean = false, night = false, rejectNight = false) {
   const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width, height: 850 } });
   const page = await context.newPage();
   const writes = [];
@@ -35,7 +35,7 @@ async function observe(width, rejectOcean = false) {
   const tileResponses = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('response', response => {
-    if (/World_Ocean_.*\/tile\//.test(response.url())) tileResponses.push({ path: new URL(response.url()).pathname, status: response.status(), contentType: response.headers()['content-type'] });
+    if (/World_Ocean_.*\/tile\/|World_Basemap_v2.*\/tile\//.test(response.url())) tileResponses.push({ path: new URL(response.url()).pathname, status: response.status(), contentType: response.headers()['content-type'] });
   });
   await context.route('**/*', route => {
     const request = route.request();
@@ -46,6 +46,8 @@ async function observe(width, rejectOcean = false) {
       return route.abort();
     }
     if (rejectOcean && /\/Ocean\/World_Ocean_(?:Base|Reference)\/MapServer/.test(url.pathname)) return route.fulfill({ json: { error: { code: 503, message: 'Synthetic unavailable service' } } });
+    if (night && url.hostname.includes('flickr')) return route.abort();
+    if (rejectNight && url.pathname.includes('/86f556a2d1fd468181855a35e344567f/resources/styles/root.json')) return route.fulfill({ json: { error: { code: 503, message: 'Synthetic unavailable replacement' } } });
     return route.continue();
   });
   return { context, page, writes, pageErrors, tileResponses };
@@ -75,6 +77,7 @@ try {
       }));
       assert.equal(result.state.fatal, null);
       assert.equal(result.state.loaded, true);
+      assert.equal(await page.locator('#compatibility-repair-notice').count(), 0);
       assert.equal(result.state.data.version, '2.0');
       assert.equal(result.state.data.baseMap.baseMapLayers.length, 2);
       assert.ok(result.state.graphicCounts.some(layer => layer.count >= 9), 'Actual tour features rendered');
@@ -85,7 +88,6 @@ try {
         await page.locator('#footerDesktop .carousel-item-div').nth(1).click();
         await page.waitForFunction(() => window.app.data.getCurrentIndex() === 1);
       } else {
-        await page.getByRole('button', { name: 'Start', exact: true }).click();
         await page.locator('#introPanel').waitFor({ state: 'hidden' });
         await page.waitForFunction(() => window.app.data.getCurrentIndex() !== null);
         await page.getByText('Map', { exact: true }).click();
@@ -150,6 +152,71 @@ try {
       result.screenshot = path.join(output, 'failure-' + width + '.png');
       await page.screenshot({ path: result.screenshot });
     } finally {
+      await context.close();
+    }
+  }
+  for (const scenario of [{ width: 1280 }, { width: 390 }, { width: 320, locale: 'fr' }, { width: 390, reject: true }]) {
+    const check = scenario.reject ? 'night-style-unavailable' : 'night-style';
+    if (selectedCase && selectedCase !== check || selectedWidth && selectedWidth !== scenario.width) continue;
+    const nightId = '840e90e3a9c44cdf95132ef2c418bb5f';
+    const nightURL = 'https://www.arcgis.com/sharing/rest/content/items/' + nightId + '/data?f=json';
+    const nightBefore = await fetch(nightURL).then(response => response.json());
+    const { context, page, writes, pageErrors, tileResponses } = await observe(scenario.width, false, true, scenario.reject);
+    const result = { check, width: scenario.width, locale: scenario.locale || 'en' };
+    results.push(result);
+    const tileReady = scenario.reject ? null : page.waitForResponse(response => response.status() === 200 && /World_Basemap_v2.*\/tile\//.test(response.url()), { timeout: 60000 }).then(() => true, () => false);
+    const styleErrors = [];
+    page.on('console', message => { if (message.type() === 'error' && !message.text().includes('ERR_FAILED')) styleErrors.push(message.text()); });
+    try {
+      await page.goto(origin + '/?appid=32d02fa456ee4c68a931efa55a5cb314' + (scenario.locale ? '&locale=' + scenario.locale : ''), { waitUntil: 'domcontentloaded' });
+      if (scenario.reject) {
+        await page.locator('#fatalError.compatibility-error').waitFor({ state: 'visible', timeout: 45000 });
+        assert.match(await page.locator('#fatalError').innerText(), /Streets \(Night\) style could not be verified/);
+        assert.equal(await page.locator('#compatibility-repair-notice').count(), 0);
+      } else {
+        const dialog = page.getByRole('dialog', { name: 'A basemap repair was needed' });
+        await dialog.waitFor({ state: 'visible', timeout: 60000 });
+        assert.match(await dialog.innerText(), /No changes were saved to the original map or story/);
+        assert.match(await dialog.innerText(), /temporarily substituted/);
+        assert.ok((await dialog.innerText()).includes(nightId));
+        assert.equal(await dialog.getByRole('link', { name: 'Open this web map in Map Viewer' }).getAttribute('href'), 'https://www.arcgis.com/apps/mapviewer/index.html?webmap=' + nightId);
+        assert.equal(await dialog.evaluate(element => {
+          const box = element.getBoundingClientRect();
+          const title = element.querySelector('h2').getBoundingClientRect();
+          return box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight && title.top >= box.top && element.scrollWidth <= element.clientWidth;
+        }), true);
+        result.state = await page.evaluate(() => ({ loaded: app.map.loaded, points: app.data.getTourPoints().length, version: app.data.getWebMapItem().itemData.version }));
+        assert.equal(result.state.loaded, true);
+        assert.equal(result.state.points, 46);
+        assert.equal(result.state.version, '1.9');
+        await page.screenshot({ path: path.join(output, check + '-' + scenario.width + '-notice.png') });
+        await dialog.getByText('Alternative: repair the style reference with ArcGIS Assistant', { exact: true }).click();
+        assert.equal(await dialog.getByRole('link', { name: 'Open ArcGIS Assistant' }).getAttribute('href'), 'https://assistant.esri-ps.com/');
+        assert.match(await dialog.innerText(), /baseMap\.baseMapLayers/);
+        assert.match(await dialog.innerText(), /86f556a2d1fd468181855a35e344567f/);
+        assert.equal(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), true);
+        await page.screenshot({ path: path.join(output, check + '-' + scenario.width + '-instructions.png') });
+        await dialog.getByRole('button', { name: 'Continue to map' }).click();
+        await dialog.waitFor({ state: 'hidden' });
+        if (scenario.width < 600) await page.getByText(await page.evaluate(() => i18n.viewer.mobileHTML.navMap), { exact: true }).click();
+        assert.equal(await tileReady, true, 'Native vector tiles arrived');
+        await page.waitForLoadState('networkidle', { timeout: 60000 });
+        await page.waitForFunction(() => !app.map.updating && document.querySelectorAll('#mainMap canvas').length > 0);
+        assert.ok(tileResponses.some(response => response.status === 200 && response.path.includes('World_Basemap_v2')));
+        result.tiles = tileResponses.length;
+      }
+      assert.deepEqual(writes, []);
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(await fetch(nightURL).then(response => response.json()), nightBefore);
+      result.pass = true;
+    } catch (error) {
+      result.pass = false;
+      result.failure = error.message;
+      result.pageErrors = pageErrors;
+      result.styleErrors = styleErrors;
+    } finally {
+      result.screenshot = path.join(output, check + '-' + scenario.width + '.png');
+      await page.screenshot({ path: result.screenshot });
       await context.close();
     }
   }

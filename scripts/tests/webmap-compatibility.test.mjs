@@ -16,6 +16,31 @@ function fixture() {
   return { item: { id: '6b1e4f428ffa411b96b0e49d214ed17f' }, itemData: { version: '1.9', operationalLayers: [{ id: 'tour', url: feature.replace('https:', 'http:') }], baseMap: { baseMapLayers: [{ id: 'ocean', url: 'http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer', opacity: 0.7, visibility: false, baseMapLayer: true }] } } };
 }
 
+test('repairs only the verified unavailable Night style without changing tour data or version', () => {
+  const oldURL = 'https://www.arcgis.com/sharing/rest/content/items/f96366254a564adda1dc468b447ed956/resources/styles/root.json';
+  const newURL = 'https://www.arcgis.com/sharing/rest/content/items/86f556a2d1fd468181855a35e344567f/resources/styles/root.json';
+  const original = { item: { id: '840e90e3a9c44cdf95132ef2c418bb5f' }, itemData: { version: '1.9', operationalLayers: [{ featureCollection: { layers: [] } }], baseMap: { baseMapLayers: [{ id: 'night', layerType: 'VectorTileLayer', styleUrl: oldURL.replace('https:', 'http:'), itemId: '7e2b9be8a9c94e45b7f87857d8d168d6', opacity: 0.6, visibility: false }] } } };
+  const baseline = structuredClone(original);
+  const proof = { [oldURL]: { ok: false, data: { error: { code: 400, messageCode: 'CONT_0001' } } }, [newURL]: { ok: true, data: { version: 8, sources: { esri: { type: 'vector', url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer' } }, layers: [{ id: 'background', type: 'background' }] } } };
+  assert.deepEqual(plain(compatibility.requests(original)).slice(0, 2), [oldURL, newURL]);
+  const result = compatibility.normalize(original, proof);
+  assert.deepEqual(original, baseline);
+  assert.equal(result.itemInfo.itemData.version, '1.9');
+  assert.deepEqual(plain(result.itemInfo.itemData.operationalLayers), original.itemData.operationalLayers);
+  assert.deepEqual(plain(result.itemInfo.itemData.baseMap.baseMapLayers[0]), { ...original.itemData.baseMap.baseMapLayers[0], styleUrl: newURL, itemId: '86f556a2d1fd468181855a35e344567f' });
+  assert.ok(result.changes.includes('streets_night_style'));
+  assert.ok(!compatibility.normalize(result.itemInfo, proof).changes.includes('streets_night_style'));
+  for (const oldProof of [{ ok: true, data: { version: 8 } }, { ok: false }, { ok: false, data: { error: { code: 403 } } }]) {
+    assert.ok(!compatibility.normalize(original, { ...proof, [oldURL]: oldProof }).changes.includes('streets_night_style'));
+  }
+  assert.ok(!compatibility.normalize(original, { ...proof, [newURL]: { ok: true, data: { error: { code: 400 } } } }).changes.includes('streets_night_style'));
+  const missingReplacement = compatibility.normalize(original, { [oldURL]: proof[oldURL] });
+  assert.ok(!missingReplacement.changes.includes('streets_night_style'));
+  assert.equal(compatibility.failureReason(missingReplacement, null), 'basemap_style_unverified');
+  original.itemData.baseMap.baseMapLayers[0].styleUrl = oldURL + '?token=secret';
+  assert.ok(!compatibility.normalize(original, proof).changes.includes('streets_night_style'));
+});
+
 test('repairs legacy Ocean and types in a clone, preserving settings and adding reference once', () => {
   const original = fixture();
   const baseline = structuredClone(original);

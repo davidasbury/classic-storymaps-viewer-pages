@@ -55,6 +55,31 @@
 	z-index: 3;
 }
 
+.compatibility-repair-notice {
+	box-sizing: border-box;
+	position: fixed;
+	width: 540px;
+	max-width: calc(100% - 24px);
+	max-height: calc(100% - 32px);
+	padding: 20px;
+	border: 1px solid #777;
+	border-radius: 4px;
+	background: #fff;
+	color: #222;
+	font: 14px open_sansregular, sans-serif;
+	line-height: 1.5;
+	overflow: auto;
+	overflow-wrap: anywhere;
+	z-index: 1100;
+}
+.compatibility-repair-notice::backdrop { background: rgba(0, 0, 0, 0.4); }
+.compatibility-repair-notice h2 { font-size: 20px; line-height: 1.3; margin: 0 0 12px; }
+.compatibility-repair-notice h3 { font-size: 15px; line-height: 1.4; margin: 16px 0 8px; }
+.compatibility-repair-notice li { margin-bottom: 8px; }
+.compatibility-repair-notice summary { cursor: pointer; }
+.compatibility-repair-notice a { color: #155d87; text-decoration: underline; }
+.compatibility-repair-notice button { margin-top: 8px; }
+
 html, body {
 	height: 100%;
 	width: 100%;

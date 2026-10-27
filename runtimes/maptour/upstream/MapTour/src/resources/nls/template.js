@@ -2,6 +2,18 @@ define({
 	root: ({
 		viewer: {
 			compatibility: {
+				repairNotice: {
+					title: "A basemap repair was needed",
+					message: "The original Streets (Night) style is unavailable. To display this map, the viewer temporarily substituted the current World Street Map (Night) style. Its appearance may differ from the original.",
+					openMap: "Open this web map in Map Viewer",
+					ownerStep: "Sign in as the web map owner or an authorized editor. Make a backup copy before editing the original map.",
+					basemapStep: "In Map Viewer, replace the unavailable basemap with the current Streets (Night) basemap, or another working basemap you choose. Check that the tour points and map appearance remain correct.",
+					saveStep: "Save the repair to the original web map only after checking other apps that use it, then reload this story. Saving only a copy does not repair this story's existing map reference.",
+					assistantSteps: "Alternative: repair the style reference with ArcGIS Assistant",
+					jsonStep: "In the web map's Item Data, find the baseMap.baseMapLayers entry whose styleUrl references f96366254a564adda1dc468b447ed956. Set styleUrl to https://www.arcgis.com/sharing/rest/content/items/86f556a2d1fd468181855a35e344567f/resources/styles/root.json and itemId to 86f556a2d1fd468181855a35e344567f. Preserve the remaining layer settings and tour data. Changing version alone does not fix this issue.",
+					nonOwner: "If you cannot edit this web map, send its ID and these repair instructions to the map or story owner.",
+					continueMap: "Continue to map"
+				},
 				title: "This web map could not be loaded",
 				unchanged: "No changes were saved to the original map or story.",
 				mapId: "Web map ID:",
@@ -18,6 +30,7 @@ define({
 				accessHelp: "Sign in with an account that can access the map and its layers. Ask the owner to check their sharing settings if access is still denied.",
 				retryHelp: "Check your connection and try loading the story again. If it still fails, contact the owner with the web map ID and diagnostic code.",
 				reasons: {
+					basemap_style_unverified: "The Streets (Night) style could not be verified, and its replacement could not be safely applied. Check your connection and try again, or ask the map owner to repair the basemap.",
 					access: "The map request reported an authentication or access error.",
 					network: "A map request timed out. Editing the map JSON may not resolve a connection problem.",
 					basemap_structure: "The map could not load, and its legacy basemap contains settings the viewer cannot safely replace automatically.",
@@ -28,6 +41,7 @@ define({
 					unknown: "The viewer could not determine why this map failed to load."
 				},
 				repairs: {
+					basemap_style_unverified: "Inspect the basemap styleUrl. The old Streets (Night) style item f96366254a564adda1dc468b447ed956 is unavailable. Verify the current World Street Map (Night) style item 86f556a2d1fd468181855a35e344567f before using it, or select a working basemap in Map Viewer. Preserve tour data and test a copy first.",
 					basemap_structure: "Review the original basemap settings. The known Ocean replacement uses Ocean/World_Ocean_Base/MapServer and Ocean/World_Ocean_Reference/MapServer on https://services.arcgisonline.com/arcgis/rest/services/. Preserve settings and mark the reference layer isReference: true.",
 					basemap_unverified: "Check HTTPS access to the World Ocean Base and World Ocean Reference services before changing the map. Do not substitute an unrelated basemap to hide an access or network failure.",
 					layer_type: "Check each operational and basemap layer against its service metadata before adding or correcting layerType. A MapServer can be tiled or dynamic; do not guess.",

@@ -839,6 +839,10 @@ define(["esri/map",
 			sanitizeDeletedOperationalLayers(webmapIdOrJSON).then(prepareCompatibleWebMap).then(
 				function(webmapToLoad){
 					compatibilityResult = webmapToLoad;
+					if ((webmapToLoad.issues || []).some(function(issue) { return issue.code === "basemap_style_unverified"; })) {
+						initError("createMap", { result: webmapToLoad, reason: "basemap_style_unverified" });
+						return;
+					}
 					arcgisUtils.createMap(webmapToLoad.itemInfo, "mainMap", {
 						mapOptions: {
 							slider: true,
@@ -862,6 +866,12 @@ define(["esri/map",
 						layerMixins: app.data.getAppProxies()
 					}).then(
 						lang.hitch(this, function(response){
+							if ((compatibilityResult.changes || []).indexOf("streets_night_style") !== -1) {
+								var noticeSubscription = topic.subscribe("maptour-ready", function() {
+									noticeSubscription.remove();
+									renderCompatibilityNotice(compatibilityResult);
+								});
+							}
 							webMapInitCallback(response);
 						}),
 						lang.hitch(this, function(error){
@@ -894,6 +904,7 @@ define(["esri/map",
 		function probeCompatibilityURL(url)
 		{
 			var service = WebMapCompatibility.serviceURL(url);
+			var vectorStyle = WebMapCompatibility.vectorStyleURL(url);
 			var credential = service && IdentityManager.findCredential(url);
 			if (credential) {
 				var request = esriRequest({ url: url, content: { f: "json" } });
@@ -905,9 +916,12 @@ define(["esri/map",
 			}
 			var controller = new window.AbortController();
 			var target = new window.URL(url);
-			if (service) target.searchParams.set("f", "json");
+			if (service || vectorStyle) target.searchParams.set("f", "json");
 			var pending = window.fetch(target.href, { credentials: "omit", redirect: "error", signal: controller.signal }).then(function(response) {
-				if (response.status !== 200 || response.type === "opaque") return { ok: false };
+				if (response.status !== 200 || response.type === "opaque") return { ok: false, status: response.status };
+				if (vectorStyle) return response.json().then(function(data) {
+					return { ok: !!data && !data.error, data: data };
+				});
 				if (service) return response.json().then(function(data) {
 					return { ok: !!data && !data.error && !!(data.type || typeof data.singleFusedMapCache === "boolean"), data: data };
 				});
@@ -1262,6 +1276,39 @@ define(["esri/map",
 			if( ! noDisplay )
 				$("#fatalError").show();
 			if (!noDisplay && error === "createMap" && message && message.result) $("#fatalError").focus();
+		}
+
+		function renderCompatibilityNotice(result)
+		{
+			$("#compatibility-repair-notice").remove();
+			var text = i18n.viewer.compatibility;
+			var notice = text.repairNotice;
+			var dialog = $("<dialog>", { id: "compatibility-repair-notice", "class": "compatibility-repair-notice",
+				"aria-labelledby": "compatibility-repair-title", "aria-describedby": "compatibility-repair-message" }).appendTo("body");
+			$("<h2>", { id: "compatibility-repair-title" }).text(notice.title).appendTo(dialog);
+			$("<p>", { id: "compatibility-repair-message" }).text(notice.message).appendTo(dialog);
+			$("<p>").text(text.unchanged).appendTo(dialog);
+			if (result.mapId && /^[a-f0-9]{32}$/i.test(result.mapId)) {
+				$("<p>").text(text.mapId + " " + result.mapId).appendTo(dialog);
+				$("<a>", { href: "https://www.arcgis.com/apps/mapviewer/index.html?webmap=" + result.mapId,
+					target: "_blank", rel: "noopener noreferrer" }).text(notice.openMap).appendTo(dialog);
+			}
+			$("<h3>").text(text.repairSteps).appendTo(dialog);
+			var steps = $("<ol>").appendTo(dialog);
+			[notice.ownerStep, notice.basemapStep, notice.saveStep].forEach(function(step) { $("<li>").text(step).appendTo(steps); });
+			var details = $("<details>").appendTo(dialog);
+			$("<summary>").text(notice.assistantSteps).appendTo(details);
+			$("<p>").text(text.backupStep).appendTo(details);
+			$("<p>").text(notice.jsonStep).appendTo(details);
+			$("<a>", { href: "https://assistant.esri-ps.com/", target: "_blank", rel: "noopener noreferrer" }).text(text.assistant).appendTo(details);
+			$("<p>").text(notice.nonOwner).appendTo(dialog);
+			var close = $("<button>", { type: "button", "class": "btn btn-primary" }).text(notice.continueMap).appendTo(dialog);
+			close.on("click", function() { if (dialog[0].close) dialog[0].close(); dialog.remove(); });
+			if (dialog[0].showModal) dialog[0].showModal();
+			else dialog.attr("open", "open");
+			dialog.attr("tabindex", "-1");
+			dialog[0].focus();
+			dialog[0].scrollTop = 0;
 		}
 
 		function renderCompatibilityError(context)

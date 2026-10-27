@@ -2,6 +2,12 @@ define([], function() {
 	var oceanSource = "https://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer";
 	var oceanBase = "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer";
 	var oceanReference = "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer";
+	var nightSource = "https://www.arcgis.com/sharing/rest/content/items/f96366254a564adda1dc468b447ed956/resources/styles/root.json";
+	var nightStyle = "https://www.arcgis.com/sharing/rest/content/items/86f556a2d1fd468181855a35e344567f/resources/styles/root.json";
+
+	function vectorStyleURL(value) {
+		return value === nightSource || value === nightStyle;
+	}
 
 	function secureURL(value) {
 		try {
@@ -59,6 +65,10 @@ define([], function() {
 			if (secure && urls.indexOf(secure) === -1) urls.push(secure);
 		}
 		roots(data).forEach(function(layer) {
+			if (layer && layer.layerType === "VectorTileLayer" && secureURL(layer.styleUrl) === nightSource) {
+				add(nightSource);
+				add(nightStyle);
+			}
 			if (!layer || typeof layer.url !== "string") return;
 			if (secureURL(layer.url) === oceanSource) {
 				add(oceanBase);
@@ -97,6 +107,22 @@ define([], function() {
 		function issue(code, location) { issues.push({ code: code, path: location }); }
 		var baseLayers = data.baseMap && Array.isArray(data.baseMap.baseMapLayers) ? data.baseMap.baseMapLayers : [];
 		baseLayers.forEach(function(layer, index) {
+			if (layer && layer.layerType === "VectorTileLayer" && secureURL(layer.styleUrl) === nightSource) {
+				var oldStyle = evidence[nightSource];
+				var replacement = evidence[nightStyle];
+				var unavailable = oldStyle && (oldStyle.status === 404 || oldStyle.data && oldStyle.data.error
+					&& oldStyle.data.error.code === 400 && oldStyle.data.error.messageCode === "CONT_0001");
+				var style = replacement && replacement.data;
+				if (unavailable && replacement && replacement.ok && style && !style.error && style.version === 8
+					&& style.sources && style.sources.esri && style.sources.esri.type === "vector"
+					&& style.sources.esri.url === "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer"
+					&& Array.isArray(style.layers) && style.layers.length) {
+					layer.styleUrl = nightStyle;
+					layer.itemId = "86f556a2d1fd468181855a35e344567f";
+					changes.push("streets_night_style");
+				} else if (!oldStyle || !oldStyle.ok) issue("basemap_style_unverified", "/baseMap/baseMapLayers/" + index);
+				return;
+			}
 			if (!layer || secureURL(layer.url) !== oceanSource) return;
 			var allowed = ["id", "url", "opacity", "visibility", "title", "layerType", "baseMapLayer", "basemapLayer"];
 			if (baseLayers.length !== 1 || Object.keys(layer).some(function(key) { return allowed.indexOf(key) === -1; }) ||
@@ -212,6 +238,7 @@ define([], function() {
 		var issues = result && result.issues || [];
 		var codes = issues.map(function(entry) { return entry.code; });
 		if (codes.indexOf("basemap_structure") !== -1) return "basemap_structure";
+		if (codes.indexOf("basemap_style_unverified") !== -1) return "basemap_style_unverified";
 		if (codes.indexOf("basemap_unverified") !== -1) return "basemap_unverified";
 		if (codes.indexOf("layer_type") !== -1) return "layer_type";
 		if (codes.indexOf("layer_structure") !== -1 || codes.indexOf("schema") !== -1) return "schema";
@@ -220,5 +247,5 @@ define([], function() {
 	}
 
 	return { requests: requests, normalize: normalize, prepare: prepare, failureReason: failureReason,
-		secureURL: secureURL, serviceURL: serviceURL };
+		secureURL: secureURL, serviceURL: serviceURL, vectorStyleURL: vectorStyleURL };
 });

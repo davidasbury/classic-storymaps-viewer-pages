@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
-  maptour_compatibility: Implementation verified; publication and private-content acceptance pending
+  maptour_compatibility: Night-style repair and owner notice verified locally; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   phase: Classic pointer resolution and source-status badges, print rendering and owner controls verified; publication and remaining acceptance pending
 ---
@@ -22,6 +22,23 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Map Tour repairs the unavailable Night style in memory, 2026-10-27.**
+
+The NYC story now loads its 46 points using the verified current Night style,
+without changing the original map, story or web-map version. A dismissible
+notice explains why substitution was necessary, warns that appearance may
+differ, and links to Map Viewer and ArcGIS Assistant with owner repair steps.
+Unverified replacements produce actionable guidance instead of entering the
+native SDK's stalled loading path. Other styles are not substituted.
+
+All 202 shared-worktree Node tests passed, alongside eight accumulated native
+browser cases covering desktop/mobile rendering, French fallback, failure
+guidance and existing Ocean behavior. The incremental runtime patch replayed
+byte-exactly over committed source. See [verification](docs/testing/maptour-night-style-repair.md)
+and [session 0052](session-logs/2026-10-27-0052-session-log.md).
+The owner authorized commit/push closure with `[skip ci]`. The repair remains
+unpublished; no deployment or ArcGIS write occurred.
 
 **Classic pointers resolve before startup and expose inactive source subscriptions, 2026-10-27.**
 
