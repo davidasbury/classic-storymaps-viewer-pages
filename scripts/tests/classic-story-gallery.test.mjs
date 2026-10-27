@@ -14,6 +14,35 @@ function configuration(pathname = '/viewers/') {
   return context.window.ClassicStoryMapsConfig;
 }
 
+test('metadata counting retains ordered unique stories without consuming visible pages', async () => {
+  let calls = 0;
+  const pager = gallery().createPager({ pageSize: 2, accept: candidate => candidate.valid ? candidate : null,
+    fetchPage: async () => ++calls === 1
+      ? { results: [{ id: 'one', valid: true }, { id: 'two', valid: true }, { id: 'three', valid: true }], nextStart: 4 }
+      : { results: [{ id: 'three', valid: true }, { id: 'excluded' }, { id: 'four', valid: true }], nextStart: -1 } });
+  assert.deepEqual((await pager.next()).items.map(story => story.id), ['one', 'two']);
+  assert.equal(pager.snapshot().hasMore, true);
+  await pager.scan();
+  assert.deepEqual(pager.snapshot(), { items: ['one', 'two', 'three', 'four'].map(id => ({ id, valid: true })), hasMore: false, limited: false });
+  assert.deepEqual((await pager.next()).items.map(story => story.id), ['three', 'four']);
+  assert.equal(calls, 2);
+});
+
+test('canceled metadata scans keep the prior count and unknown totals never expose a distant last page', async () => {
+  const controller = new AbortController();
+  let calls = 0;
+  const pager = gallery().createPager({ accept: candidate => candidate, fetchPage: async () => {
+    if (++calls === 2) controller.abort();
+    return { results: [{ id: String(calls) }], nextStart: calls + 1 };
+  } });
+  await pager.scan();
+  const before = pager.snapshot();
+  await assert.rejects(pager.scan(controller.signal), { name: 'AbortError' });
+  assert.deepEqual(pager.snapshot(), before);
+  assert.deepEqual(gallery().pageNumbers(1, 125, false), [1, 2, 3, 4, 5]);
+  assert.deepEqual(gallery().pageNumbers(1, 125, true), [1, 2, 3, 125]);
+});
+
 test('every runtime has two to eight unique screenshot-backed examples', () => {
   const config = configuration();
   const identifiers = new Set();

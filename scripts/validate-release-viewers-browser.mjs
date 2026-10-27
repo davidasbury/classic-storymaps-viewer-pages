@@ -813,6 +813,124 @@ try {
       await context.close();
     }
   }
+  if (selectedRuntimes.has('gallery-counting')) {
+    for (const width of [1440, 390, 320]) {
+      const { context, page, errors } = await observePage(width);
+      const result = { runtime: 'gallery-counting', width };
+      results.push(result);
+      let mode = 'held';
+      let release;
+      let heldStarted;
+      let held = new Promise(resolve => { heldStarted = resolve; });
+      let searches = 0;
+      let thumbnails = 0;
+      const story = (number, owner = 'owner-one') => ({ id: number.toString(16).padStart(32, '0'),
+        title: 'Story ' + number, owner, access: 'public', type: 'Web Mapping Application',
+        typeKeywords: ['Story Map Journal'], thumbnail: 'thumbnail/test.png' });
+      const candidates = [...Array.from({ length: 245 }, (_, index) => story(index + 1)),
+        ...Array.from({ length: 15 }, (_, index) => ({ ...story(index + 246), type: 'StoryMap' })), story(1)];
+      await context.addInitScript(() => {
+        sessionStorage.setItem('arcgis_access_token', 'synthetic-one');
+        sessionStorage.setItem('arcgis_access_token_expires', String(Date.now() + 600000));
+      });
+      await context.route('https://www.arcgis.com/sharing/rest/**', async route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        const authorization = request.headers()['x-esri-authorization'];
+        const owner = authorization === 'Bearer synthetic-two' ? 'owner-two' : 'owner-one';
+        assert.equal(url.searchParams.has('token'), false);
+        assert.equal(request.method(), 'GET');
+        if (url.pathname.endsWith('/community/self')) return route.fulfill({ json: { username: owner, orgId: 'synthetic-org' } });
+        if (url.pathname.endsWith('/thumbnail/test.png')) {
+          thumbnails++;
+          return route.fulfill({ contentType: 'image/png', body: await readFile(path.join(publish, 'viewers/assets/images/archive/resources/basics.png')) });
+        }
+        searches++;
+        const start = Number(url.searchParams.get('start'));
+        if (mode === 'held' && start > 1) {
+          mode = 'normal'; heldStarted();
+          await new Promise(resolve => { release = resolve; });
+        }
+        if (mode === 'error' && start > 1) return route.fulfill({ json: { error: { code: 500 } } });
+        const source = owner === 'owner-two' ? [story(900, owner)] : candidates;
+        const payload = ['long', 'medium'].includes(mode) ? { results: Array.from({ length: 100 }, (_, index) => story(start + index)), nextStart: mode === 'medium' && start >= 2901 ? -1 : start + 100, total: 10000 }
+          : { results: source.slice(start - 1, start + 99), nextStart: start + 100 > source.length ? -1 : start + 100, total: 10000 };
+        return route.fulfill({ json: payload }).catch(() => {});
+      });
+      const exact = () => page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 1-24 of 245 stories');
+      try {
+        await page.goto(origin + basePath + '/viewers/');
+        await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+        await held;
+        await page.waitForFunction(() => [...document.querySelectorAll('.story-image')].every(image => image.src.startsWith('blob:')));
+        assert.equal(thumbnails, 24);
+        await page.evaluate(() => { window.countingFirstCard = document.querySelector('.story-card'); });
+        assert.match(await page.locator('#stories-status').innerText(), /100 stories found so far/);
+        await page.getByRole('button', { name: 'Pause counting', exact: true }).click();
+        assert.match(await page.locator('#stories-status').innerText(), /Count incomplete/);
+        release(); release = null;
+        await page.getByRole('button', { name: 'Continue counting', exact: true }).click();
+        await exact();
+        assert.equal(await page.evaluate(() => window.countingFirstCard === document.querySelector('.story-card')), true);
+        assert.equal(thumbnails, 24);
+        assert.equal(await page.locator('#stories-status').innerText(), await page.locator('#stories-page').innerText());
+        await page.locator('.story-results').scrollIntoViewIfNeeded();
+        await page.screenshot({ path: path.join(temporary, 'gallery-counted-toolbar-' + width + '.png') });
+        await page.getByRole('button', { name: 'Page 11', exact: true }).click();
+        assert.equal(await page.locator('#stories-page').innerText(), 'Showing 241-245 of 245 stories');
+        const beforeSize = searches;
+        for (const [size, range] of [['48', '241-245'], ['96', '193-245'], ['24', '193-216']]) {
+          await page.getByLabel('Stories per page', { exact: true }).selectOption(size);
+          assert.equal(await page.locator('#stories-page').innerText(), 'Showing ' + range + ' of 245 stories');
+        }
+        assert.equal(searches, beforeSize);
+        await page.locator('.story-pagination').scrollIntoViewIfNeeded();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        assert.equal(await page.locator('.story-pagination').evaluate(node => [...node.querySelectorAll('button')].every(button => button.scrollWidth <= button.clientWidth)), true);
+        await page.screenshot({ path: path.join(temporary, 'gallery-counted-' + width + '.png') });
+        await page.getByRole('button', { name: 'Page 1', exact: true }).click();
+        mode = 'error';
+        await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('Count interrupted'));
+        assert.equal(await page.locator('.story-card').count(), 24);
+        mode = 'normal';
+        await page.getByRole('button', { name: 'Continue counting', exact: true }).click();
+        await exact();
+        mode = 'long';
+        const beforeLimit = searches;
+        await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('2100 stories found so far') && document.getElementById('stories-status').textContent.includes('Count incomplete'));
+        assert.equal(searches - beforeLimit, 21);
+        mode = 'medium';
+        await page.getByRole('button', { name: 'Continue counting', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 1-24 of 3000 stories');
+        await page.getByRole('button', { name: 'Page 125', exact: true }).click();
+        await page.locator('.story-pagination').scrollIntoViewIfNeeded();
+        assert.equal(await page.locator('.story-pagination').evaluate(node => [...node.querySelectorAll('button')].every(button => button.scrollWidth <= button.clientWidth)), true);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        await page.screenshot({ path: path.join(temporary, 'gallery-three-digit-pages-' + width + '.png') });
+        mode = 'normal';
+        const beforeOrg = searches;
+        await page.getByLabel('View items in', { exact: true }).selectOption('org');
+        await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
+        assert.equal(searches - beforeOrg, 1);
+        assert.equal(await page.locator('#stories-count').isVisible(), false);
+        mode = 'held';
+        held = new Promise(resolve => { heldStarted = resolve; });
+        await page.getByLabel('View items in', { exact: true }).selectOption('mine');
+        await held;
+        await page.evaluate(() => { sessionStorage.setItem('arcgis_access_token', 'synthetic-two'); window.dispatchEvent(new Event('focus')); });
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 1-1 of 1 stories');
+        release(); release = null;
+        assert.equal(await page.locator('.story-owner').innerText(), 'owner-two');
+        assert.equal(await page.locator('.story-card').count(), 1);
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.stack; }
+      finally { if (release) release(); await context.close(); }
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+  }
   if (selectedRuntimes.has('gallery-pagination')) {
     for (const width of [1440, 390, 320]) {
       const { context, page, errors } = await observePage(width);
@@ -868,26 +986,26 @@ try {
         await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
         await settled();
         assert.deepEqual(await page.locator('#stories-pages button').allTextContents(), ['1', '2', '3', '4', '5']);
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+        assert.match(await page.locator('#stories-page').innerText(), /^Showing 1-24 \| 100 stories found so far/);
         assert.equal(requests.length, 1);
         await page.getByRole('button', { name: 'Page 5', exact: true }).click();
         await settled();
         assert.equal(await page.locator('.story-title').first().innerText(), 'Story 149');
         assert.equal(await page.locator('#stories-pages [aria-current="page"]').innerText(), '5');
-        const beforeForward = requests.length;
-        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
-        await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 10');
-        assert.ok(requests.length - beforeForward <= 3);
+        for (let nextPage = 6; nextPage <= 9; nextPage++) {
+          await page.getByRole('button', { name: 'Next page', exact: true }).click();
+          await settled();
+          assert.equal(await page.locator('#stories-pages [aria-current="page"]').innerText(), String(nextPage));
+        }
         await page.getByRole('button', { name: 'Page 11', exact: true }).click();
         await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 11 of 11');
+        assert.equal(await page.locator('#stories-page').innerText(), 'Showing 241-245 of 245 stories');
         assert.equal(await page.locator('.story-card').count(), 5);
         assert.equal(await page.getByRole('button', { name: 'Next page', exact: true }).isDisabled(), true);
         const beforeBack = requests.length;
-        await page.getByRole('button', { name: 'Back up to five pages', exact: true }).click();
+        await page.getByRole('button', { name: 'Previous page', exact: true }).click();
         await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 6 of 11');
+        assert.equal(await page.locator('#stories-page').innerText(), 'Showing 217-240 of 245 stories');
         assert.equal(requests.length, beforeBack);
         await page.locator('.story-pagination').scrollIntoViewIfNeeded();
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
@@ -899,7 +1017,7 @@ try {
         await page.getByRole('button', { name: 'Page 1', exact: true }).focus();
         await page.keyboard.press('Enter');
         await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1 of 11');
+        assert.equal(await page.locator('#stories-page').innerText(), 'Showing 1-24 of 245 stories');
         assert.equal(requests.length, beforeBack);
         for (const field of Object.keys(fields)) {
           await page.getByLabel('Sort', { exact: true }).selectOption(field);
@@ -914,7 +1032,7 @@ try {
             await page.getByLabel('Sort direction', { exact: true }).selectOption(direction);
             await settled();
             assert.deepEqual(requests.at(-1), { start: 1, field, direction });
-            assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+            assert.match(await page.locator('#stories-page').innerText(), /^Showing 1-24 \| 100 stories found so far/);
             assert.deepEqual(await page.locator('.story-title').allTextContents(), ordered(field, direction).slice(0, 24).map(story => story.title));
           }
         }
@@ -926,7 +1044,7 @@ try {
         await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('could not be loaded'));
         await page.getByRole('button', { name: 'Page 5', exact: true }).click();
         await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 5');
+        assert.match(await page.locator('#stories-page').innerText(), /^Showing 97-120/);
         await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
         await settled();
         mode = 'held';
@@ -934,12 +1052,12 @@ try {
         const released = new Promise(resolve => { heldFinished = resolve; });
         await page.getByRole('button', { name: 'Page 5', exact: true }).click();
         await heldRequest;
-        assert.equal(await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).isDisabled(), true);
+        assert.equal(await page.getByRole('button', { name: 'Next page', exact: true }).isDisabled(), true);
         await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');
         await settled();
         releaseHeld();
         await released;
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
+        assert.match(await page.locator('#stories-page').innerText(), /^Showing 1-24/);
         assert.deepEqual(await page.locator('.story-title').allTextContents(), ordered('scorecompleteness', 'asc').slice(0, 24).map(story => story.title));
         mode = 'sparse';
         let beforeSparse = requests.length;
@@ -947,13 +1065,13 @@ try {
         await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false' && !document.querySelector('.story-card'));
         assert.equal(requests.length - beforeSparse, 3);
         beforeSparse = requests.length;
-        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
+        await page.getByRole('button', { name: 'Next page', exact: true }).click();
         await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
         assert.equal(requests.length - beforeSparse, 3);
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1');
-        await page.getByRole('button', { name: 'Forward up to five pages', exact: true }).click();
+        assert.match(await page.locator('#stories-page').innerText(), /^Showing 0 \| 0 stories found so far/);
+        await page.getByRole('button', { name: 'Next page', exact: true }).click();
         await settled();
-        assert.equal(await page.locator('#stories-page').innerText(), 'Page 1 of 1');
+        assert.equal(await page.locator('#stories-page').innerText(), 'Showing 1-24 of 24 stories');
         assert.equal(await page.getByRole('button', { name: 'Previous page', exact: true }).isDisabled(), true);
         assert.deepEqual(errors.filter(message => message.startsWith('page:')), []);
         result.pass = true;
@@ -1024,7 +1142,7 @@ try {
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
         assert.match(await page.locator('.story-title').innerText(), /Rupert/);
         await page.getByLabel('Search stories', { exact: true }).fill('no matching synthetic title');
-        await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'No matching stories found.');
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 0 of 0 stories');
         await page.getByLabel('Search stories', { exact: true }).fill('');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
         await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');

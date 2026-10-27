@@ -13,11 +13,11 @@ extra:
   agents: [claude, copilot-enterprise]
   basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
   legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
-  gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
+  gallery_navigation: Ranges, page sizes and bounded My Content counting verified in both layouts; publication pending
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: Shared sign-in cookie isolation and vector basemap fallback verified locally; publication and remaining acceptance pending
+  phase: Gallery counting, shared sign-in and vector basemap fallback verified locally; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -119,22 +119,25 @@ and [session 0054](session-logs/2026-10-27-0054-session-log.md).
 Archive discovery remains disabled in the static configuration; production
 relay hosting and publication need separate approval.
 
-**Gallery page shortcuts and expanded sorting are verified locally, 2026-10-27.**
+**Conventional gallery pagination and progressive counts are verified locally, 2026-10-27.**
 
-The gallery now provides numbered shortcuts, first/discovered-end page links,
-and bounded five-page forward/backward jumps. Page numbers expand as filtered
-results become available instead of treating ArcGIS's raw search total as a
-Classic-story count. Nine server-side sort fields have explicit ascending and
-descending controls, including modified/created dates and view counts.
+Top and bottom ranges identify the visible stories. One Previous / numbered
+pages / Next row replaces the five-page arrows, and a 24 / 48 / 96 page-size
+selector preserves the current first story within the new page. My Content
+counts accepted metadata in the background with Pause/Continue controls, a
+20-additional-request limit and a 30-second deadline per pass. Only completed,
+uncapped searches show a final story total; other counts explicitly say "found
+so far." Organization and public searches remain on-demand. Existing sorting,
+scope/sharing, account isolation and in-memory-only caching are preserved.
 
-All 205 Node tests passed. Seven browser scenarios passed for each of the root
-and project-prefix layouts, including narrow phones, cancellation, retry and
-synthetic account changes. All 18 live public sort requests succeeded; a live
-anonymous preview loaded 24 cards and four numbered pages without page errors
-or ArcGIS writes. See [verification](docs/testing/gallery-pagination-sorting.md)
-and [session 0053](session-logs/2026-10-27-0053-session-log.md).
-The owner authorized commit/push closure with `[skip ci]`; publication remains
-pending. Existing shared previews and signed-in browser sessions were preserved.
+All 230 Node tests and ten browser cases in each URL layout passed, including
+held-response cancellation, retry, account changes, filtered totals, thumbnail
+isolation, page sizes and three-digit page labels on narrow phones. Signed-in
+coverage used synthetic credentials, not an owner's private collection. See
+[verification](docs/testing/gallery-pagination-sorting.md) and
+[session 0061](session-logs/2026-10-27-0061-session-log.md).
+This follow-up is unpublished. Shared previews and owner sessions were preserved;
+closure uses `[skip ci]`, not a deployment.
 
 **Classic pointers resolve before startup and expose inactive source subscriptions, 2026-10-27.**
 

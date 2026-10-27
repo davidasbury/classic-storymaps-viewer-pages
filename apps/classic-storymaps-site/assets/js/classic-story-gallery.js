@@ -139,18 +139,20 @@
   function createPager(options) {
     var cursor = 1;
     var buffer = [];
+    var accepted = [];
     var seen = new Set();
     var limited = false;
     var pageSize = options.pageSize || 24;
-    return { bufferedPages: function() { return Math.ceil(buffer.length / pageSize); }, next: async function(signal, requestLimit) {
+    async function advance(signal, requestLimit, scanOnly) {
       var nextCursor = cursor;
       var nextBuffer = buffer.slice();
+      var nextAccepted = accepted.slice();
       var nextSeen = new Set(seen);
       var nextLimited = limited;
       var requests = 0;
       var skipped = 0;
       var budget = requestLimit === undefined ? 3 : Math.max(0, Math.min(3, requestLimit));
-      while (nextBuffer.length < pageSize && nextCursor !== -1 && requests < budget) {
+      while ((scanOnly || nextBuffer.length < pageSize) && nextCursor !== -1 && requests < budget) {
         var response = await options.fetchPage(nextCursor, signal);
         if (signal) signal.throwIfAborted();
         if (!Array.isArray(response.results) || !Number.isInteger(response.nextStart)) throw new Error('Invalid search response.');
@@ -158,25 +160,34 @@
         response.results.forEach(function(candidate) {
           var story = options.accept(candidate);
           if (!story) { skipped++; return; }
-          if (!nextSeen.has(story.id)) { nextSeen.add(story.id); nextBuffer.push(story); }
+          if (!nextSeen.has(story.id)) { nextSeen.add(story.id); nextBuffer.push(story); nextAccepted.push(story); }
         });
         if (response.nextStart !== -1 && response.nextStart <= nextCursor) throw new Error('Invalid pagination cursor.');
         nextLimited = response.nextStart > 10000;
         nextCursor = nextLimited ? -1 : response.nextStart;
       }
       if (signal) signal.throwIfAborted();
-      var items = nextBuffer.splice(0, pageSize);
+      var items = scanOnly ? [] : nextBuffer.splice(0, pageSize);
       cursor = nextCursor;
       buffer = nextBuffer;
+      accepted = nextAccepted;
       seen = nextSeen;
       limited = nextLimited;
       return { items: items, hasMore: buffer.length > 0 || cursor !== -1, limited: limited,
         continuation: items.length < pageSize && cursor !== -1, skipped: skipped, requests: requests };
-    } };
+    }
+    return { bufferedPages: function() { return Math.ceil(buffer.length / pageSize); }, next: advance,
+      scan: function(signal) { return advance(signal, 1, true); },
+      snapshot: function() { return { items: accepted.slice(), hasMore: cursor !== -1, limited: limited }; } };
   }
 
-  function pageNumbers(current, count) {
+  function pageNumbers(current, count, complete) {
     if (count < 1) return [];
+    if (complete === false) {
+      var discovered = [1];
+      for (var nearby = Math.max(2, current - 1); nearby <= Math.min(count, Math.max(5, current + 1)); nearby++) discovered.push(nearby);
+      return discovered;
+    }
     if (count <= 5) return Array.from({ length: count }, function(_, index) { return index + 1; });
     var start = Math.max(1, Math.min(current - 1, count - 2));
     var numbers = [1];
@@ -204,8 +215,8 @@
     var sortOrder = document.getElementById('stories-sort-order');
     var previous = document.getElementById('stories-previous');
     var next = document.getElementById('stories-next');
-    var backward = document.getElementById('stories-backward');
-    var forward = document.getElementById('stories-forward');
+    var pageSizeSelect = document.getElementById('stories-page-size');
+    var countButton = document.getElementById('stories-count');
     var numberedPages = document.getElementById('stories-pages');
     var refresh = document.getElementById('stories-refresh');
     var pageLabel = document.getElementById('stories-page');
@@ -220,7 +231,83 @@
     var pages = [];
     var pageIndex = -1;
     var loading = false;
+    var pageSize = 24;
+    var pendingScan = null;
+    var countController = null;
+    var countState = 'idle';
     var debounce;
+    function collection() { return pager ? pager.snapshot() : { items: [], hasMore: true, limited: false }; }
+    function rebuildPages() {
+      var snapshot = collection();
+      pages = [];
+      for (var offset = 0; offset < snapshot.items.length; offset += pageSize) {
+        pages.push({ items: snapshot.items.slice(offset, offset + pageSize), hasMore: offset + pageSize < snapshot.items.length || snapshot.hasMore });
+      }
+      if (!pages.length) pages.push({ items: [], hasMore: snapshot.hasMore });
+      pageIndex = Math.max(0, Math.min(pageIndex, pages.length - 1));
+    }
+    function updateRange() {
+      var snapshot = collection();
+      var total = snapshot.items.length;
+      var page = pages[pageIndex];
+      var range = page && page.items.length ? 'Showing ' + (pageIndex * pageSize + 1) + '-' + (pageIndex * pageSize + page.items.length) : 'Showing 0';
+      var complete = !snapshot.hasMore && !snapshot.limited;
+      range += complete ? ' of ' + total + ' stories' : ' | ' + total + ' stories found so far';
+      if (snapshot.limited) range += '. ArcGIS search limit reached; narrow the search.';
+      else if (countState === 'running') range += '. Counting...';
+      else if (countState === 'failed') range += '. Count interrupted.';
+      else if (countState === 'paused' && !complete) range += '. Count incomplete.';
+      else if (!complete) range += '. More results available.';
+      status.textContent = pageLabel.textContent = range;
+    }
+    function scan(epoch, signal) {
+      if (pendingScan) return pendingScan;
+      var request = pager.scan(signal);
+      pendingScan = request;
+      request.finally(function() { if (epoch === generation && pendingScan === request) pendingScan = null; }).catch(function() {});
+      return request;
+    }
+    function stopCount() {
+      if (countController) countController.abort();
+      countController = null;
+      if (countState === 'running') countState = 'paused';
+    }
+    async function countRemaining() {
+      if (!pager || countState === 'running' || scopeFilter.value !== 'mine' || !collection().hasMore) return;
+      var epoch = generation;
+      var counter = new AbortController();
+      countController = counter;
+      var signal = AbortSignal.any([controller.signal, counter.signal]);
+      var deadline = setTimeout(function() { counter.abort(); }, 30000);
+      countState = 'running';
+      updateRange(); updateButtons();
+      try {
+        if (pendingScan) {
+          try { await pendingScan; } catch (error) { if (signal.aborted || error.name !== 'AbortError') throw error; }
+        }
+        for (var request = 0; request < 20 && collection().hasMore; request++) {
+          signal.throwIfAborted();
+          if (loading) break;
+          await scan(epoch, signal);
+          if (epoch !== generation || countController !== counter) return;
+          var previousLength = pages[pageIndex].items.length;
+          rebuildPages();
+          if (pages[pageIndex].items.length !== previousLength) render(pages[pageIndex]);
+          else { updateRange(); updateButtons(); }
+        }
+        if (epoch === generation) countState = collection().hasMore ? 'paused' : 'complete';
+      } catch (error) {
+        if (epoch !== generation || countController !== counter) return;
+        countState = signal.aborted ? 'paused' : 'failed';
+        if (!signal.aborted && [401, 498, 499].includes(error.code)) { options.onExpired(); return; }
+      } finally {
+        clearTimeout(deadline);
+        if (epoch === generation && countController === counter) {
+          countController = null;
+          updateRange(); updateButtons();
+        }
+      }
+    }
     function updateSourceBadges() {
       var inactive = new Set(sourceStatuses().map(function(entry) { return entry.id; }));
       cards.querySelectorAll('.story-source-status').forEach(function(badge) {
@@ -242,16 +329,18 @@
     function updateButtons() {
       previous.disabled = loading || pageIndex <= 0;
       next.disabled = loading || pageIndex < 0 || !(pageIndex < pages.length - 1 || pages[pageIndex].hasMore);
-      backward.disabled = previous.disabled;
-      forward.disabled = next.disabled;
       refresh.disabled = loading;
+      pageSizeSelect.disabled = loading;
+      countButton.hidden = !pager || scopeFilter.value !== 'mine' || !collection().hasMore;
+      countButton.disabled = loading;
+      countButton.textContent = countState === 'running' ? 'Pause counting' : 'Continue counting';
       section.setAttribute('aria-busy', String(loading));
-      pageLabel.textContent = pageIndex >= 0 ? 'Page ' + (pageIndex + 1) : '';
-      if (pages.length && !pages[pages.length - 1].hasMore) pageLabel.textContent += ' of ' + pages.length;
       numberedPages.replaceChildren();
-      var knownPages = pages.length + (pager ? pager.bufferedPages() : 0);
+      var snapshot = collection();
+      var complete = !snapshot.hasMore && !snapshot.limited;
+      var knownPages = snapshot.items.length ? Math.ceil(snapshot.items.length / pageSize) : 0;
       var previousNumber = 0;
-      pageNumbers(pageIndex + 1, knownPages).forEach(function(number) {
+      pageNumbers(pageIndex + 1, knownPages, complete).forEach(function(number) {
         if (previousNumber && number > previousNumber + 1) {
           var gap = element('span', 'story-page-gap', '...');
           gap.setAttribute('aria-hidden', 'true');
@@ -269,6 +358,7 @@
     }
     function invalidate() {
       clearTimeout(debounce);
+      stopCount();
       generation++;
       controller.abort();
       controller = new AbortController();
@@ -280,7 +370,10 @@
       pages = [];
       pageIndex = -1;
       loading = false;
+      pendingScan = null;
+      countState = 'idle';
       status.textContent = '';
+      pageLabel.textContent = '';
       updateButtons();
     }
     function element(tag, className, text) {
@@ -358,23 +451,16 @@
       }
       for (var worker = 0; worker < 4; worker++) thumbnailWorker();
       updateSourceBadges();
-      status.textContent = page.items.length ? page.items.length + ' stories on this page.'
-        : page.hasMore ? 'No matching stories on this page. More results are available.' : 'No matching stories found.';
-      if (page.limited) status.textContent += ' ArcGIS search limit reached; narrow the search.';
-      else if (page.continuation) status.textContent += ' More results are available.';
+      updateRange();
       updateButtons();
-    }
-    function matches(story) {
-      return (!runtimeFilter.value || story.runtime === runtimeFilter.value)
-        && story.title.toLowerCase().includes(search.value.trim().toLowerCase());
     }
     async function load(targetIndex) {
       if (loading || section.hidden) return;
       var currentToken = options.getToken();
       if (currentToken !== token) { setSession(currentToken); return; }
-      if (!Number.isInteger(targetIndex)) targetIndex = pages.length;
-      targetIndex = Math.max(0, Math.min(targetIndex, pages.length + 4));
-      if (targetIndex < pages.length) {
+      if (!Number.isInteger(targetIndex)) targetIndex = 0;
+      targetIndex = Math.max(0, Math.min(targetIndex, Math.ceil(collection().items.length / pageSize)));
+      if (targetIndex < pages.length && (pages[targetIndex].items.length === pageSize || !collection().hasMore)) {
         pageIndex = targetIndex;
         render(pages[pageIndex]);
         return true;
@@ -404,25 +490,26 @@
           }
           heading.textContent = { mine: 'My Content', org: 'My Organization', online: 'ArcGIS Online' }[scopeFilter.value];
           var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value, sort: sort.value, sortOrder: sortOrder.value };
+          var selectedRuntime = runtimeFilter.value;
+          var selectedTitle = search.value.trim().toLowerCase();
           pager = createPager({
             fetchPage: function(start, pageSignal) { return client.json(searchUrl(Object.assign({}, queryOptions, { start: start })), queryOptions.scope === 'online' ? null : token, pageSignal); },
             accept: function(candidate) {
               var story = storyFromItem(candidate, config, queryOptions);
-              return story && matches(story) ? story : null;
+              return story && (!selectedRuntime || story.runtime === selectedRuntime) && story.title.toLowerCase().includes(selectedTitle) ? story : null;
             }
           });
         }
-        var budget = 3;
-        while (pages.length <= targetIndex && (budget > 0 || pager.bufferedPages() > 0)) {
-          var page = await pager.next(signal, budget);
-          if (signal.aborted || epoch !== generation) return;
-          budget -= page.requests;
-          if (page.items.length && pages.length === 1 && !pages[0].items.length) pages[0] = page;
-          else if (page.items.length || !pages.length) pages.push(page);
-          else Object.assign(pages[pages.length - 1], { hasMore: page.hasMore, limited: page.limited, continuation: page.continuation });
-          if (!page.hasMore || page.continuation) break;
+        if (pendingScan) {
+          try { await pendingScan; } catch (error) { if (signal.aborted || error.name !== 'AbortError') throw error; }
         }
-        pageIndex = pages.length - 1;
+        for (var budget = 0; budget < 3 && collection().items.length < (targetIndex + 1) * pageSize && collection().hasMore; budget++) {
+          await scan(epoch, signal);
+          if (signal.aborted || epoch !== generation) return;
+        }
+        if (signal.aborted || epoch !== generation) return;
+        pageIndex = targetIndex;
+        rebuildPages();
         render(pages[pageIndex]);
         return true;
       } catch (error) {
@@ -430,7 +517,10 @@
         if (token && [401, 498, 499].includes(error.code)) { options.onExpired(); return; }
         status.textContent = 'Stories could not be loaded. Try Refresh.';
       } finally {
-        if (epoch === generation) { loading = false; updateButtons(); }
+        if (epoch === generation) {
+          loading = false; updateButtons();
+          if (pager && pages.length && countState === 'idle' && scopeFilter.value === 'mine') countRemaining();
+        }
       }
     }
     async function navigate(index) {
@@ -483,8 +573,16 @@
     refresh.addEventListener('click', restart);
     previous.addEventListener('click', function() { navigate(pageIndex - 1); });
     next.addEventListener('click', function() { navigate(pageIndex + 1); });
-    backward.addEventListener('click', function() { navigate(Math.max(0, pageIndex - 5)); });
-    forward.addEventListener('click', function() { navigate(pageIndex + 5); });
+    pageSizeSelect.addEventListener('change', function() {
+      var first = Math.max(0, pageIndex) * pageSize;
+      pageSize = Number(pageSizeSelect.value);
+      pageIndex = Math.floor(first / pageSize);
+      if (pager) { rebuildPages(); render(pages[pageIndex]); load(pageIndex); }
+    });
+    countButton.addEventListener('click', function() {
+      if (countState === 'running') { stopCount(); updateRange(); updateButtons(); }
+      else countRemaining();
+    });
     window.addEventListener('pagehide', invalidate);
     window.addEventListener('storage', function(event) { if (event.key === STATUS_KEY || event.key === null) updateSourceBadges(); });
     window.addEventListener('classic-source-status', updateSourceBadges);

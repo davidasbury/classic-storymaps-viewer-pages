@@ -1,24 +1,32 @@
 # Gallery Pagination and Sorting
 
-Verified locally at `2026-10-27 00:45:57-07:00[America/Los_Angeles]`, followed
-by an anonymous live-preview check. The owner subsequently authorized
-commit/push closure with `[skip ci]`; deployment remains pending.
+Updated 2026-10-27 with progressive filtered counts and conventional navigation.
+Publication of this follow-up remains pending; closure uses `[skip ci]`.
 
 ## Behavior
 
-- Numbered page buttons show the current neighborhood and known endpoints,
+- Numbered page buttons show the current neighborhood and verified endpoints,
   with ellipses across gaps. The current button has `aria-current="page"`.
 - Previously loaded pages are cached in memory. Filter, sort and account changes
   clear that cache and cancel old requests. No private result cache is persisted.
-- Buffered, accepted results expose additional page numbers before those pages
-  are rendered. Raw ArcGIS totals are not treated as filtered gallery totals.
-- Single-page and up-to-five-page arrows provide forward/backward navigation.
-  Each action retains the existing maximum of three candidate search requests;
-  sparse searches can advance fewer than five pages. There is no eager whole
-  account scan or invented last-page count. The 10,000-result bound remains.
-- Empty scans do not accumulate numbered empty pages. The initial empty scan
-  is replaced when the first matching results arrive. A final total is shown
-  only when the buffered results and remote cursor are exhausted.
+- Top and bottom show the current story range and either a completed filtered
+  total or an explicitly incomplete "stories found so far" count. Raw ArcGIS
+  totals are never presented as accepted-story totals. Unknown totals do not
+  expose a distant last-page button.
+- A single Previous / numbered pages / Next row replaces five-page jumps and
+  the redundant page label. A 24 / 48 / 96 selector repaginates retained metadata
+  around the current first story without resetting the sort or filters.
+- My Content starts a metadata-only background count after its first page.
+  Each pass permits at most 20 additional search requests and has a 30-second
+  deadline. Pause aborts the active count; Continue starts another bounded pass.
+  A failed or bounded pass retains its accepted results and an incomplete count.
+  Foreground navigation can also pause counting when it needs network work.
+  My Organization and ArcGIS Online do not start background enumeration.
+- Foreground loading retains its three-request budget. The ArcGIS 10,000-result
+  window remains enforced and reaching it does not claim a complete total.
+- The pager retains ordered, deduplicated accepted metadata, independently of
+  visible page slices. Counting does not consume pages or fetch off-page
+  thumbnails. Empty/sparse scans do not accumulate empty numbered pages.
 - Navigation returns focus to the gallery heading and scrolls the new results
   into view. Controls disable during loading, and failed jumps can be retried.
 - Explicit ascending/descending direction applies server-side to modified date,
@@ -27,7 +35,41 @@ commit/push closure with `[skip ci]`; deployment remains pending.
   Unsupported values use safe defaults. Type sorting is omitted because all
   candidates are Web Mapping Applications.
 
-## Evidence
+## Current Verification
+
+- All 230 Node tests passed on Node 24.22.1, including 32 gallery contracts.
+- Ten browser scenarios passed on each of the root and project-prefix layouts:
+  three counting cases, three pagination/sorting cases, three public-gallery
+  cases and the synthetic authenticated-session workflow.
+- The counting fixture returned 245 valid stories, 15 rejected items and a
+  duplicate, with an intentionally misleading raw total of 10,000. The completed
+  gallery count was 245. A held count was paused and resumed without replacing
+  the visible cards; thumbnail requests stayed at 24 while counting completed.
+- Verified first-story preservation through 24 / 48 / 96 page sizes, cached
+  last-page navigation, matching top/bottom ranges, background error/retry,
+  the 20-additional-request cap, continuation to 3,000 stories, and account
+  replacement while a count response was held. Organization scope stayed
+  on-demand. Existing logout, expiry, filter/sort cancellation and ownership
+  checks passed without real credentials or content writes.
+- Inspected toolbar, range and navigation screenshots at desktop and phone
+  widths. Three-digit page numbers fit the 320px viewport. Browser checks
+  reported no page errors; editor diagnostics were clear.
+- A separate anonymous live preview loaded 24 then 48 stories from 78 accepted
+  results, retaining the incomplete-count label and on-demand behavior. It had
+  no page errors or mutation requests. The served gallery script matched the
+  reviewed source exactly. Existing runtime builds were copied only into the
+  separate preview for story links; shared output was not changed.
+
+The deadline is implemented with cancellation; the deterministic browser bound
+assertion exercises the request cap rather than waiting 30 seconds. Real
+private-account enumeration was not performed. Returning from a story opened
+in its normal separate tab retains gallery state; reloading the gallery or
+restoring it from the back/forward cache still starts a fresh search.
+
+## Initial Verification
+
+The following records the earlier page-shortcut/sorting implementation, before
+the progressive-count follow-up replaced its five-page arrows.
 
 The official [ArcGIS Search documentation](https://developers.arcgis.com/rest/users-groups-and-items/search/)
 lists these sort fields, both directions, 100-result candidate batches and the
@@ -57,7 +99,7 @@ requests succeeded, but ArcGIS text collation was not independently recreated.
   or ArcGIS writes. Editor diagnostics were clear.
 
 Run `scripts/validate-release-viewers-browser.mjs` with
-`RUNTIME_FILTER=gallery-pagination,gallery`, an isolated `PUBLISH_CHECK_ROOT`,
+`RUNTIME_FILTER=gallery-counting,gallery-pagination,gallery`, an isolated `PUBLISH_CHECK_ROOT`,
 and the matching `SITE_BASE_PATH`. The runner prints its unique artifact folder.
 
 ## Scope and Limits
