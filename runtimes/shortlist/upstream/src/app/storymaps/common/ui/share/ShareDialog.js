@@ -70,7 +70,7 @@ define([
 
 			function createSocialbuttons(socialOptions)
 			{
-				var appTitle = $('<div>' + app.data.getWebAppData().getTitle() + '</div>').text();
+				var appTitle = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.getWebAppData().getTitle() + '</div>');
 
 				container.find(".share_facebook").toggle(socialOptions.facebook);
 				if ( socialOptions.facebook ) {

@@ -65,6 +65,10 @@ export function secureCascadePrint(output) {
   if (source === 'release:1.23.0') {
     if (digest(Buffer.from(bundle)) !== releaseHash) throw new Error('Unexpected Cascade release print checksum');
     bundle = patchCascadePrintBundle(bundle);
+    const manifest = JSON.parse(readFileSync(new URL('../runtime-manifest.json', import.meta.url), 'utf8'));
+    const sharing = manifest.patches.find(patch => patch.name === 'bounded-share-url-query-filter');
+    if (!sharing) throw new Error('Missing Cascade share URL patch');
+    bundle = replaceOnce(bundle, sharing.find, sharing.replace);
   } else if (source === 'grunt') {
     for (const [name, method] of [['media/Text', 'toReact'], ['PrintViewReact', 'themeStyles']]) {
       const [start, end] = moduleRange(bundle, name);

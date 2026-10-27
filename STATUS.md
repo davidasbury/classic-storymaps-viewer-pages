@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  code_scanning: First two visitor-facing root causes repaired in source and publication output; 253 Node and twelve affected-viewer browser cases passed; remaining alerts and publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
@@ -22,7 +23,7 @@ extra:
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: General source-website fallback verified locally; publication and remaining security reachability review pending
+  phase: First CodeQL root-cause fixes verified locally; remaining security review and publication pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -31,6 +32,22 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Two CodeQL root causes are repaired locally; broader remediation remains open.**
+
+Inert HTML-to-text extraction replaced 29 source expressions and 26 publication
+expressions across six viewers. Cascade sharing now filters query parameters
+without the flagged backtracking regex, including the pinned release and print
+bundle. Existing checksum, print sanitization and authentication protections remain.
+
+All 253 Node tests and twelve desktop/mobile browser cases passed. Native sharing
+handlers and a freshly built Cascade Controller received additional hostile-input
+checks, and screenshots from all six viewers were inspected. Twelve DOM-XSS alert
+locations and one ReDoS location were changed, not assumed closed before CodeQL
+reanalyzes them. Other rich-HTML sinks, library findings and URL checks remain open.
+See [scope and evidence](docs/testing/code-scanning-remediation.md) and
+[session 0069](session-logs/2026-10-27-0069-session-log.md). Nothing was deployed;
+owner sessions, ArcGIS content and scanner coverage were unchanged.
 
 **The gallery supports explicit advanced ArcGIS search locally.**
 

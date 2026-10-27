@@ -62,4 +62,5 @@ node "$(dirname "${BASH_SOURCE[0]}")/../runtimes/mapjournal/patches/embedded-bas
 node "$(dirname "${BASH_SOURCE[0]}")/patch-runtime-edit-controls.mjs" mapjournal "$OUTPUT_PATH"
 
 node "$(dirname "${BASH_SOURCE[0]}")/secure-runtime-media.mjs" "$OUTPUT_PATH"
+node "$(dirname "${BASH_SOURCE[0]}")/patch-runtime-html-text.mjs" "$OUTPUT_PATH"
 echo "Map Journal build output copied to $OUTPUT_PATH"

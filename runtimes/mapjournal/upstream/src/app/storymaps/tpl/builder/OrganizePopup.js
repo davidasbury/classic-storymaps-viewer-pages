@@ -63,7 +63,7 @@ define([
 				$.each(_cfg.story.sections, function (index, section) {
 					contentHTML += entryTpl({
 						index: index,
-						title: $('<div>' + section.title + '</div>').text(),
+						title: (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + section.title + '</div>'),
 						pubDate: unserializeDate(section.pubDate),
 						statusVal: section.status,
 						statusLbl: app.builderCfg.STATUS[section.status],

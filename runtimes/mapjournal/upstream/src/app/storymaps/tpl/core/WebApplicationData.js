@@ -151,7 +151,7 @@ define(["dojo/_base/lang", 'storymaps/tpl/core/Helper'],
 			{
 				// Reuse the title as app title
 				if ( this.getStorySections().length > 0 )
-					this.setTitle($("<div>" + this.getStorySections()[0].title + "</div>").text());
+					this.setTitle((function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})("<div>" + this.getStorySections()[0].title + "</div>"));
 
 				return _data.values.title ? _data.values.title.trim() : "";
 			},

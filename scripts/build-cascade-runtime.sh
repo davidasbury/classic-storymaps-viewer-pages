@@ -58,4 +58,5 @@ node "$SCRIPT_DIR/patch-runtime-edit-controls.mjs" cascade "$OUTPUT_PATH"
 node "$SCRIPT_DIR/../runtimes/cascade/patches/print-security.mjs" "$OUTPUT_PATH"
 
 node "$SCRIPT_DIR/secure-runtime-media.mjs" "$OUTPUT_PATH"
+node "$SCRIPT_DIR/patch-runtime-html-text.mjs" "$OUTPUT_PATH"
 echo "Cascade build output copied to $OUTPUT_PATH"

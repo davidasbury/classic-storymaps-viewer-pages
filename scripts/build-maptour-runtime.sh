@@ -59,4 +59,5 @@ else
 fi
 
 node "$(dirname "${BASH_SOURCE[0]}")/secure-runtime-media.mjs" "$OUTPUT_PATH"
+node "$(dirname "${BASH_SOURCE[0]}")/patch-runtime-html-text.mjs" "$OUTPUT_PATH"
 echo "Map Tour build output copied to $OUTPUT_PATH"

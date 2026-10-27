@@ -542,7 +542,7 @@ define(["lib-build/css!./MainView",
 			function updateUIStory()
 			{
 				if ( app.data.getStoryByIndex(0) )
-					document.title = $('<div>' + app.data.getStoryByIndex(0).title + '</div>').text();
+					document.title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.getStoryByIndex(0).title + '</div>');
 
 				app.ui.mainStage.updateMainMediaContainers();
 

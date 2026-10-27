@@ -41,7 +41,7 @@ require([
 	esri.arcgis.utils.arcgisUrl = window.opener.esri.arcgis.utils.arcgisUrl;
 	esri.id.initialize(window.opener.esri.id);
 
-	document.title = $('<div>' + title + '</div>').text();
+	document.title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + title + '</div>');
 
 	storyHTML += '<div class="print-settings">';
 	storyHTML += '<div class="print-warning">' + strings.printInstruction1 + '</div>';

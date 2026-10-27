@@ -106,7 +106,7 @@ define([
 				var numDots = (startIndex === 0 && _firstGroupSize) ? _firstGroupSize : _groupSize;
 
 				for (var i = startIndex; i < _nbSections && i < startIndex + numDots; i++) {
-					var title = $("<div>" + _params.sections[i].title + "</div>").text();
+					var title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})("<div>" + _params.sections[i].title + "</div>");
 					title = title.replace(/"/g, '&quot;');
 					var ariaLabel = i18n.viewer.a11y.toSectionAria.replace('%SECTION_NUMBER%', i+1).replace('%SECTION_TITLE%', title);
 

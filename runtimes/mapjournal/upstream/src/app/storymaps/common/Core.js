@@ -640,7 +640,7 @@ define(["lib-build/css!lib-app/bootstrap/css/bootstrap.min",
 			}
 
 			if ( app.appCfg.useAppTitleAsPageTitle )
-				document.title = title ? $('<div>' + title + '</div>').text() : app.cfg.TPL_NAME;
+				document.title = title ? (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + title + '</div>') : app.cfg.TPL_NAME;
 		}
 
 		function appInitComplete()

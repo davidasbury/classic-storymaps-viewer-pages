@@ -41,19 +41,10 @@ export default class Controller {
 
   // TODO: deprecate method in SocialSharing
   static getStoryURL(params = {}) {
-    let url = params.url || document.location.href;
-
-    // If sharing in builder mode the link will always open the viewer
-    // TODO clean, should get all url parameters, filter edit and rebuild URL
-    url = url.replace(/\?edit(=.*)*&/, '?');
-    url = url.replace(/\&edit(=.*)*/, '');
-    url = url.replace(/\?edit/, '');
-
-    // Filter out locale URL
-    url = url.replace(/\?locale(=[a-zA-Z\-]+)+&/, '?');
-    url = url.replace(/\&locale(=[a-zA-Z\-]+)+/, '');
-
-    return params.urlEncoding ? encodeURIComponent(url) : url;
+    const url = new URL(params.url || document.location.href, document.location.href);
+    url.searchParams.delete('edit');
+    url.searchParams.delete('locale');
+    return params.urlEncoding ? encodeURIComponent(url.href) : url.href;
   }
 
   static isStoryBlank() {

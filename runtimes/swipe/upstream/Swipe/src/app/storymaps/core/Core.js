@@ -978,7 +978,7 @@ define(["esri/map",
 					WebApplicationData.getHeaderLinkURL() == undefined ? APPCFG.HEADER_LINK_URL : WebApplicationData.getHeaderLinkURL(),
 					WebApplicationData.getSocial()
 				);
-				document.title = $('<div>' + title + '</div>').text();
+				document.title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + title + '</div>');
 			}
 
 			try {

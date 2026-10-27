@@ -135,8 +135,8 @@ define([
 					if ( $(this).hasClass("disabled") )
 						return;
 
-					var title = $('<div>' + app.data.getWebAppData().getTitle() + '</div>').text(),
-						subtitle = $('<div>' + app.data.getWebAppData().getSubtitle() + '</div>').text();
+					var title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.getWebAppData().getTitle() + '</div>'),
+						subtitle = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.getWebAppData().getSubtitle() + '</div>');
 
 					SocialSharing.shareFacebook(
 						title,
@@ -149,7 +149,7 @@ define([
 					if ( $(this).hasClass("disabled") )
 						return;
 
-					var title = $('<div>' + app.data.getWebAppData().getTitle() + '</div>').text();
+					var title = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.getWebAppData().getTitle() + '</div>');
 
 					SocialSharing.shareTwitter(
 						title,

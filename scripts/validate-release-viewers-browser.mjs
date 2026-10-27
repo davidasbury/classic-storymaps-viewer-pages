@@ -642,7 +642,8 @@ try {
       }
     }
   }
-  if (selectedRuntimes.has('owner-controls')) {
+  if (selectedRuntimes.has('owner-controls') || selectedRuntimes.has('html-text-security')) {
+    const htmlTextTesting = selectedRuntimes.has('html-text-security');
     const targets = [
       { runtime: 'maptour', appid: '10c62c6bd29f4175b26386aa46cf5a40' },
       { runtime: 'swipe', appid: '5c851a0bd60d42f0b2955966ee933465' },
@@ -654,6 +655,7 @@ try {
       { runtime: 'basic', appid: 'ef329532de2645239789978efe531f3b' }
     ];
     for (const target of targets) {
+      if (htmlTextTesting && ['crowdsource', 'basic'].includes(target.runtime)) continue;
       if (process.env.OWNER_RUNTIME_FILTER && !process.env.OWNER_RUNTIME_FILTER.split(',').includes(target.runtime)) continue;
       for (const width of process.env.OWNER_WIDTH ? [Number(process.env.OWNER_WIDTH)] : [1280, 390]) {
         const { context, page, errors } = await observePage(width);
@@ -745,6 +747,88 @@ try {
           assert.equal(await page.locator(controls.split(', ').map(selector => selector + ':visible').join(', ')).count(), 0);
           for (const control of await page.getByText(/^\W*Edit\W*$/i).all()) assert.equal(await control.isVisible(), false);
           await page.screenshot({ path: path.join(temporary, 'owner-' + target.runtime + '-' + width + '.png') });
+          if (htmlTextTesting) {
+            result.check = 'html-text-security';
+            const filename = ['maptour', 'swipe'].includes(target.runtime) ? target.runtime + '-viewer-min.js' : 'viewer-min.js';
+            const bundle = await readFile(path.join(publish, 'viewers', target.runtime, 'app', filename), 'utf8');
+            const readers = [...bundle.matchAll(/function\(html\)\{var template=document.createElement\("template"\);template.innerHTML=html;return template.content.textContent;\}/g)].map(match => match[0]);
+            assert.equal(readers.length, { maptour: 2, swipe: 1, mapjournal: 9, mapseries: 5, cascade: 2, shortlist: 5 }[target.runtime]);
+            const probeRequests = [];
+            await context.route('**/__html_text_probe__*', route => {
+              probeRequests.push(route.request().url());
+              return route.fulfill({ status: 404, body: '' });
+            });
+            const payload = '<img src="' + origin + '/__html_text_probe__candidate" onerror="window.__htmlTextProbe++">'
+              + '<svg onload="window.__htmlTextProbe++"></svg><b>A &amp; B</b>';
+            result.textChecks = await page.evaluate(({ readers, payload }) => {
+              window.__htmlTextProbe = 0;
+              const jquery = window.jQuery || window.$;
+              const examples = ['Title', 'A &amp; B', '<b>Title</b> <em>subtitle</em>', '<p>First</p><p>Second</p>',
+                'A<br>B', '&lt;img&gt;', 'Quotes &quot; &#39;', '', '<template>hidden</template>visible'];
+              const checks = readers.map(source => {
+                const read = new Function('return (' + source + ')')();
+                return { benign: examples.every(value => read('<div>' + value + '</div>') === jquery('<div>' + value + '</div>').text()),
+                  hostile: read('<div>' + payload + '</div>') };
+              });
+              return { jquery: jquery.fn.jquery, checks };
+            }, { readers, payload });
+            assert.ok(result.textChecks.checks.every(check => check.benign && check.hostile === 'A & B'));
+            if (['mapjournal', 'mapseries', 'shortlist'].includes(target.runtime)) {
+              result.nativeShares = await page.evaluate(payload => new Promise((resolve, reject) => {
+                require(['storymaps/common/utils/HeaderHelper', 'storymaps/common/utils/SocialSharing'], (helper, social) => {
+                  const data = app.data.getWebAppData();
+                  const original = { title: data.getTitle, subtitle: data.getSubtitle, facebook: social.shareFacebook, twitter: social.shareTwitter };
+                  const container = $('<div><button class="share_facebook"></button><button class="share_twitter"></button></div>');
+                  const calls = [];
+                  try {
+                    data.getTitle = data.getSubtitle = () => payload;
+                    social.shareFacebook = (title, subtitle) => calls.push([title, subtitle]);
+                    social.shareTwitter = title => calls.push([title]);
+                    helper.initEvents(container);
+                    container.find('.share_facebook').trigger('click');
+                    container.find('.share_twitter').trigger('click');
+                    resolve(calls);
+                  } catch (error) { reject(error); }
+                  finally {
+                    data.getTitle = original.title;
+                    data.getSubtitle = original.subtitle;
+                    social.shareFacebook = original.facebook;
+                    social.shareTwitter = original.twitter;
+                    container.remove();
+                  }
+                }, reject);
+              }), payload);
+              assert.deepEqual(result.nativeShares, [['A & B', 'A & B'], ['A & B']]);
+            }
+            await page.waitForLoadState('networkidle');
+            assert.equal(await page.evaluate(() => window.__htmlTextProbe), 0);
+            assert.equal(probeRequests.length, 0);
+            await page.evaluate(url => {
+              const jquery = window.jQuery || window.$;
+              jquery('<div><img src="' + url + '" onerror="window.__htmlTextProbe++"></div>').text();
+            }, origin + '/__html_text_probe__baseline');
+            await page.waitForFunction(() => window.__htmlTextProbe > 0);
+            assert.ok(probeRequests.some(url => url.endsWith('__html_text_probe__baseline')));
+            result.baselineExecuted = true;
+            if (target.runtime === 'cascade') {
+              result.shareURL = await page.evaluate(() => new Promise((resolve, reject) => {
+                require(['storymaps-react/tpl/core/Controller'], loaded => {
+                  try {
+                    const controller = loaded.default || loaded;
+                    const input = 'https://example.org/?edit=true&appid=abc&locale=fr&edit=false&value=a%26b#edit=keep';
+                    const start = performance.now();
+                    const long = controller.getStoryURL({ url: 'https://example.org/?edit=' + '='.repeat(100000) });
+                    resolve({ ordinary: controller.getStoryURL({ url: input }),
+                      encoded: controller.getStoryURL({ url: input, urlEncoding: true }), long, milliseconds: performance.now() - start });
+                  } catch (error) { reject(error); }
+                }, reject);
+              }));
+              assert.equal(result.shareURL.ordinary, 'https://example.org/?appid=abc&value=a%26b#edit=keep');
+              assert.equal(result.shareURL.encoded, encodeURIComponent(result.shareURL.ordinary));
+              assert.equal(result.shareURL.long, 'https://example.org/');
+              assert.ok(result.shareURL.milliseconds < 1000);
+            }
+          }
           result.pass = true;
         } catch (error) {
           result.pass = false;

@@ -1168,7 +1168,7 @@ define(["esri/map",
 				WebApplicationData.getHeaderLinkURL() === undefined ? APPCFG.HEADER_LINK_URL : WebApplicationData.getHeaderLinkURL(),
 				WebApplicationData.getSocial()
 			);
-			document.title = title ? $('<div>' + title + '</div>').text() : 'Map Tour';
+			document.title = title ? (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + title + '</div>') : 'Map Tour';
 
 			_mainView.webmapLoaded();
 		}

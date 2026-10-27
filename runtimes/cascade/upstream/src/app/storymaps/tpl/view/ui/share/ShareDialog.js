@@ -138,7 +138,7 @@ define([
     }
 
     function shareTwitter(url) {
-      var appTitle = $('<div>' + app.data.title + '</div>').text();
+      var appTitle = (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + app.data.title + '</div>');
       SocialSharing.shareTwitter(appTitle, url);
     }
   };

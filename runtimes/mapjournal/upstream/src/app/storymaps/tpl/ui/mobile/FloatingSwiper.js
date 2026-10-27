@@ -202,7 +202,7 @@ define(["lib-build/tpl!./FloatingSwiperSection",
 				shareURL += "section=" + _nbSections;
 
 				return viewSectionTpl({
-					title: $("<div>" + StoryText.prepareEditorContent(title) + "</div>").text(),
+					title: (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})("<div>" + StoryText.prepareEditorContent(title) + "</div>"),
 					content: StoryText.prepareEditorContent(content),
 					lblShare: i18n.viewer.headerFromCommon.share,
 					shareURL: shareURL,

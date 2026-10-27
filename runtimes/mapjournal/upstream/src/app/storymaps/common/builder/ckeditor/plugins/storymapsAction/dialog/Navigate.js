@@ -40,7 +40,7 @@ define(["lib-build/tpl!./Navigate",
 
 					title += (i+1) + ' - ';
 
-					title += $('<div>' + section.title + '</div>').text();
+					title += (function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + section.title + '</div>');
 
 					if (i == app.data.getCurrentSectionIndex()) {
 						title += ' (' + i18n.commonCore.sectionNavigation.thisSection + ')';

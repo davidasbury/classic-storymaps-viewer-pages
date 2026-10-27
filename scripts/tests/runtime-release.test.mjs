@@ -10,7 +10,56 @@ import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
+test('HTML text extraction patch changes only wrapped jQuery text reads', async () => {
+  const { patchHtmlText } = await import('../patch-runtime-html-text.mjs');
+  const original = 'var title=$("<div>"+(getTitle()||"")+"</div>").text();'
+    + 'var subtitle=jQuery("<div>"+getSubtitle()+"</div>").text();'
+    + 'var plain=$(".title").text();$(".story").html(richText);';
+  const patched = patchHtmlText(original);
+  assert.equal(patched.count, 2);
+  assert.ok(patched.source.endsWith('var plain=$(".title").text();$(".story").html(richText);'));
+  assert.deepEqual(patchHtmlText(patched.source), { source: patched.source, count: 0 });
+  assert.equal(patchHtmlText('var ignored="$(\'<div>\'+title+\'</div>\').text()";').count, 0);
+  const inputs = [];
+  const context = { getTitle: () => 'A &amp; B', getSubtitle: () => '<b>Subtitle</b>',
+    document: { createElement: tag => {
+      assert.equal(tag, 'template');
+      return { set innerHTML(value) { inputs.push(value); }, content: { textContent: 'extracted' } };
+    } },
+    $: () => ({ text: () => 'unchanged', html: () => {} }), richText: '<p>unchanged</p>' };
+  vm.runInNewContext(patched.source, context);
+  assert.deepEqual(inputs, ['<div>A &amp; B</div>', '<div><b>Subtitle</b></div>']);
+  assert.equal(context.title, 'extracted');
+  assert.equal(context.subtitle, 'extracted');
+  assert.equal(context.plain, 'unchanged');
+});
+
+test('Cascade sharing removes only edit and locale query parameters without backtracking', () => {
+  const source = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/app/storymaps/tpl/core/Controller.jsx'), 'utf8');
+  const method = source.slice(source.indexOf('  static getStoryURL('), source.indexOf('  static isStoryBlank('));
+  const Controller = vm.runInNewContext('(class Controller {' + method + '})', {
+    URL, document: { location: { href: 'https://example.org/viewer/?appid=abc&locale=fr#section' } }
+  });
+  const manifest = JSON.parse(readFileSync(path.join(repo, 'runtimes/cascade/runtime-manifest.json'), 'utf8'));
+  const patch = manifest.patches.find(patch => patch.name === 'bounded-share-url-query-filter');
+  const released = vm.runInNewContext('(' + patch.replace + ').value', {
+    URL, document: { location: { href: 'https://example.org/viewer/?appid=abc&locale=fr#section' } }
+  });
+  assert.equal(Controller.getStoryURL(), 'https://example.org/viewer/?appid=abc#section');
+  const input = 'https://example.org/?edit=true&appid=abc&locale=fr&edit=false&value=a%26b&locale=en#edit=keep';
+  const expected = 'https://example.org/?appid=abc&value=a%26b#edit=keep';
+  assert.equal(Controller.getStoryURL({ url: input }), expected);
+  assert.equal(released({ url: input }), expected);
+  assert.equal(released({ url: input, urlEncoding: true }), encodeURIComponent(expected));
+  assert.equal(Controller.getStoryURL({ url: input, urlEncoding: true }), encodeURIComponent(expected));
+  assert.equal(Controller.getStoryURL({ url: '?editor=keep&locales=en&edit&locale' }), 'https://example.org/viewer/?editor=keep&locales=en');
+  assert.equal(Controller.getStoryURL({ url: 'https://example.org/?edit=' + '='.repeat(100000) }), 'https://example.org/');
+  assert.equal(released({ url: 'https://example.org/?edit=' + '='.repeat(100000) }), 'https://example.org/');
+});
+
 test('Media credential sanitizer uses fingerprints and rejects newly embedded provider keys', async () => {
+  const { secureRuntimeHtmlText } = await import('../patch-runtime-html-text.mjs');
+  assert.throws(() => secureRuntimeHtmlText(path.join(repo, 'runtimes/mapseries/upstream')), /Cannot modify runtime sources/);
   const { removeInheritedMediaKeys, assertNoEmbeddedMediaKeys, secureRuntimeMedia } = await import('../secure-runtime-media.mjs');
   const synthetic = 'synthetic-flickr-value'.padEnd(32, 'x');
   const fingerprints = new Set([createHash('sha256').update(synthetic).digest('hex')]);

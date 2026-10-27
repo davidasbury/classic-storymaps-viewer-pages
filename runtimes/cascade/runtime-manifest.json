@@ -7,6 +7,12 @@
       "file": "app/viewer-min.js",
       "find": "getAppID:function(e){var t=this.getUrlParams();return app.indexCfg",
       "replace": "getAppID:function(e){var t=this.getUrlParams();if(typeof t.appid===\"string\"&&/^[a-f0-9]{32}$/i.test(t.appid))return t.appid;return app.indexCfg"
+    },
+    {
+      "name": "bounded-share-url-query-filter",
+      "file": "app/viewer-min.js",
+      "find": "{key:\"getStoryURL\",value:function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},t=e.url||document.location.href;return t=t.replace(/\\?edit(=.*)*&/,\"?\"),t=t.replace(/\\&edit(=.*)*/,\"\"),t=t.replace(/\\?edit/,\"\"),t=t.replace(/\\?locale(=[a-zA-Z\\-]+)+&/,\"?\"),t=t.replace(/\\&locale(=[a-zA-Z\\-]+)+/,\"\"),e.urlEncoding?encodeURIComponent(t):t}}",
+      "replace": "{key:\"getStoryURL\",value:function(params){params=params||{};var url=new URL(params.url||document.location.href,document.location.href);url.searchParams.delete(\"edit\");url.searchParams.delete(\"locale\");return params.urlEncoding?encodeURIComponent(url.href):url.href}}"
     }
   ],
   "release": {
