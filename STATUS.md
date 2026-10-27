@@ -30,6 +30,12 @@ searches allow accessible other-owner items returned by ArcGIS without a
 client-side role gate; Convert remains restricted to owned items. Signed-out
 browsing uses ArcGIS Online / Public instead of the curated launcher examples.
 
+The catalog footer now uses the owner's community-project disclaimer, stating
+that the tools are not an official Esri product, are not covered by Esri Technical
+Support, and are used at the user's own risk. The feedback placeholder was
+replaced in source and both local preview entry pages; see
+[session 0033](session-logs/2026-10-26-0033-session-log.md). Production is unchanged.
+
 The omni-input accepts IDs, explicit app-ID URLs and exact indexed Classic app
 URLs, plus verified aliases for the two supplied self-hosted examples. Web-map
 overrides survive; credentials and arbitrary parameters do not. This is not a

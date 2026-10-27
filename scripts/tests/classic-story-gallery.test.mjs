@@ -214,6 +214,8 @@ test('Viewers starts with a hidden gallery and whole-card catalog links', () => 
   assert.match(page, /<a class="card"[^>]*href="\$\{app.launchRoute\}"/);
   assert.match(page, /ClassicStoryGallery.mount/);
   assert.match(page, /galleryController.setSession/);
+  assert.ok(page.includes('This is a free, community-built project&mdash;not an official Esri product. These tools are not covered by Esri Technical Support. Use them at your own risk.'));
+  assert.doesNotMatch(page, /I may put a link to a GitHub repo/);
 });
 
 test('all eight launchers opt into shared galleries and explicitly identify their advanced tools', () => {
