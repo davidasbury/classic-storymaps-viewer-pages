@@ -21,17 +21,24 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Shared tab favicon, 2026-10-26.**
+**Edited tab favicon preserved in source, 2026-10-26.**
 
-David directed using the existing `publish/viewers/favicon.ico` image for all
-page favicons. Its tracked source is `apps/classic-storymaps-site/favicon.ico`.
-Landing and runtime publication now normalize full HTML documents to the shared
-local ICO, including archive, compatibility, print and notice pages. A root
-fallback is included. Upstream sources and existing image bytes are unchanged.
-All 139 tests passed; all 68 published-link checks passed both for the local
-project prefix and for production-root output, the latter under Node 24.
-This is a source change, not a deployment or integration approval; font-specific
-findings remain open. See [session 0029](session-logs/2026-10-26-0029-session-log.md).
+David requested promotion of his background-removed ICO from generated
+`publish/viewers/assets/images/favicon.ico` into both tracked source copies:
+`apps/classic-storymaps-site/favicon.ico` and
+`apps/classic-storymaps-site/assets/images/favicon.ico`. Independent byte and
+SHA-256 comparisons matched his edited image:
+`2fac548f1a962e4f31fad61a62a75f3e844fbeead4b0709350a98c68aac9c7f1`.
+The generated favicon cache key is now `folded-map-transparent`; the existing
+focused Node 24 regression passed against an isolated build, including source/
+output equality and repeat-staging idempotence. The owner's preview was not rebuilt.
+
+The shared-icon normalization introduced in
+[session 0029](session-logs/2026-10-26-0029-session-log.md) remains in place for
+landing, archive, compatibility, runtime, print and notice pages, with a root
+fallback. Upstream sources remain untouched. This promotion is source-only,
+not deployment or integration approval; font-specific findings remain open.
+See [session 0030](session-logs/2026-10-26-0030-session-log.md).
 
 **Viewer cutover accepted by the owner, 2026-10-26.**
 

@@ -5,7 +5,7 @@ const base = (process.env.SITE_BASE_PATH || '').replace(/\/$/, '');
 if (!/^(\/[A-Za-z0-9._~-]+)*$/.test(base) || base.split('/').some(part => part === '.' || part === '..')) {
   throw new Error('Invalid SITE_BASE_PATH');
 }
-const icon = `<link rel="icon" type="image/x-icon" href="${base}/viewers/assets/images/favicon.ico?v=folded-map">`;
+const icon = `<link rel="icon" type="image/x-icon" href="${base}/viewers/assets/images/favicon.ico?v=folded-map-transparent">`;
 
 function stage(filename) {
   if (statSync(filename).isDirectory()) {

@@ -853,7 +853,7 @@ test('site pages use the shared local folded-map favicon', () => {
     if (!/<html\b/i.test(html)) continue;
     const icons = [...html.matchAll(/<link\b[^>]*rel="(?:shortcut )?icon"[^>]*>/g)];
     assert.equal(icons.length, 1, file + ': one canonical favicon');
-    for (const icon of icons) assert.ok(icon[0].includes(`href="${base}/viewers/assets/images/favicon.ico?v=folded-map"`), file);
+    for (const icon of icons) assert.ok(icon[0].includes(`href="${base}/viewers/assets/images/favicon.ico?v=folded-map-transparent"`), file);
   }
   const icon = readFileSync(path.join(publish, 'viewers/assets/images/favicon.ico'));
   assert.equal(icon.readUInt16LE(2), 1);
