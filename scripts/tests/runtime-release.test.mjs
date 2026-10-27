@@ -47,6 +47,22 @@ test(runtime + ' never enables the builder button for an authenticated owner', a
 });
 }
 
+test('Cascade empty stories never redirect editors into the builder', async () => {
+  const { disableRuntimeEdit } = await import('../patch-runtime-edit-controls.mjs');
+  const original = 'define("storymaps/tpl/core/Core",[],function(){function gate(){return app.userCanEdit;}function blank(){return app.userCanEdit?helper.switchToBuilder():error("notConfiguredDesktop")}return{hasSwitchBuilderButton:gate,blank:blank}})';
+  const patched = disableRuntimeEdit('cascade', original);
+  assert.equal(disableRuntimeEdit('cascade', patched), patched);
+  for (const userCanEdit of [true, false]) {
+    let core;
+    vm.runInNewContext(patched, { app: { userCanEdit }, helper: { switchToBuilder: () => assert.fail('Builder redirect') },
+      error: message => message, define: (name, dependencies, factory) => { core = factory(); } });
+    assert.equal(core.blank(), 'notConfiguredDesktop');
+  }
+  assert.throws(() => disableRuntimeEdit('cascade', original.replace('app.userCanEdit?helper', 'unknown?helper')), /empty-story/);
+  const source = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/app/storymaps/tpl/core/Core.js'), 'utf8');
+  assert.doesNotMatch(source, /CommonHelper\.switchToBuilder\(\)/);
+});
+
 test('Crowdsource authenticated editors cannot open the owner banner', async () => {
   const { disableRuntimeEdit } = await import('../patch-runtime-edit-controls.mjs');
   const original = 'function update(){provider["default"].getObject("appState.user.editor",!1,this)&&(this.checkedAdminPanel=!0,actions.showComponent("admin-banner"))}';

@@ -121,6 +121,78 @@ were inspected; the pill and error text fit. The new cases had no page
 exceptions. An initial test-only input-selector typo was corrected and the
 same two cases passed on rerun.
 
+## Verified Mapping And Empty-Story Loop
+
+Verified at `2026-10-27 01:05:33-07:00[America/Los_Angeles]`; not deployed.
+
+Public wrapper `6f336f5b90594c7fbdb204a9268c925b` has empty data and points to
+`https://web.tplgis.org/Storymaps/national/willrogers/cascade/index.html`.
+Its exact URL alias now resolves to `a4a39ad4d78b40d9887bf4f19f2fef59`, the
+live public Cascade item. Nonempty copies still win over their URL aliases.
+The owner supplied the archived configuration; anonymous live REST reads and
+native rendering independently confirmed the target. A real Wayback lookup
+also returned that exact ID from capture `20210923074832` with HTTP 200.
+
+The Danajon placeholder `e51d80835b774c95b30195bcbf28e968` exposed a second
+authoring path: empty Cascade stories with edit capability called
+`switchToBuilder()`, while the viewer guard stripped the resulting `&edit`.
+Both source and the guarded official-release adapter now show the normal
+not-configured error instead. This does not alter access permissions. A native
+release test forced edit capability true at the blank-story decision and
+observed one navigation, the error message and no builder query parameter.
+
+## Explicit Archive Discovery
+
+Empty external pointers without a known ID stop before native startup. The
+native error screen and main input retain the source link and can offer archive
+discovery when a same-origin relay and source origin have been configured.
+Consent is explicit, per lookup/page, and not persisted. Cancel, consent
+revocation, changed input and stale identity prevent late results from opening
+a story. Success offers a dated archive-source link and a separate **Open live
+story** link; it never automatically navigates or embeds archived HTML.
+
+The implementation reuses the photo-discovery transport, caches, limits and
+HTTP boundary in `scripts/wayback-discovery.mjs`. The new relay independently
+reads the wrapper anonymously from the fixed ArcGIS REST origin, requires a
+public Web Mapping Application with empty data, and accepts only approved
+public HTML origins without queries, fragments, credentials or custom ports.
+The browser sends only the item ID and explicit consent; it sends no ArcGIS
+token to the relay or Internet Archive. Live external websites are not fetched.
+
+Exact CDX lookups inspect HTTP and HTTPS variants, at most 50 rows each, and
+select the nearest returned capture to the item's modified date. CDX/REST
+responses are capped at 64 KiB; the one selected HTML capture is capped at
+1 MiB. Redirects fail closed. Relay concurrency is two and its budget is 20
+requests per minute; archive results have bounded positive/negative caching
+and a 429 circuit breaker. Metadata and archive phases each have a 15-second
+deadline; the browser cancels its request after 25 seconds. Browser cancellation
+does not guarantee an already-running bounded server lookup stops immediately.
+
+Pinned parse5 and Acorn parse HTML and JavaScript inertly. Only a top-level
+literal `configOptions` object containing one literal 32-hex `appid` is
+supported. Dynamic values, conflicting configurations, computed properties,
+spreads and observed mutations fail closed. External scripts and template
+contents are not executed or loaded. The extracted ID is only a hint: the
+browser validates the live target through the normal bounded Classic resolver,
+rejects cycles and checks capture provenance before offering a local viewer.
+
+Default static configuration has an empty endpoint and origin list. The local
+preview can enable the relay with `WAYBACK_STORY_ORIGINS`; production hosting
+is not implemented or authorized. GitHub Pages alone cannot run it. This is
+not general recovery of arbitrary pages, dynamic applications or private items.
+
+All 212 Node tests passed on Node 24, including existing photo discovery and
+new extraction, consent, ambiguity, size, MIME, rate-limit and provenance
+checks. Three browser cases covered the real Will Rogers pointer plus desktop
+and mobile fixture-driven discovery: no lookup before consent, cancellation,
+ambiguous results, dated provenance, explicit opening of the real live story,
+revocation and main-input changes. The additional blank-editor loop case and
+all 39 existing pointer/input/authentication cases passed: 43 browser cases,
+with no page exceptions. Desktop/mobile screenshots were inspected. The live
+Wayback capture check was separate from the deterministic browser fixtures.
+Checks used isolated output and disposable browser contexts, not shared owner
+previews or signed-in sessions. No ArcGIS content or hosting was changed.
+
 ## Repeat The Browser Checks
 
 Against an isolated published site using its actual base path:
@@ -132,6 +204,9 @@ PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
 PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
   PLAYWRIGHT_NODE_MODULES="$TEST_DEPS/node_modules" PLAYWRIGHT_CHANNEL=chrome \
   RUNTIME_FILTER=source-status,gallery node scripts/validate-release-viewers-browser.mjs
+  PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
+    PLAYWRIGHT_NODE_MODULES="$TEST_DEPS/node_modules" PLAYWRIGHT_CHANNEL=chrome \
+    RUNTIME_FILTER=archive-discovery,blank-cascade node scripts/validate-release-viewers-browser.mjs
 node --test scripts/tests/*.test.mjs
 ```
 

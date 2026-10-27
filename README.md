@@ -76,6 +76,7 @@ access. From the repository root, run the same build sequence as CI:
 ```sh
 set -e
 export SITE_BASE_PATH=""
+npm ci --ignore-scripts --no-audit --no-fund
 node --test scripts/tests/*.test.mjs
 bash scripts/build-maptour-runtime.sh
 bash scripts/build-swipe-runtime.sh
@@ -106,10 +107,35 @@ From the repository root, run the tests with Node.js 20 or later:
 node --test scripts/tests/*.test.mjs
 ```
 
-Tests use Node's built-in test runner and require no additional dependencies.
+Tests use Node's built-in test runner. Run `npm ci --ignore-scripts --no-audit
+--no-fund` first to install the pinned HTML/JavaScript discovery parsers.
 The explicit file glob works on the Node 24 runtime used by CI.
 Add regression tests as `scripts/tests/*.test.mjs`. The Pages workflow runs
 the suite before building; a test failure stops the build and deployment.
+
+## Explicit Archive Story Discovery
+
+Empty public pointer items with unresolved external HTML URLs can offer an
+explicit Wayback lookup. The user must consent before any archive request;
+the result links both the dated capture and a separately verified live Classic
+story. Archived scripts are parsed, never executed. Known mappings, including
+Will Rogers, do not require archive access. See the
+[behavior, verification and limits](docs/testing/story-pointer-resolution.md#explicit-archive-discovery).
+
+Static publication leaves discovery disabled. GitHub Pages cannot host the
+required same-origin relay. For an isolated, already built local preview:
+
+```sh
+PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" PORT=0 \
+WAYBACK_STORY_ORIGINS=https://web.tplgis.org,http://web.tplgis.org \
+node scripts/preview-server.mjs
+```
+
+The server reports a free loopback HTTPS port and uses a temporary self-signed
+certificate. It does not change system trust or production configuration.
+Origins must be explicitly approved public origins; private wrappers, query
+URLs, credentials, redirects and dynamic configuration are unsupported.
+Production relay hosting and publication require separate approval.
 
 ## Runtime Import Reproducibility
 

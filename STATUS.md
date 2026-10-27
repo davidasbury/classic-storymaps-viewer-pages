@@ -14,7 +14,8 @@ extra:
   gallery_navigation: Numbered pages and nine bidirectional sorts verified locally; publication pending
   maptour_compatibility: Night-style repair and owner notice verified locally; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
-  phase: Classic pointer resolution and source-status badges, print rendering and owner controls verified; publication and remaining acceptance pending
+  story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
+  phase: Verified pointer mapping, Cascade loop fix and explicit archive discovery implemented; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -23,6 +24,26 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Verified pointer mapping, Cascade loop fix and explicit archive discovery are implemented, 2026-10-27.**
+
+The Will Rogers wrapper now opens its verified live Cascade target. Empty
+editor-capable Cascades no longer redirect into the builder. Unresolved empty
+external pointers stop before native startup and can offer an explicit,
+cancelable Wayback lookup through an approved same-origin relay. The relay
+reuses photo-discovery limits, independently requires a public empty wrapper,
+and parses archived configuration without executing it. Results link dated
+provenance and a separately verified live story; no automatic opening occurs.
+
+All 212 Node tests and 43 browser cases passed, including desktop/mobile
+discovery, real Will Rogers rendering, the native blank-editor regression and
+all existing pointer/input/authentication checks. A separate live Wayback GET
+returned the expected app ID from capture `20210923074832`. See
+[verification](docs/testing/story-pointer-resolution.md#explicit-archive-discovery)
+and [session 0054](session-logs/2026-10-27-0054-session-log.md).
+The static default remains disabled; production relay hosting and publication
+need separate approval. An isolated local preview was started. Shared previews,
+signed-in owner sessions, ArcGIS content and Netlify were not changed.
 
 **Gallery page shortcuts and expanded sorting are verified locally, 2026-10-27.**
 

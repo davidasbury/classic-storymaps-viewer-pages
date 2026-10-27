@@ -230,6 +230,7 @@
     appRegistry: APP_REGISTRY,
     catalogApps: CATALOG_APPS,
     exampleStoriesByRuntime: EXAMPLE_STORIES,
+    archiveDiscovery: { endpoint: '', allowedOrigins: [] },
     gallery: {
       publicGroupId: '',
       converter: {

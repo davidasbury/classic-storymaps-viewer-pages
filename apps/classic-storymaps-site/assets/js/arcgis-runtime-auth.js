@@ -23,7 +23,7 @@ define(['esri/IdentityManager'], function(identity) {
     document.addEventListener('visibilitychange', reconcile);
   }
 
-  function showUnavailable(message) {
+  function showUnavailable(message, source, token) {
     function render() {
       var panel = document.createElement('main');
       panel.setAttribute('role', 'alert');
@@ -37,6 +37,10 @@ define(['esri/IdentityManager'], function(identity) {
       back.textContent = 'Back to Viewers';
       panel.append(heading, detail, back);
       document.body.appendChild(panel);
+      if (source) window.ClassicStoryDiscovery.mount(panel, source, {
+        config: window.ClassicStoryMapsConfig, token: token,
+        isCurrent: function() { var latest = helpers.readCatalogCredential(document.cookie); return (latest && latest.token) === token; }
+      });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render, { once: true });
     else render();
@@ -71,7 +75,7 @@ define(['esri/IdentityManager'], function(identity) {
         loaded(true);
         return;
       }
-      showUnavailable(error.message || 'The story could not be loaded.');
+      showUnavailable(error.message || 'The story could not be loaded.', error.source, token);
       loaded(false);
     });
   } };

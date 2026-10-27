@@ -14,8 +14,24 @@ const modulePath = process.env.PLAYWRIGHT_NODE_MODULES;
 const { chromium } = modulePath
   ? await import(pathToFileURL(path.join(modulePath, 'playwright/index.mjs')).href)
   : await import('playwright');
+const archiveFixture = { calls: 0, mode: 'success', itemId: 'c'.repeat(32), target: 'a4a39ad4d78b40d9887bf4f19f2fef59', source: 'https://web.tplgis.org/unmapped/cascade/index.html' };
+const archiveTesting = (process.env.RUNTIME_FILTER || '').split(',').includes('archive-discovery');
+const archiveOptions = archiveTesting ? {
+  storyArchiveOrigins: ['https://web.tplgis.org'],
+  storyArchiveOptions: { fetchImpl: async (address, options) => {
+    assert.equal(options.credentials, 'omit');
+    assert.equal(options.headers, undefined);
+    const url = new URL(address);
+    if (url.hostname === 'www.arcgis.com') return url.pathname.endsWith('/data') ? new Response('') : Response.json({
+      id: archiveFixture.itemId, access: 'public', type: 'Web Mapping Application', url: archiveFixture.source, modified: Date.parse('2017-10-01') });
+    assert.equal(url.hostname, 'web.archive.org');
+    archiveFixture.calls++;
+    return url.pathname.includes('/cdx/') ? Response.json([['timestamp', 'original', 'mimetype', 'statuscode'],
+      ['20171001000000', archiveFixture.source, 'text/html', '200']]) : new Response('<script>var configOptions={appid:"' + archiveFixture.target + '"};</script>', { headers: { 'Content-Type': 'text/html' } });
+  } }
+} : {};
 execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', path.join(temporary, 'key.pem'), '-out', path.join(temporary, 'cert.pem'), '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
-const server = https.createServer({ key: await readFile(path.join(temporary, 'key.pem')), cert: await readFile(path.join(temporary, 'cert.pem')) }, createPreviewHandler({ root: publish, basePath }));
+const server = https.createServer({ key: await readFile(path.join(temporary, 'key.pem')), cert: await readFile(path.join(temporary, 'cert.pem')) }, createPreviewHandler({ root: publish, basePath, ...archiveOptions }));
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const origin = 'https://127.0.0.1:' + server.address().port;
 const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || undefined });
@@ -32,6 +48,139 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('blank-cascade')) {
+    const { context, page, errors } = await observePage(1280);
+    const itemId = 'd'.repeat(32);
+    const result = { runtime: 'cascade', check: 'empty-editor-no-builder-loop', navigations: [] };
+    results.push(result);
+    await context.route('**/*', async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame()) {
+        result.navigations.push(request.url());
+        if (result.navigations.length > 1) return route.abort();
+      }
+      if (url.pathname.endsWith('/cascade/app/viewer-min.js')) {
+        const response = await route.fetch();
+        const text = await response.text();
+        const blank = /([\w$]+\.isStoryBlank\(\))\?/g;
+        assert.equal([...text.matchAll(blank)].length, 1);
+        return route.fulfill({ response, body: text.replace(blank, '(app.userCanEdit=true,$1)?') });
+      }
+      if (url.pathname.includes('/content/items/' + itemId)) {
+        const payload = url.pathname.endsWith('/data') ? {} : { id: itemId, title: 'Empty editor fixture', owner: 'synthetic-owner',
+          type: 'Web Mapping Application', access: 'public', typeKeywords: ['Story Map Cascade'], url: 'https://www.arcgis.com/apps/Cascade/?appid=' + itemId };
+        return url.searchParams.has('callback') ? route.fulfill({ contentType: 'application/javascript', body: url.searchParams.get('callback') + '(' + JSON.stringify(payload) + ')' }) : route.fulfill({ json: payload });
+      }
+      return route.continue();
+    });
+    try {
+      await page.goto(origin + basePath + '/viewers/cascade/index.html?appid=' + itemId);
+      await page.getByText('The story is not configured yet.', { exact: true }).waitFor({ timeout: 60000 });
+      assert.equal(await page.evaluate(() => window.app.userCanEdit), true);
+      assert.equal(result.navigations.length, 1);
+      assert.equal(new URL(page.url()).searchParams.has('edit'), false);
+      result.pass = true;
+    } catch (error) { result.pass = false; result.failure = error.message; }
+    await context.close();
+    result.pageErrors = errors.filter(message => message.startsWith('page:'));
+    if (result.pageErrors.length) result.pass = false;
+  }
+  if (archiveTesting) {
+    for (const width of [1280, 390]) {
+      const { context, page, errors } = await observePage(width);
+      const result = { runtime: 'archive-discovery', width };
+      results.push(result);
+      let relayRequests = 0;
+      let hold;
+      let holdNext = false;
+      let ambiguous = false;
+      await context.route('**/*', async route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (url.origin === origin && url.pathname.endsWith('/api/story-archive')) {
+          relayRequests++;
+          assert.equal(request.headers()['x-esri-authorization'], undefined);
+          assert.equal(request.headers().cookie, undefined);
+          if (holdNext) { hold = route; holdNext = false; return; }
+          if (ambiguous) return route.fulfill({ json: { snapshot: null, reason: 'no_unique_app_id' } });
+          return route.continue();
+        }
+        if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+        if (url.pathname.endsWith('/content/items/' + archiveFixture.itemId + '/data')) return route.fulfill({ body: '', contentType: 'application/json' });
+        if (url.pathname.endsWith('/content/items/' + archiveFixture.itemId)) return route.fulfill({ json: {
+          id: archiveFixture.itemId, title: 'Archived configuration pointer', access: 'public', type: 'Web Mapping Application',
+          typeKeywords: ['Story Map Cascade'], url: archiveFixture.source } });
+        return route.continue();
+      });
+      try {
+        await page.goto(origin + basePath + '/viewers/cascade/index.html?appid=' + archiveFixture.itemId);
+        const lookup = page.getByRole('button', { name: 'Look up in Wayback Machine', exact: true });
+        await lookup.waitFor({ timeout: 60000 });
+        assert.equal(await lookup.isDisabled(), true);
+        assert.equal(relayRequests, 0);
+        assert.equal(await page.getByRole('link', { name: 'Open source website' }).getAttribute('href'), archiveFixture.source);
+        await page.getByRole('checkbox').check();
+        holdNext = true;
+        await lookup.click();
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        await page.getByText('Lookup canceled.', { exact: true }).waitFor();
+        if (hold) await hold.abort().catch(() => {});
+        ambiguous = true;
+        await lookup.click();
+        await page.getByText('The archived page has no unambiguous supported app ID.', { exact: true }).waitFor();
+        ambiguous = false;
+        await lookup.click();
+        const open = page.getByRole('link', { name: 'Open live story', exact: true });
+        await open.waitFor({ timeout: 60000 });
+        assert.equal(new URL(await open.getAttribute('href')).searchParams.get('appid'), archiveFixture.target);
+        assert.equal(await page.getByRole('link', { name: 'Archived source (2017-10-01)', exact: true }).getAttribute('href'),
+          'https://web.archive.org/web/20171001000000id_/' + archiveFixture.source);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        await page.screenshot({ path: path.join(temporary, 'archive-discovery-' + width + '.png') });
+        const popupPromise = page.waitForEvent('popup');
+        await open.click();
+        const story = await popupPromise;
+        await story.waitForFunction(id => window.app?.data?.appItem?.item?.id === id, archiveFixture.target, { timeout: 60000 });
+        await story.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: 60000 });
+        assert.equal(await story.evaluate(() => window.opener), null);
+        await story.screenshot({ path: path.join(temporary, 'archive-live-story-' + width + '.png') });
+        await story.close();
+        await page.getByRole('checkbox').uncheck();
+        assert.equal(await open.count(), 0);
+        await page.goto(origin + basePath + '/viewers/');
+        await page.locator('#omni-appid').fill(archiveFixture.itemId);
+        await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+        await lookup.waitFor();
+        await page.getByRole('checkbox').check();
+        await lookup.click();
+        await open.waitFor({ timeout: 60000 });
+        await page.locator('#omni-appid').fill('changed');
+        assert.equal(await lookup.count(), 0);
+        result.relayRequests = relayRequests;
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+    const { context, page, errors } = await observePage(1280);
+    const result = { runtime: 'cascade', check: 'verified-will-rogers-pointer' };
+    results.push(result);
+    try {
+      await context.route('**/*', route => ['GET', 'OPTIONS'].includes(route.request().method()) ? route.continue() : route.abort());
+      await page.goto(origin + basePath + '/viewers/cascade/index.html?appid=6f336f5b90594c7fbdb204a9268c925b');
+      await page.waitForFunction(id => window.app?.data?.appItem?.item?.id === id, archiveFixture.target, { timeout: 60000 });
+      await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: 60000 });
+      assert.equal(new URL(page.url()).searchParams.get('appid'), archiveFixture.target);
+      await page.screenshot({ path: path.join(temporary, 'verified-will-rogers.png') });
+      result.pass = true;
+    } catch (error) { result.pass = false; result.failure = error.message; }
+    await context.close();
+    result.pageErrors = errors.filter(message => message.startsWith('page:'));
+    if (result.pageErrors.length) result.pass = false;
+  }
   if (selectedRuntimes.has('source-status')) {
     for (const width of [1280, 390]) {
       const { context, page, errors } = await observePage(width);

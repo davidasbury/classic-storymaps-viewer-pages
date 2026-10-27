@@ -1,16 +1,40 @@
 const rasterPath = /\.(?:png|jpe?g|gif|webp|bmp)$/i;
 
 export function publicImageURL(value, allowedOrigins) {
+  return publicArchiveURL(value, allowedOrigins, rasterPath);
+}
+
+export function publicStoryURL(value, allowedOrigins) {
+  return publicArchiveURL(value, allowedOrigins, /(?:\/|\.html?)$/i);
+}
+
+function publicArchiveURL(value, allowedOrigins, pathPattern) {
   if (typeof value !== 'string' || value.length > 2048 || /[\s%\\]/.test(value)) return null;
   try {
     const url = new URL(value);
     const authority = value.match(/^https?:\/\/([^/]+)/)?.[1];
     if (!authority || /[:@]/.test(authority) || !allowedOrigins.includes(url.origin)
-      || url.search || url.hash || !rasterPath.test(url.pathname)
+      || url.search || url.hash || !pathPattern.test(url.pathname)
       || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(url.hostname)
       || /(?:^|\.)(?:localhost|local|internal|test|invalid|example|home)$/i.test(url.hostname)) return null;
     return url.href;
   } catch { return null; }
+}
+
+export async function readArchiveText(response, limit) {
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.length;
+      if (length > limit) throw new Error('oversize');
+      chunks.push(value);
+    }
+  } finally { await reader.cancel(); }
+  return Buffer.concat(chunks).toString('utf8');
 }
 
 function captureTime(value) {
@@ -22,7 +46,7 @@ function captureTime(value) {
 }
 
 export function createWaybackLookup({ allowedOrigins = [], fetchImpl = fetch, now = Date.now, timeoutMs = 5000,
-  concurrency = 2, maxLookups = 20, windowMs = 60000, cacheLimit = 128 } = {}) {
+  concurrency = 2, maxLookups = 20, windowMs = 60000, cacheLimit = 128, extractStoryId = null } = {}) {
   const cache = new Map();
   const pending = new Map();
   let active = 0;
@@ -38,7 +62,7 @@ export function createWaybackLookup({ allowedOrigins = [], fetchImpl = fetch, no
     endpoint.searchParams.set('output', 'json');
     endpoint.searchParams.set('fl', 'timestamp,original,mimetype,statuscode');
     endpoint.searchParams.append('filter', 'statuscode:200');
-    endpoint.searchParams.append('filter', 'mimetype:image/(png|jpeg|gif|webp|bmp)');
+    endpoint.searchParams.append('filter', extractStoryId ? 'mimetype:text/html' : 'mimetype:image/(png|jpeg|gif|webp|bmp)');
     endpoint.searchParams.set('limit', '50');
     const response = await fetchImpl(endpoint.href, { signal, redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer' });
     if (response.status === 429) {
@@ -46,29 +70,17 @@ export function createWaybackLookup({ allowedOrigins = [], fetchImpl = fetch, no
       throw new Error('rate_limited');
     }
     if (!response.ok) throw new Error('unavailable');
-    const reader = response.body.getReader();
-    const chunks = [];
-    let length = 0;
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        length += value.length;
-        if (length > 65536) throw new Error('oversize');
-        chunks.push(value);
-      }
-    } finally { await reader.cancel(); }
-    const rows = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    const rows = JSON.parse(await readArchiveText(response, 65536));
     if (!Array.isArray(rows) || rows.length > 51) throw new Error('invalid_response');
     const parsed = new URL(original);
     const variants = ['https://' + parsed.host + parsed.pathname, 'http://' + parsed.host + parsed.pathname];
     return rows.slice(1).filter(row => Array.isArray(row) && row.length === 4 && variants.includes(row[1])
-      && /^image\/(?:png|jpeg|gif|webp|bmp)$/.test(row[2]) && row[3] === '200' && Number.isFinite(captureTime(row[0])))
+      && (extractStoryId ? row[2] === 'text/html' : /^image\/(?:png|jpeg|gif|webp|bmp)$/.test(row[2])) && row[3] === '200' && Number.isFinite(captureTime(row[0])))
       .map(row => ({ timestamp: row[0], original: row[1], distance: Math.abs(captureTime(row[0]) - timestamp) }));
   }
 
   return async function lookup(source, date) {
-    const original = publicImageURL(source, allowedOrigins);
+    const original = (extractStoryId ? publicStoryURL : publicImageURL)(source, allowedOrigins);
     const time = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? Date.parse(date + 'T00:00:00Z') : NaN;
     if (!original || !Number.isFinite(time) || new Date(time).toISOString().slice(0, 10) !== date || time > now()) return empty('not_eligible');
     const key = original + '\n' + date;
@@ -92,6 +104,16 @@ export function createWaybackLookup({ allowedOrigins = [], fetchImpl = fetch, no
         }
         candidates.sort((left, right) => left.distance - right.distance || left.timestamp.localeCompare(right.timestamp));
         const selected = candidates[0];
+        if (selected && extractStoryId) {
+          const capture = 'https://web.archive.org/web/' + selected.timestamp + 'id_/' + selected.original;
+          const response = await fetchImpl(capture, { signal: controller.signal, redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer' });
+          if (response.status === 429) { blockedUntil = now() + 600000; throw new Error('rate_limited'); }
+          if (!response.ok || !/^text\/html(?:;|$)/i.test(response.headers.get('content-type') || '')) throw new Error('unavailable');
+          const appId = extractStoryId(await readArchiveText(response, 1048576));
+          return appId && /^[a-f0-9]{32}$/i.test(appId) ? { snapshot: {
+            original: selected.original, timestamp: selected.timestamp, url: capture, appId: appId.toLowerCase()
+          } } : empty('no_unique_app_id');
+        }
         return selected ? { snapshot: {
           original: selected.original, timestamp: selected.timestamp,
           url: 'https://web.archive.org/web/' + selected.timestamp + 'if_/' + selected.original
@@ -129,7 +151,7 @@ export function createWaybackHandler(options = {}) {
         chunks.push(chunk);
       }
       const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      const result = await lookup(data.url, data.date);
+      const result = options.lookupRequest ? await options.lookupRequest(data) : await lookup(data.url, data.date);
       response.writeHead(200, headers).end(JSON.stringify(result));
     } catch { response.writeHead(400, headers).end(JSON.stringify({ snapshot: null, reason: 'invalid_request' })); }
   };

@@ -7,6 +7,7 @@
 
   var ID = /^[a-f0-9]{32}$/i;
   var LEGACY_APPS = {
+    'web.tplgis.org/Storymaps/national/willrogers/cascade/': 'a4a39ad4d78b40d9887bf4f19f2fef59',
     'storymaps.esri.com/stories/2014/brazil-beyond-the-stadiums/': 'cf69fa9aee724adf8b6f77d059ae08a9',
     'clear3.uconn.edu/viewers/bears/': '137ee8cb7d05426ca95ae1330ebf4d38'
   };
@@ -98,11 +99,16 @@
       chain.push(item.id.toLowerCase());
       if (!sourceItem) sourceItem = item;
       var target = item.url ? parse(item.url) : null;
-      if (target && target.appId && target.appId !== input.appId) {
+      if (target && (target.url || target.appId && target.appId !== input.appId)) {
         var dataUrl = new URL(url);
         dataUrl.pathname += '/data';
         var data = await read(dataUrl, true);
         if (data === null || typeof data === 'object' && Object.keys(data).length === 0) {
+          if (!target.appId) {
+            var unresolved = new Error('This item points to an external page, but its live story app ID could not be determined.');
+            unresolved.source = { id: item.id, url: target.url.href, access: item.access, webmap: input.webmap };
+            throw unresolved;
+          }
           input = { appId: target.appId, webmap: input.webmap || target.webmap };
           continue;
         }
@@ -117,5 +123,43 @@
     throw new Error('This story reference exceeds the five-item limit.');
   }
 
-  return { parse: parse, resolve: resolve, resolveItem: resolveItem };
+  function archiveEndpoint(source, options) {
+    try {
+      var config = options.config.archiveDiscovery;
+      if (!config || !config.endpoint || source.access !== 'public' || !ID.test(source.id) || /[\s%\\]/.test(source.url)) return null;
+      var url = new URL(source.url);
+      var authority = source.url.match(/^https?:\/\/([^/]+)/);
+      if (!authority || /[:@]/.test(authority[1]) || !(config.allowedOrigins || []).includes(url.origin)
+        || url.search || url.hash || !/(?:\/|\.html?)$/i.test(url.pathname)
+        || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(url.hostname)
+        || /(?:^|\.)(?:localhost|local|internal|test|invalid|example|home)$/i.test(url.hostname)) return null;
+      var base = new URL(options.baseURL || window.location.href);
+      var endpoint = new URL(config.endpoint, base);
+      return endpoint.origin === base.origin && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash ? endpoint : null;
+    } catch (_) { return null; }
+  }
+
+  async function discoverArchive(source, options) {
+    var endpoint = archiveEndpoint(source, options);
+    if (!endpoint || options.consent !== true) throw new Error('Archive discovery is not enabled for this public source.');
+    var signal = AbortSignal.any([options.signal || new AbortController().signal, AbortSignal.timeout(25000)]);
+    var response = await (options.fetcher || fetch)(endpoint, { method: 'POST', credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer',
+      headers: { 'Content-Type': 'application/json' }, signal: signal, body: JSON.stringify({ itemId: source.id, consent: true }) });
+    if (!response.ok) throw new Error('Archive lookup is unavailable. Try again later.');
+    var data = await response.json();
+    var snapshot = data && data.snapshot;
+    if (!snapshot) throw new Error(data && data.reason === 'no_unique_app_id' ? 'The archived page has no unambiguous supported app ID.' : 'No usable archived configuration was found. The archive may be unavailable; try again later.');
+    var original = new URL(source.url);
+    var variants = ['https://' + original.host + original.pathname, 'http://' + original.host + original.pathname];
+    if (!ID.test(snapshot.appId) || !/^\d{14}$/.test(snapshot.timestamp) || !variants.includes(snapshot.original)
+      || snapshot.url !== 'https://web.archive.org/web/' + snapshot.timestamp + 'id_/' + snapshot.original || snapshot.appId.toLowerCase() === source.id.toLowerCase()) {
+      throw new Error('The archive returned an invalid or circular story reference.');
+    }
+    var resolved = await resolveItem(snapshot.appId, { client: options.client, config: options.config, token: options.token, signal: signal });
+    if (resolved.chain.includes(source.id.toLowerCase())) throw new Error('The archive returned a circular story reference.');
+    signal.throwIfAborted();
+    return { resolved: resolved, snapshot: snapshot };
+  }
+
+  return { parse: parse, resolve: resolve, resolveItem: resolveItem, archiveEndpoint: archiveEndpoint, discoverArchive: discoverArchive };
 });

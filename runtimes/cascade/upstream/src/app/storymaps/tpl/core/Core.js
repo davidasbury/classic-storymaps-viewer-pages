@@ -751,15 +751,7 @@ define([
     }
     // No data in view mode
     else if(CommonHelper.getAppID(isProd())) {
-      if(app.userCanEdit) {
-        //app.ui.loadingIndicator.setMessage(i18n.viewer.loading.loadBuilder);
-        //setTimeout(function(){
-        CommonHelper.switchToBuilder();
-        //}, 1200);
-      }
-      else {
-        initError('notConfiguredDesktop');
-      }
+      initError('notConfiguredDesktop');
     }
     // No data in preview mode (should not happen)
     else {

@@ -27,6 +27,12 @@ export function disableRuntimeEdit(runtime, original) {
       throw new Error('Unrecognized ' + runtime + ' Edit eligibility');
     }
     let patchedModule = module.replace(gates[0][0], 'function ' + exports[0][1] + '(){return false;}');
+    if (runtime === 'cascade' && patchedModule.includes('.switchToBuilder()')) {
+      const emptyStory = /app\.userCanEdit\?[\w$]+\.switchToBuilder\(\):([\w$]+\("notConfiguredDesktop"\))/g;
+      if ([...patchedModule.matchAll(emptyStory)].length !== 1) throw new Error('Unrecognized Cascade empty-story redirect');
+      patchedModule = patchedModule.replace(emptyStory, '$1');
+      if (patchedModule.includes('.switchToBuilder()')) throw new Error('Unexpected Cascade builder redirect remains');
+    }
     if (runtime === 'mapjournal' && module.includes('app.ui.headerDesktop.init(')) {
       const call = new RegExp('(app\\.ui\\.headerDesktop\\.init\\([\\s\\S]*?,)' + name + '(\\))', 'g');
       const matches = [...patchedModule.matchAll(call)];

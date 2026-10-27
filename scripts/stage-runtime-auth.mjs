@@ -29,7 +29,7 @@ if (['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'cro
   }
   const indexFile = path.join(directory, 'index.html');
   let html = readFileSync(indexFile, 'utf8');
-  const helpers = ['arcgis-auth-helpers.js', 'classic-storymaps-config.js', 'classic-story-gallery.js', 'classic-story-input.js'];
+  const helpers = ['arcgis-auth-helpers.js', 'classic-storymaps-config.js', 'classic-story-gallery.js', 'classic-story-input.js', 'classic-story-discovery.js'];
   for (const filename of helpers.reverse()) {
     const helper = `<script src="${base}/viewers/assets/js/${filename}"></script>`;
     if (!html.includes(helper)) {

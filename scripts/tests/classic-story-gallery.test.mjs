@@ -55,6 +55,7 @@ test('omni input accepts IDs, hosted URLs, web map overrides and verified legacy
   assert.equal(input().parse('https://blm-egis.maps.arcgis.com/apps/Cascade/index.html?appid=6a9c3a5af20b43dea05fbd1e121ef6da').appId, '6a9c3a5af20b43dea05fbd1e121ef6da');
   assert.equal(input().parse('http://storymaps.esri.com/stories/2014/brazil-beyond-the-stadiums/').appId, 'cf69fa9aee724adf8b6f77d059ae08a9');
   assert.equal(input().parse('http://clear3.uconn.edu/viewers/bears/').appId, '137ee8cb7d05426ca95ae1330ebf4d38');
+  assert.equal(input().parse('https://web.tplgis.org/Storymaps/national/willrogers/cascade/index.html').appId, 'a4a39ad4d78b40d9887bf4f19f2fef59');
   for (const value of ['javascript:alert(1)', 'https://user:password@example.org/', 'https://example.org/?appid=' + appId + '&appid=' + appId,
     'https://example.org/?appid=' + appId + '&token=synthetic', 'https://example.org/?appid=invalid', 'https://example.org/?webmap=invalid']) assert.throws(() => input().parse(value));
 });
@@ -178,6 +179,51 @@ test('source status storage is public-only, bounded, expiring and optional', () 
   assert.doesNotThrow(() => api.rememberSourceStatus(item(1), true));
   Object.defineProperty(context.window, 'localStorage', { get: () => { throw new Error('Storage disabled'); } });
   assert.doesNotThrow(() => api.rememberSourceStatus(item(1), true));
+});
+
+test('external empty pointers stop before native startup and verified mappings retain nonempty-copy protection', async () => {
+  const config = configuration();
+  const wrapper = item(1, { url: 'https://public.example.org/cascade/index.html' });
+  let payload = null;
+  const client = { json: async url => url.pathname.endsWith('/data') ? payload : url.pathname.endsWith(wrapper.id) ? wrapper : item(2, { id: 'a4a39ad4d78b40d9887bf4f19f2fef59' }) };
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), error => error.source.id === wrapper.id && error.source.url === wrapper.url);
+  payload = { story: 'real copy' };
+  assert.equal((await input().resolveItem(wrapper.id, { client, config })).appId, wrapper.id);
+  wrapper.url = 'https://web.tplgis.org/Storymaps/national/willrogers/cascade/index.html';
+  assert.equal((await input().resolveItem(wrapper.id, { client, config })).appId, wrapper.id);
+  payload = null;
+  assert.equal((await input().resolveItem(wrapper.id, { client, config })).appId, 'a4a39ad4d78b40d9887bf4f19f2fef59');
+});
+
+test('archive client requires consent, validates provenance, and resolves live metadata without sharing credentials with the relay', async () => {
+  const config = configuration();
+  config.archiveDiscovery = { endpoint: '/api/story-archive', allowedOrigins: ['https://web.tplgis.org'] };
+  const source = { id: item(1).id, access: 'public', url: 'https://web.tplgis.org/unmapped/index.html' };
+  let snapshot = { appId: item(2).id, timestamp: '20171001000000', original: source.url,
+    url: 'https://web.archive.org/web/20171001000000id_/' + source.url };
+  let requests = 0;
+  const options = { config, baseURL: 'https://viewer.example.org/viewers/', token: 'synthetic-archive-session',
+    client: { json: async (url, token) => { assert.equal(token, 'synthetic-archive-session'); return item(2); } },
+    fetcher: async (url, request) => {
+      requests++;
+      assert.equal(url.origin, 'https://viewer.example.org');
+      assert.equal(request.credentials, 'omit');
+      assert.deepEqual(request.headers, { 'Content-Type': 'application/json' });
+      assert.deepEqual(JSON.parse(request.body), { itemId: source.id, consent: true });
+      return { ok: true, json: async () => ({ snapshot }) };
+    }
+  };
+  await assert.rejects(input().discoverArchive(source, options), /not enabled/);
+  assert.equal(requests, 0);
+  options.consent = true;
+  assert.equal((await input().discoverArchive(source, options)).resolved.appId, item(2).id);
+  snapshot = { ...snapshot, url: 'https://other.example/capture' };
+  await assert.rejects(input().discoverArchive(source, options), /invalid/);
+  for (const override of [{ access: 'private' }, { url: source.url + '?token=secret' }, { url: 'http://127.0.0.1/index.html' }]) {
+    assert.equal(input().archiveEndpoint({ ...source, ...override }, options), null);
+  }
+  config.archiveDiscovery.endpoint = 'https://foreign.example/relay';
+  assert.equal(input().archiveEndpoint(source, options), null);
 });
 
 test('real story data takes precedence over a stale copied URL and references stay bounded', async () => {

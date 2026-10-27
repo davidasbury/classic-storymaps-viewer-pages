@@ -454,6 +454,7 @@
         <button class="omni-btn" type="submit">Open Viewer</button>
       </form>
       <p id="omni-status" class="omni-status" role="status" aria-live="polite"></p>
+      <div id="omni-discovery"></div>
 
     </section>
 
@@ -493,6 +494,7 @@
   <script src="assets/js/arcgis-auth-helpers.js"></script>
   <script src="assets/js/classic-story-gallery.js"></script>
   <script src="assets/js/classic-story-input.js"></script>
+  <script src="assets/js/classic-story-discovery.js"></script>
   <script>
     const CLASSIC_CONFIG = window.ClassicStoryMapsConfig || {};
     const apps = Array.isArray(CLASSIC_CONFIG.catalogApps) ? CLASSIC_CONFIG.catalogApps : [];
@@ -663,8 +665,12 @@
       return window.ClassicStoryGallery.createClient().json(new URL("https://www.arcgis.com/sharing/rest/content/items/" + encodeURIComponent(itemId) + "?f=json"), token);
     }
 
+    let clearDiscovery = () => {};
+    omniInput.addEventListener('input', () => clearDiscovery());
+
     async function handleOmniSubmit(evt) {
       evt.preventDefault();
+      clearDiscovery();
 
       const submitted = omniInput.value;
       setOmniStatus("Checking ArcGIS Online item...", "");
@@ -683,6 +689,10 @@
         item = resolved.item;
       } catch (error) {
         if (token !== getStoredToken() || submitted !== omniInput.value) return;
+        if (error.source) clearDiscovery = window.ClassicStoryDiscovery.mount(document.getElementById('omni-discovery'), error.source, {
+          config: CLASSIC_CONFIG, token,
+          isCurrent: () => token === getStoredToken() && submitted === omniInput.value
+        });
         if ([401, 498, 499].includes(error.code) && token) {
           clearStoredToken();
           setAuthUi(null);

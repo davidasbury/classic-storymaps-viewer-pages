@@ -60,6 +60,18 @@ boundary or a claim that arbitrary story links cannot point to authoring tools.
   were blocked; Crowdsource's public attachment-query POST was replayed as a GET.
   No ArcGIS content was saved.
 
+## Empty Cascade Follow-Up
+
+At `2026-10-27 01:05:33-07:00[America/Los_Angeles]`, the separate automatic
+blank-story authoring path was also removed from source and the guarded release
+adapter. An editor-capable empty story now shows the not-configured message
+without calling `switchToBuilder()`. The release test rejects unknown redirect
+shapes and checks idempotency; a native browser fixture kept edit capability
+true and observed one navigation with no `edit` query. Existing permissions
+remain unchanged. See [pointer verification](story-pointer-resolution.md#verified-mapping-and-empty-story-loop).
+Run the browser runner with `RUNTIME_FILTER=blank-cascade` for this additional
+case. The earlier owner-control checks remain distinct and unchanged.
+
 ## Run The Checks
 
 With Node 24 and Playwright installed in a separate dependency directory:
