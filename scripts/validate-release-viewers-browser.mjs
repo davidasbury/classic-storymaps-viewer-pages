@@ -32,6 +32,91 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('source-status')) {
+    for (const width of [1280, 390]) {
+      const { context, page, errors } = await observePage(width);
+      const pointer = 'a'.repeat(32);
+      const target = 'b'.repeat(32);
+      const wrapper = { id: pointer, title: 'Source subscription example', owner: 'public-owner', access: 'public',
+        type: 'Web Mapping Application', typeKeywords: ['Story Map Cascade'],
+        url: 'https://other-org.maps.arcgis.com/apps/Cascade/?appid=' + target };
+      let mode = 'inactive';
+      const message = "The source's ArcGIS Online subscription is no longer active.";
+      const result = { runtime: 'source-status', width };
+      results.push(result);
+      await context.route('**/*', route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+        if (url.pathname === '/sharing/rest/search') return route.fulfill({ json: { results: [wrapper], nextStart: -1 } });
+        if (url.pathname.endsWith('/content/items/' + pointer + '/data')) return route.fulfill({ body: '', contentType: 'application/json' });
+        if (url.pathname.endsWith('/content/items/' + pointer)) return route.fulfill({ json: wrapper });
+        if (url.pathname.endsWith('/content/items/' + target)) return route.fulfill({ json: mode === 'recovered'
+          ? { ...wrapper, id: target, url: 'https://www.arcgis.com/apps/Cascade/?appid=' + target }
+          : { error: mode === 'inactive' ? { code: 403, messageCode: 'SB_0006' } : { code: 403 } } });
+        if (url.origin === origin && url.searchParams.get('appid') === target) return route.fulfill({ body: '<title>Recovered story</title>', contentType: 'text/html' });
+        return route.continue();
+      });
+      try {
+        await page.goto(origin + basePath + '/viewers/');
+        await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+        const card = page.locator('.story-card');
+        await card.waitFor();
+        const badge = card.locator('.story-source-status');
+        assert.equal(await badge.isVisible(), false);
+        const popupPromise = page.waitForEvent('popup');
+        await card.getByRole('link', { name: 'View ' + wrapper.title, exact: true }).click();
+        const viewer = await popupPromise;
+        viewer.on('pageerror', error => errors.push('page: ' + error.message));
+        await viewer.getByText(message, { exact: true }).waitFor({ timeout: 60000 });
+        await badge.waitFor({ state: 'visible' });
+        assert.equal(await badge.innerText(), 'Source subscription inactive');
+        assert.equal(await viewer.evaluate(() => window.opener), null);
+        await viewer.screenshot({ path: path.join(temporary, 'source-inactive-viewer-' + width + '.png') });
+        await page.bringToFront();
+        await card.scrollIntoViewIfNeeded();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        const cardBounds = await card.boundingBox();
+        const badgeBounds = await badge.boundingBox();
+        assert.ok(badgeBounds.x >= cardBounds.x && badgeBounds.x + badgeBounds.width <= cardBounds.x + cardBounds.width);
+        await card.screenshot({ path: path.join(temporary, 'source-inactive-card-' + width + '.png') });
+        await page.reload();
+        await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+        await badge.waitFor({ state: 'visible' });
+        mode = 'denied';
+        await viewer.reload();
+        await viewer.getByText('The referenced story is unavailable or is not shared with your account.', { exact: true }).waitFor({ timeout: 60000 });
+        await badge.waitFor({ state: 'hidden' });
+        mode = 'inactive';
+        await viewer.reload();
+        await viewer.getByText(message, { exact: true }).waitFor({ timeout: 60000 });
+        await badge.waitFor({ state: 'visible' });
+        mode = 'recovered';
+        await viewer.reload();
+        await viewer.waitForURL(url => url.searchParams.get('appid') === target, { timeout: 60000 });
+        await badge.waitFor({ state: 'hidden' });
+        mode = 'inactive';
+        await page.locator('#omni-appid').fill(pointer);
+        await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+        await page.getByText(message, { exact: true }).waitFor();
+        await badge.waitFor({ state: 'visible' });
+        await page.evaluate(() => {
+          const now = Date.now;
+          Date.now = () => now() + 1800001;
+          window.dispatchEvent(new Event('focus'));
+          Date.now = now;
+        });
+        await badge.waitFor({ state: 'hidden' });
+        await viewer.addInitScript(() => Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage disabled'); } }));
+        await viewer.goto(origin + basePath + '/viewers/cascade/index.html?appid=' + pointer);
+        await viewer.getByText(message, { exact: true }).waitFor({ timeout: 60000 });
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+      result.pageErrors = errors.filter(message => message.startsWith('page:'));
+      if (result.pageErrors.length) result.pass = false;
+    }
+  }
   if (selectedRuntimes.has('pointers')) {
     for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
       const { context, page, errors } = await observePage(1280);

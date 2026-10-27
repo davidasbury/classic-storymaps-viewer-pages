@@ -64,6 +64,17 @@
     var input = await resolve(value, options);
     var visited = new Set();
     var chain = [];
+    var sourceItem;
+    async function read(url, allowEmpty) {
+      try {
+        return await options.client.json(url, options.token, options.signal, allowEmpty);
+      } catch (error) {
+        if (sourceItem && options.onSourceStatus && !(options.signal && options.signal.aborted)) {
+          options.onSourceStatus(sourceItem, error.subscriptionInactive === true);
+        }
+        throw error;
+      }
+    }
     for (var depth = 0; depth < 5; depth++) {
       if (visited.has(input.appId)) throw new Error('This story reference contains a loop.');
       visited.add(input.appId);
@@ -71,11 +82,13 @@
       url.searchParams.set('f', 'json');
       var item;
       try {
-        item = await options.client.json(url, options.token, options.signal);
+        item = await read(url);
       } catch (error) {
         if (!chain.length || options.signal && options.signal.aborted) throw error;
-        var unavailable = new Error('The referenced story is unavailable or is not shared with your account.');
+        var unavailable = new Error(error.subscriptionInactive ? error.message : 'The referenced story is unavailable or is not shared with your account.');
         unavailable.code = error.code;
+        unavailable.messageCode = error.messageCode;
+        unavailable.subscriptionInactive = error.subscriptionInactive === true;
         unavailable.referencedStory = true;
         throw unavailable;
       }
@@ -83,11 +96,12 @@
         throw new Error('The referenced item is not a web mapping application.');
       }
       chain.push(item.id.toLowerCase());
+      if (!sourceItem) sourceItem = item;
       var target = item.url ? parse(item.url) : null;
       if (target && target.appId && target.appId !== input.appId) {
         var dataUrl = new URL(url);
         dataUrl.pathname += '/data';
-        var data = await options.client.json(dataUrl, options.token, options.signal, true);
+        var data = await read(dataUrl, true);
         if (data === null || typeof data === 'object' && Object.keys(data).length === 0) {
           input = { appId: target.appId, webmap: input.webmap || target.webmap };
           continue;
@@ -97,6 +111,7 @@
       if (!Object.prototype.hasOwnProperty.call(options.config.runtimeViewerByApp, runtime)) {
         throw new Error('The referenced item is not a supported Classic Story Map.');
       }
+      if (options.onSourceStatus) options.onSourceStatus(sourceItem, false);
       return { appId: input.appId, webmap: input.webmap, item: item, runtime: runtime, chain: chain };
     }
     throw new Error('This story reference exceeds the five-item limit.');

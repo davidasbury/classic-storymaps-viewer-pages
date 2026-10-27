@@ -13,7 +13,7 @@ extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
-  phase: Classic pointer resolution, print rendering and owner controls verified; publication and remaining acceptance pending
+  phase: Classic pointer resolution and source-status badges, print rendering and owner controls verified; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -23,7 +23,7 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Classic pointer items resolve before viewer startup, 2026-10-27.**
+**Classic pointers resolve before startup and expose inactive source subscriptions, 2026-10-27.**
 
 All eight native viewers now check item metadata before startup. When an item's
 URL names a different app and its own data is empty, the shared resolver follows
@@ -33,7 +33,20 @@ with nonempty data retain their own content even if their URL is stale. Loops,
 excessive chains and inaccessible targets produce a readable error instead of
 loading an empty wrapper. The main ID/URL input uses the same resolver.
 
-All 197 Node tests and 39 browser cases passed: eight native startup paths,
+Confirmed ArcGIS `403 / SB_0006` responses now display "The source's ArcGIS
+Online subscription is no longer active." Public wrapper cards gain a
+"Source subscription inactive" pill once the condition is observed. A bounded
+30-minute browser cache updates open gallery tabs and clears on successful retry;
+generic 403 errors are not labeled as subscriptions. Private wrapper IDs and
+credentials are not persisted. No background gallery scan was added.
+
+This follow-up passed 46 focused tests, all 202 tests in the shared worktree,
+two new desktop/mobile status cases and four existing gallery browser cases.
+The native error screen, cross-tab updates, expiry, retry clearing and blocked
+storage fallback were verified. See
+[session 0051](session-logs/2026-10-27-0051-session-log.md).
+
+The original pointer implementation passed 197 Node tests and 39 browser cases: eight native startup paths,
 desktop/mobile public-story and failure screens, 24 authentication cases and
 the input-form regression. A real public Cascade story rendered through a
 synthetic pointer. The supplied item `430123c37f694274b3e84250d70b3168` was

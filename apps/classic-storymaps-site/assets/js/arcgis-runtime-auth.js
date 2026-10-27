@@ -50,7 +50,11 @@ define(['esri/IdentityManager'], function(identity) {
     return window.ClassicStoryInput.resolveItem(current.href, {
       config: window.ClassicStoryMapsConfig,
       client: window.ClassicStoryGallery.createClient(),
-      token: token
+      token: token,
+      onSourceStatus: function(item, inactive) {
+        var latest = helpers.readCatalogCredential(document.cookie);
+        if ((latest && latest.token) === token) window.ClassicStoryGallery.rememberSourceStatus(item, inactive);
+      }
     }).then(function(result) {
       var latest = helpers.readCatalogCredential(document.cookie);
       if ((latest && latest.token) !== token) { window.location.reload(); return; }
@@ -63,7 +67,7 @@ define(['esri/IdentityManager'], function(identity) {
       loaded(false);
       window.location.replace(destination.href);
     }, function(error) {
-      if (!error.referencedStory && [401, 403, 498, 499].includes(error.code)) {
+      if (!error.referencedStory && !error.subscriptionInactive && [401, 403, 498, 499].includes(error.code)) {
         loaded(true);
         return;
       }

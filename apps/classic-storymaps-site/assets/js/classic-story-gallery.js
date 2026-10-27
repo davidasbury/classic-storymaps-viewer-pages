@@ -1,12 +1,32 @@
 (function(root, factory) {
-  var api = factory();
+  var api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.ClassicStoryGallery = api;
-})(typeof window === 'object' ? window : null, function() {
+})(typeof window === 'object' ? window : null, function(root) {
   'use strict';
 
   var REST = 'https://www.arcgis.com/sharing/rest/';
   var ID = /^[a-f0-9]{32}$/i;
+  var STATUS_KEY = 'classic-public-source-status-v1';
+  var STATUS_TTL = 30 * 60 * 1000;
+  function sourceStatuses() {
+    try {
+      var entries = JSON.parse(root.localStorage.getItem(STATUS_KEY) || '[]');
+      return Array.isArray(entries) ? entries.filter(function(entry) {
+        return entry && ID.test(entry.id) && Number.isFinite(entry.expires)
+          && entry.expires > Date.now() && entry.expires <= Date.now() + STATUS_TTL;
+      }).slice(-100) : [];
+    } catch (_) { return []; }
+  }
+  function rememberSourceStatus(item, inactive) {
+    if (!item || item.access !== 'public' || !ID.test(item.id)) return;
+    try {
+      var entries = sourceStatuses().filter(function(entry) { return entry.id !== item.id.toLowerCase(); });
+      if (inactive) entries.push({ id: item.id.toLowerCase(), expires: Date.now() + STATUS_TTL });
+      root.localStorage.setItem(STATUS_KEY, JSON.stringify(entries.slice(-100)));
+      root.dispatchEvent(new Event('classic-source-status'));
+    } catch (_) {}
+  }
   function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
   function quote(value) { return '"' + String(value).replace(/[+\-!(){}\[\]^"~*?:\\/|&]/g, '\\$&') + '"'; }
 
@@ -98,6 +118,11 @@
         if (data && data.error) {
           var error = new Error('ArcGIS Online could not return these stories.');
           error.code = data.error.code;
+          error.messageCode = data.error.messageCode;
+          if (error.code === 403 && error.messageCode === 'SB_0006') {
+            error.subscriptionInactive = true;
+            error.message = "The source's ArcGIS Online subscription is no longer active.";
+          }
           throw error;
         }
         return data;
@@ -181,6 +206,12 @@
     var pageIndex = -1;
     var loading = false;
     var debounce;
+    function updateSourceBadges() {
+      var inactive = new Set(sourceStatuses().map(function(entry) { return entry.id; }));
+      cards.querySelectorAll('.story-source-status').forEach(function(badge) {
+        badge.hidden = !inactive.has(badge.dataset.itemId);
+      });
+    }
 
     config.catalogApps.forEach(function(app) {
       var option = document.createElement('option');
@@ -254,6 +285,11 @@
         title.appendChild(view);
         body.appendChild(title);
         if (story.owner) body.appendChild(element('p', 'story-owner', story.owner));
+        var sourceBadge = element('span', 'story-source-status', 'Source subscription inactive');
+        sourceBadge.dataset.itemId = story.id;
+        sourceBadge.hidden = true;
+        sourceBadge.title = "The source's ArcGIS Online subscription is no longer active.";
+        body.appendChild(sourceBadge);
         var conversion = convertUrl(story, config, owner);
         if (conversion) {
           var actions = element('div', 'story-actions');
@@ -285,6 +321,7 @@
         while (thumbnailTasks.length && !signal.aborted && renderVersion === version) await thumbnailTasks.shift()();
       }
       for (var worker = 0; worker < 4; worker++) thumbnailWorker();
+      updateSourceBadges();
       status.textContent = page.items.length ? page.items.length + ' stories on this page.'
         : page.hasMore ? 'No matching stories on this page. More results are available.' : 'No matching stories found.';
       if (page.limited) status.textContent += ' ArcGIS search limit reached; narrow the search.';
@@ -391,6 +428,11 @@
       else load();
     });
     window.addEventListener('pagehide', invalidate);
+    window.addEventListener('storage', function(event) { if (event.key === STATUS_KEY || event.key === null) updateSourceBadges(); });
+    window.addEventListener('classic-source-status', updateSourceBadges);
+    window.addEventListener('focus', updateSourceBadges);
+    document.addEventListener('visibilitychange', updateSourceBadges);
+    window.setInterval(updateSourceBadges, 60000);
     window.addEventListener('pageshow', function(event) { if (event.persisted) restart(); });
     updateFilters();
     updateButtons();
@@ -398,5 +440,6 @@
   }
 
   return { storyFromItem: storyFromItem, searchUrl: searchUrl, convertUrl: convertUrl,
-    thumbnailUrl: thumbnailUrl, createClient: createClient, createPager: createPager, mount: mount };
+    thumbnailUrl: thumbnailUrl, createClient: createClient, createPager: createPager, mount: mount,
+    rememberSourceStatus: rememberSourceStatus };
 });

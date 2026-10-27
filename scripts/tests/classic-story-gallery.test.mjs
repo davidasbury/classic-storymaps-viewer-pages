@@ -130,6 +130,56 @@ test('story references reject loops, unsafe URLs and inaccessible targets', asyn
   await assert.rejects(input().resolveItem(wrapper.id, { client, config }), error => error.code === 403 && /referenced story is unavailable/.test(error.message));
 });
 
+test('pointer subscription errors retain their reason and report status against the source item', async () => {
+  const config = configuration();
+  const wrapper = item(1, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(2).id });
+  let failure = { code: 403, messageCode: 'SB_0006' };
+  const observed = [];
+  const client = gallery().createClient(async url => ({ ok: true,
+    text: async () => '',
+    json: async () => url.pathname.endsWith(wrapper.id) ? wrapper : failure ? { error: failure } : item(2)
+  }));
+  const options = { client, config, onSourceStatus: (source, inactive) => observed.push([source.id, inactive]) };
+  await assert.rejects(input().resolveItem(wrapper.id, options), error => {
+    assert.equal(error.message, "The source's ArcGIS Online subscription is no longer active.");
+    assert.equal(error.messageCode, 'SB_0006');
+    assert.equal(error.referencedStory, true);
+    return error.subscriptionInactive;
+  });
+  failure = { code: 403 };
+  await assert.rejects(input().resolveItem(wrapper.id, options), /referenced story is unavailable/);
+  failure = null;
+  await input().resolveItem(wrapper.id, options);
+  assert.deepEqual(observed, [[wrapper.id, true], [wrapper.id, false], [wrapper.id, false]]);
+});
+
+test('source status storage is public-only, bounded, expiring and optional', () => {
+  const storage = new Map();
+  let now = Date.now();
+  const context = vm.createContext({ Event, Date: { now: () => now }, window: {
+    localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
+    dispatchEvent: event => assert.equal(event.type, 'classic-source-status')
+  } });
+  vm.runInContext(readFileSync(new URL('assets/js/classic-story-gallery.js', site), 'utf8'), context);
+  const api = context.window.ClassicStoryGallery;
+  const key = 'classic-public-source-status-v1';
+  api.rememberSourceStatus(item(1, { access: 'private' }), true);
+  assert.equal(storage.size, 0);
+  api.rememberSourceStatus(item(1), true);
+  assert.deepEqual(JSON.parse(storage.get(key)), [{ id: item(1).id, expires: now + 1800000 }]);
+  api.rememberSourceStatus(item(1), false);
+  assert.deepEqual(JSON.parse(storage.get(key)), []);
+  for (let number = 1; number <= 101; number++) api.rememberSourceStatus(item(number), true);
+  assert.equal(JSON.parse(storage.get(key)).length, 100);
+  now += 1800001;
+  api.rememberSourceStatus(item(102), true);
+  assert.deepEqual(JSON.parse(storage.get(key)), [{ id: item(102).id, expires: now + 1800000 }]);
+  storage.set(key, '{invalid');
+  assert.doesNotThrow(() => api.rememberSourceStatus(item(1), true));
+  Object.defineProperty(context.window, 'localStorage', { get: () => { throw new Error('Storage disabled'); } });
+  assert.doesNotThrow(() => api.rememberSourceStatus(item(1), true));
+});
+
 test('real story data takes precedence over a stale copied URL and references stay bounded', async () => {
   const config = configuration();
   const wrapper = item(1, { url: 'https://www.arcgis.com/apps/Cascade/?appid=' + item(2).id });
@@ -270,6 +320,25 @@ test('REST client fixes the origin, keeps tokens out of URLs, and classifies aut
   assert.equal(calls.length, 1);
   assert.equal(gallery().thumbnailUrl(item(1, { thumbnail: '../outside' })), null);
   assert.equal(gallery().thumbnailUrl(item(1, { thumbnail: 'https://other.example/img.png' })), null);
+});
+
+test('only the explicit canceled subscription response gets the inactive-source message', async () => {
+  for (const payload of [
+    { code: 403, messageCode: 'SB_0006' },
+    { code: 403 },
+    { code: 403, messageCode: 'OTHER' },
+    { code: 498, messageCode: 'SB_0006' }
+  ]) {
+    const client = gallery().createClient(async () => ({ ok: true, json: async () => ({ error: payload }) }));
+    await assert.rejects(client.json(new URL('https://www.arcgis.com/sharing/rest/content/items/' + 'a'.repeat(32) + '?f=json')), error => {
+      assert.equal(error.code, payload.code);
+      assert.equal(error.messageCode, payload.messageCode);
+      const inactive = payload.code === 403 && payload.messageCode === 'SB_0006';
+      assert.equal(error.subscriptionInactive === true, inactive);
+      if (inactive) assert.equal(error.message, "The source's ArcGIS Online subscription is no longer active.");
+      return true;
+    });
+  }
 });
 
 test('Viewers starts with a hidden gallery and whole-card catalog links', () => {

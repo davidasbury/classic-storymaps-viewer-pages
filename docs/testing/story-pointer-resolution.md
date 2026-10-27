@@ -80,6 +80,47 @@ startup staging and shared scripts. All remote mutation requests were blocked;
 public item reads and synthetic authentication fixtures did not access the
 owner's signed-in sessions or save ArcGIS content.
 
+## Subscription Message And Gallery Status
+
+Verified at `2026-10-27 00:19:22-07:00[America/Los_Angeles]`; not deployed.
+
+The REST client preserves `messageCode`. Only the explicit combination of
+ArcGIS code `403` and `SB_0006` is classified as an inactive subscription. The
+native viewer and main input display:
+
+> The source's ArcGIS Online subscription is no longer active.
+
+A fresh anonymous GET to the supplied target independently returned HTTP 200
+with ArcGIS error `403`, `messageCode: SB_0006`, and the original canceled
+subscription message. Generic 403 errors are not classified as subscriptions;
+direct protected items retain native sign-in behavior.
+
+When resolution discovers this condition after reading a public wrapper's
+metadata, its gallery card shows a **Source subscription inactive** pill. The
+original card identity and usable link remain intact. This is learned on open
+or main-input submission, not by scanning every gallery item. Same-origin tabs
+update through browser storage events, including links opened with `noopener`.
+
+The cache stores only public wrapper IDs and expiry timestamps, at most 100
+entries for 30 minutes. Successful resolution or a different observed target
+failure clears the prior subscription status. Focus/visibility checks and a
+one-minute timer remove expired visible pills. No credentials, source URLs,
+titles, target IDs or private-wrapper IDs are persisted. Private wrappers still
+receive the viewer message, but do not get a persistent cross-tab badge.
+If storage is unavailable, the viewer message still works and no badge is
+retained. Status is local to this browser/origin, not an organization-wide audit.
+
+The follow-up passed 46 focused resolver/gallery/auth tests and all 202 tests
+in the shared worktree, which included concurrent Map Tour work. Two new
+desktop/mobile browser cases covered the real native startup error screen,
+cross-tab badge appearance, reload persistence, generic-denial clearing,
+successful-retry clearing, main-input feedback, expiry and blocked storage.
+All four existing gallery browser cases passed, including 320px layout and
+synthetic authentication/account isolation. Screenshots at 1280px and 390px
+were inspected; the pill and error text fit. The new cases had no page
+exceptions. An initial test-only input-selector typo was corrected and the
+same two cases passed on rerun.
+
 ## Repeat The Browser Checks
 
 Against an isolated published site using its actual base path:
@@ -88,6 +129,9 @@ Against an isolated published site using its actual base path:
 PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
   PLAYWRIGHT_NODE_MODULES="$TEST_DEPS/node_modules" PLAYWRIGHT_CHANNEL=chrome \
   RUNTIME_FILTER=pointers,input,auth node scripts/validate-release-viewers-browser.mjs
+PUBLISH_CHECK_ROOT="$ISOLATED_PUBLISH" SITE_BASE_PATH="$PREVIEW_BASE" \
+  PLAYWRIGHT_NODE_MODULES="$TEST_DEPS/node_modules" PLAYWRIGHT_CHANNEL=chrome \
+  RUNTIME_FILTER=source-status,gallery node scripts/validate-release-viewers-browser.mjs
 node --test scripts/tests/*.test.mjs
 ```
 

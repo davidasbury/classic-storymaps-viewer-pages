@@ -347,6 +347,8 @@
     .story-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
     .story-card { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card-bg); }
     .story-card:hover { border-color: var(--accent); }
+    .story-source-status { align-self: flex-start; display: inline-block; max-width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 4px 8px; border: 1px solid #d5a5a5; border-radius: 999px; background: #fff0f0; color: #842626; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+    .story-source-status[hidden] { display: none; }
     .story-card:has(.story-link:focus-visible) { outline: 3px solid var(--accent); outline-offset: 3px; }
     .story-link { color: inherit; text-decoration: none; }
     .story-link:focus-visible { outline: none; }
@@ -665,7 +667,10 @@
       submit.disabled = true;
       try {
         resolved = await window.ClassicStoryInput.resolveItem(submitted, { config: CLASSIC_CONFIG,
-          client: window.ClassicStoryGallery.createClient(), token });
+          client: window.ClassicStoryGallery.createClient(), token,
+          onSourceStatus: (source, inactive) => {
+            if (token === getStoredToken() && submitted === omniInput.value) window.ClassicStoryGallery.rememberSourceStatus(source, inactive);
+          } });
         item = resolved.item;
       } catch (error) {
         if (token !== getStoredToken() || submitted !== omniInput.value) return;
@@ -673,7 +678,7 @@
           clearStoredToken();
           setAuthUi(null);
           setOmniStatus("Your session expired. Sign in again and retry.", "error");
-        } else if (error.referencedStory) {
+        } else if (error.referencedStory || error.subscriptionInactive) {
           setOmniStatus(error.message, "error");
         } else if (error.code) {
           setOmniStatus("Item was not found or is not accessible. Sign in if it is restricted.", "error");

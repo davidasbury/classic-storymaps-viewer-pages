@@ -108,6 +108,34 @@ test('pointer preflight does not catch native startup exceptions or complete the
   assert.equal(completions, 1);
 });
 
+test('direct subscription failures show the reason while ordinary access failures retain native sign-in', async () => {
+  for (const inactive of [true, false]) {
+    let plugin;
+    const panels = [];
+    const completions = [];
+    const message = "The source's ArcGIS Online subscription is no longer active.";
+    const error = Object.assign(new Error(inactive ? message : 'Denied'), { code: 403, subscriptionInactive: inactive });
+    const context = {
+      URL,
+      document: { cookie: '', readyState: 'complete', body: { appendChild: panel => panels.push(panel) },
+        createElement: () => ({ style: {}, setAttribute() {}, append(...children) { this.children = children; } }) },
+      define: (dependencies, factory) => { plugin = factory({}); },
+      window: {
+        location: { href: 'https://local.example/viewers/cascade/?appid=' + 'a'.repeat(32) },
+        ClassicArcgisAuthHelpers: { readCatalogCredential: () => null },
+        ClassicStoryMapsConfig: { basePath: '/viewers' },
+        ClassicStoryGallery: { createClient: () => ({}) },
+        ClassicStoryInput: { resolveItem: async () => { throw error; } }
+      }
+    };
+    vm.runInNewContext(readFileSync(new URL('../../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js', import.meta.url), 'utf8'), context);
+    await plugin.load('story', null, permitted => completions.push(permitted));
+    assert.deepEqual(completions, [!inactive]);
+    assert.equal(panels.length, inactive ? 1 : 0);
+    if (inactive) assert.equal(panels[0].children[1].textContent, message);
+  }
+});
+
 for (const change of ['sign-out', 'expiry', 'replacement']) {
   test('an open runtime clears inherited credentials on catalog ' + change, () => {
     const helpers = require(helperUrl.pathname);
