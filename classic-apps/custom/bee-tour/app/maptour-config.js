@@ -142,7 +142,7 @@ APPCFG = {
 	},
 	
 	// Online photo sharing services connection parameters
-	FLICKR_API_KEY: "750b36a2ac65a72e03cf9cef06d79f45",
+	FLICKR_API_KEY: "",
 	// The Facebook ID is only valid on arcgis.com domain
 	// If used on another domain, user will have an error in the Facebook popup after login
 	// To use Facebook import on Portal for ArcGIS, create your own ID at https://developers.facebook.com/ 

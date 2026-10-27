@@ -438,12 +438,9 @@ app.cfg = {
 	},
 
 	// Online photo sharing services connection parameters
-	FLICKR_API_KEY: "750b36a2ac65a72e03cf9cef06d79f45",
-	// This Youtube key is valid for application running on arcgis.com and esri.com domains
-	// If the application is deployed on Portal for ArcGIS or your own server, the Youtube api call
-	//  won't be perfomed until you set the following flag and provide your own key
+	FLICKR_API_KEY: "",
 	YOUTUBE_DISABLE_ON_PORTAL: true,
-	YOUTUBE_API_KEY: "AIzaSyDevTFP16nz6sA-akiOVi6wWXiplJnQ4qw",
+	YOUTUBE_API_KEY: "",
 
 	//
 	// Builder direct creation

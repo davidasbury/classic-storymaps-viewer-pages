@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
@@ -8,6 +9,119 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
+
+test('Media credential sanitizer uses fingerprints and rejects newly embedded provider keys', async () => {
+  const { removeInheritedMediaKeys, assertNoEmbeddedMediaKeys, secureRuntimeMedia } = await import('../secure-runtime-media.mjs');
+  const synthetic = 'synthetic-flickr-value'.padEnd(32, 'x');
+  const fingerprints = new Set([createHash('sha256').update(synthetic).digest('hex')]);
+  assert.equal(removeInheritedMediaKeys('key="' + synthetic + '";ordinary="retain"', fingerprints), 'key="";ordinary="retain"');
+  assert.doesNotThrow(() => assertNoEmbeddedMediaKeys('FLICKR_API_KEY:"",YOUTUBE_API_KEY:"",UNSPLASH_API:""', 'fixture'));
+  for (const field of ['FLICKR_API_KEY', 'FLICKR_API', 'YOUTUBE_API_KEY', 'YOUTUBE_API', 'UNSPLASH_API', 'youtubeKey']) {
+    assert.throws(() => assertNoEmbeddedMediaKeys(field + ':"synthetic-only"', 'fixture'), /Embedded media credential detected in fixture/);
+  }
+  assert.throws(() => assertNoEmbeddedMediaKeys('AIza' + 'x'.repeat(35), 'fixture'), /Embedded media credential/);
+  assert.throws(() => secureRuntimeMedia(path.join(repo, 'runtimes/cascade/upstream')), /Cannot modify runtime sources/);
+  for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
+    assert.match(readFileSync(path.join(repo, 'scripts/build-' + runtime + '-runtime.sh'), 'utf8'), /secure-runtime-media\.mjs.*"\$OUTPUT_PATH"/);
+  }
+  const publish = readFileSync(path.join(repo, 'scripts/build-classic-storymaps-runtime-publish.sh'), 'utf8');
+  assert.match(publish, /secure-runtime-media\.mjs.*"\$PUBLISH_ROOT\/\$runtime_name"/);
+  assert.match(publish, /secure-runtime-media\.mjs.*--check "\$PUBLISH_ROOT"/);
+});
+
+test('Legacy release media patch preserves keyless startup and video print output', async () => {
+  const { patchKeylessMedia } = await import('../secure-runtime-media.mjs');
+  const original = 'var config={check:function(){return app.cfg&&app.cfg.FLICKR_API_KEY&&app.cfg.YOUTUBE_API_KEY&&app.cfg.required}};'
+    + 'app.flickr=new Connector(APPCFG.FLICKR_API_KEY);'
+    + 'var methods=[{key:"getYoutubeInfo",value:function(videoId){var fallback={videoUrl:"//www.youtube.com/embed/"+videoId};'
+    + 'if(this.state.videoScreenshot){this.onRequestReturn(fallback);return}request()}},'
+    + '{key:"getVimeoVideoInfo",value:function(){if(this.state.videoScreenshot)return;vimeo()}}];';
+  const patched = patchKeylessMedia(original);
+  assert.equal(patchKeylessMedia(patched), patched);
+  const app = { cfg: { FLICKR_API_KEY: '', YOUTUBE_API_KEY: '', required: true } };
+  let rendered;
+  const context = { app, APPCFG: app.cfg, Connector: function() { assert.fail('Unexpected connector'); },
+    request: () => assert.fail('Unexpected credentialed request') };
+  vm.runInNewContext(patched, context);
+  assert.equal(context.config.check(), true);
+  app.cfg.required = false;
+  assert.equal(context.config.check(), false);
+  assert.equal(app.flickr, null);
+  context.methods[0].value.call({ state: { youtubeKey: '' }, onRequestReturn: result => { rendered = result; } }, 'M7lc1UVf-VE');
+  assert.equal(rendered.videoUrl, '//www.youtube.com/embed/M7lc1UVf-VE');
+  assert.ok(patched.includes('if(this.state.videoScreenshot)return;vimeo()'));
+  assert.throws(() => patchKeylessMedia(original.replace('if(this.state.videoScreenshot)', 'if(unknown)')), /Unrecognized Cascade print/);
+});
+
+test('Tracked runtime media sources contain no embedded provider credentials', async () => {
+  const { assertNoEmbeddedMediaKeys } = await import('../secure-runtime-media.mjs');
+  const listing = spawnSync('git', ['ls-files', '-z', 'runtimes', 'classic-apps'], { cwd: repo, encoding: 'utf8' });
+  assert.equal(listing.status, 0);
+  const files = listing.stdout.split('\0').filter(filename => /\.(?:js|jsx|json|html)$/.test(filename));
+  assert.ok(files.length > 0);
+  for (const filename of files) assertNoEmbeddedMediaKeys(readFileSync(path.join(repo, filename), 'utf8'), filename);
+});
+
+test('Map Tour Flickr photo info uses only its supplied key', () => {
+  const source = readFileSync(path.join(repo, 'runtimes/maptour/upstream/MapTour/src/app/storymaps/utils/FlickrConnector.js'), 'utf8');
+  let Connector;
+  let requestedUrl;
+  vm.runInNewContext(source, {
+    define: (dependencies, factory) => { Connector = factory(function() {}, {}); },
+    $: { param: params => new URLSearchParams(params).toString(), getJSON: url => {
+      requestedUrl = url;
+      return { done() {} };
+    } }
+  });
+  new Connector('synthetic-flickr-credential').getInfo('https://example.org/12345_image.jpg');
+  const request = new URL(requestedUrl);
+  assert.ok(request.searchParams.getAll('api_key').every(value => value === 'synthetic-flickr-credential'), 'Only the constructor credential may be sent');
+  assert.equal(request.searchParams.getAll('api_key').length, 1);
+  assert.equal(request.searchParams.get('photo_id'), '12345');
+});
+
+test('Cascade prints YouTube thumbnails and links without a provider key or API request', () => {
+  const source = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/app/storymaps/tpl/print/media/Video.jsx'), 'utf8');
+  const method = source.slice(source.indexOf('  getYoutubeInfo(videoId) {'), source.indexOf('  getVimeoVideoInfo(videoId) {'));
+  const getInfo = vm.runInNewContext('({' + method + '}).getYoutubeInfo');
+  for (const screenshot of [null, 'https://example.org/alternate.jpg']) {
+    let rendered;
+    getInfo.call({ state: { youtubeKey: '', videoScreenshot: screenshot },
+      sendRequest: () => assert.fail('Keyless print must not request the YouTube Data API'),
+      onRequestReturn: result => { rendered = result; } }, 'M7lc1UVf-VE');
+    assert.equal(rendered.videoScreenshot, screenshot || '//img.youtube.com/vi/M7lc1UVf-VE/0.jpg');
+    assert.equal(rendered.shortUrl, 'www.youtube.com/watch?v=M7lc1UVf-VE');
+    assert.match(rendered.videoUrl, /^\/\/www.youtube.com\/embed\/M7lc1UVf-VE\?/);
+  }
+});
+
+test('Map Tour does not initialize the authoring Flickr connector without a key', () => {
+  const source = readFileSync(path.join(repo, 'runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/core/MainView.js'), 'utf8');
+  const assignment = source.match(/app\.flickr = [^;]+;/);
+  assert.ok(assignment);
+  const app = {};
+  vm.runInNewContext(assignment[0], { app, APPCFG: { FLICKR_API_KEY: '' },
+    FlickrConnector: function() { assert.fail('Missing optional key must not initialize the connector'); } });
+  assert.equal(app.flickr, null);
+});
+
+for (const runtime of ['maptour', 'mapjournal', 'mapseries', 'shortlist']) {
+test(runtime + ' accepts empty optional media keys without weakening required settings', () => {
+  const relativePath = runtime === 'maptour'
+    ? 'MapTour/src/app/storymaps/maptour/core/Config.js' : 'src/app/storymaps/tpl/core/Config.js';
+  const source = readFileSync(path.join(repo, 'runtimes', runtime, 'upstream', relativePath), 'utf8');
+  const gate = source.match(/return ((?:APPCFG|app\.cfg)\s+&&[\s\S]*?);/);
+  assert.ok(gate);
+  const config = Object.fromEntries([...gate[1].matchAll(/(?:APPCFG|app\.cfg)\.([A-Z_]+)/g)].map(match => [match[1], true]));
+  Object.assign(config, { FLICKR_API_KEY: '', YOUTUBE_API_KEY: '', COLORS: ['red', 'green', 'blue'],
+    LAYOUTS: [{}], PIN_DEFAULT_CFG: 'default', PIN_CFG: { default: {} }, USE_STATIC_ICON: { enabled: true, url: 'icon.png' },
+    HELPER_SERVICES: { geometry: {}, geocode: [] } });
+  const evaluate = () => vm.runInNewContext('(' + gate[1] + ')', { APPCFG: config, app: { cfg: config } });
+  assert.equal(evaluate(), true);
+  config.DEFAULT_SHARING_URL = '';
+  assert.ok(!evaluate(), 'The required sharing URL still blocks startup');
+});
+}
 
 for (const runtime of ['cascade', 'mapjournal', 'mapseries']) {
 test(runtime + ' never enables the builder button for an authenticated owner', async () => {

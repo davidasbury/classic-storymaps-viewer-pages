@@ -92,7 +92,7 @@ app.cfg = {
 	},
 
 	// Online photo sharing services connection parameters
-	FLICKR_API_KEY: "750b36a2ac65a72e03cf9cef06d79f45",
+	FLICKR_API_KEY: "",
 
 	//
 	// Builder direct creation

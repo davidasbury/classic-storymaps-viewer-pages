@@ -124,7 +124,7 @@ define(["storymaps/maptour/core/WebApplicationData",
 				app.mobileInfoView = new InfoView("#infoCarousel");
 				app.mobileCarousel = new MobileCarousel("#footerMobile", app.isInBuilderMode);
 
-				app.flickr = new FlickrConnector(APPCFG.FLICKR_API_KEY);
+				app.flickr = APPCFG.FLICKR_API_KEY ? new FlickrConnector(APPCFG.FLICKR_API_KEY) : null;
 
 				/*
 				 * Autoplay in viewer mode

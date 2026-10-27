@@ -58,4 +58,5 @@ else
   copy_item "$RUNTIME_PATH/src/web.config" "$OUTPUT_PATH"
 fi
 
+node "$(dirname "${BASH_SOURCE[0]}")/secure-runtime-media.mjs" "$OUTPUT_PATH"
 echo "Map Tour build output copied to $OUTPUT_PATH"

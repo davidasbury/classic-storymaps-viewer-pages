@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  media_credentials: Inherited provider defaults removed from source and isolated publication; upstream revocation and production publication pending
   basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
   legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
   gallery_navigation: Ranges, page sizes and bounded My Content counting verified in both layouts; publication pending
@@ -26,6 +27,20 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Inherited media defaults are removed locally; publication and upstream revocation remain pending.**
+
+The three alerted Flickr/Google values and an additional inherited Unsplash
+default are absent from current source and independently scanned isolated
+publication output. All runtime builders and the publication step enforce the
+cleanup. Empty keys no longer block viewer startup; Cascade print uses its
+existing public thumbnail and links. All 240 Node tests and the source/release
+print component checks passed. All 34 native/authentication browser cases passed
+against fresh affected builds and complete landing assets; external-resource
+failures remain documented separately from the zero native page exceptions.
+See [verification and remaining exposure](docs/testing/inherited-media-credentials.md).
+Upstream key validity is unknown. Alerts, historical commits and production
+were not changed; no deployment or history rewrite was authorized.
 
 **Shared sign-in and basemap compatibility fixes are verified locally.**
 

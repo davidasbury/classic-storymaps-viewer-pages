@@ -35,9 +35,9 @@ define([],
 					&& APPCFG.FIELDS_CANDIDATE
 					&& APPCFG.CORS_SERVER
 					&& APPCFG.AUTHORIZED_IMPORT_SOURCE
-					&& APPCFG.FLICKR_API_KEY
+					&& APPCFG.FLICKR_API_KEY !== undefined
 					&& APPCFG.YOUTUBE_DISABLE_ON_PORTAL !== undefined
-					&& APPCFG.YOUTUBE_API_KEY
+					&& APPCFG.YOUTUBE_API_KEY !== undefined
 					&& APPCFG.BING_MAPS_KEY !== undefined
 					&& APPCFG.HELPER_SERVICES !== undefined
 					&& APPCFG.HELPER_SERVICES.geometry !== undefined

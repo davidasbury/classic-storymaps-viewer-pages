@@ -65,7 +65,7 @@ define([],
 					&& app.cfg.WEBAPP_KEYWORD_APP
 
 					&& app.cfg.AUTHORIZED_IMPORT_SOURCE
-					&& app.cfg.FLICKR_API_KEY
+					&& app.cfg.FLICKR_API_KEY !== undefined
 
 					&& app.cfg.CORS_SERVER
 					&& app.cfg.DEFAULT_SHARING_URL

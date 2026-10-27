@@ -46,7 +46,7 @@ export default class Videos extends Media {
         content: {
           part: 'snippet',
           id: youTubeId,
-          key: 'AIzaSyCHc4DP7IJU2neC0lbuKh5Fg5g3RVeRoiE'
+          key: ''
         },
         timeout: 4000
       })

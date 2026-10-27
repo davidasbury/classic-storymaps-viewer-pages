@@ -16,7 +16,7 @@ const { transformSync } = require('esbuild');
 const { chromium } = await import(pathToFileURL(path.join(dependencies, 'playwright/index.mjs')));
 const sourceRoot = path.join(repo, 'runtimes/cascade/upstream/src/app/storymaps/tpl/print');
 const sources = {};
-for (const filename of ['media/Text.jsx', 'PrintViewReact.jsx']) {
+for (const filename of ['media/Text.jsx', 'media/Video.jsx', 'PrintViewReact.jsx']) {
   sources[filename] = transformSync(await readFile(path.join(sourceRoot, filename), 'utf8'), {
     loader: 'jsx', format: 'cjs', target: 'es2017'
   }).code;
@@ -72,10 +72,14 @@ try {
         const values = definition.dependencies.map(dependency => {
           if (dependency === 'module') return module;
           if (dependency === 'exports') return module.exports;
+          if (dependency.includes('i18n!')) return { print: { page: {}, media: {} } };
+          if (name.endsWith('/media/Video') && ['./ImageBlock', './ImageBackground'].includes(dependency)) return () => null;
           if (name.endsWith('/PrintViewReact') && !['react', 'storymaps/tpl/print/PrintSanitizer'].includes(dependency)) {
             return dependency.includes('i18n!') ? { print: { page: {} } } : {};
           }
-          return window.__getModule(dependency);
+          const resolved = dependency.startsWith('.')
+            ? new URL(dependency, 'https://fixture.invalid/' + name).pathname.slice(1) : dependency;
+          return window.__getModule(resolved);
         });
         const result = typeof definition.factory === 'function' ? definition.factory(...values) : definition.factory;
         const value = result === undefined ? module.exports : result;
@@ -98,7 +102,7 @@ try {
       const sourceModule = code => {
         const module = { exports: {} };
         const require = name => name === 'react' ? React : name === 'storymaps/tpl/print/PrintSanitizer' ? sanitizer
-          : name.includes('i18n!') ? { print: { page: {} } } : {};
+          : name.includes('i18n!') ? { print: { page: {}, media: {} } } : {};
         new Function('require', 'module', 'exports', code)(require, module, module.exports);
         return module.exports.default;
       };
@@ -132,6 +136,21 @@ try {
       ];
       const results = [];
       const benignOutputs = [];
+      for (const [variant, Video] of [
+        ['release', window.__getModule('storymaps-react/tpl/print/media/Video')],
+        ['source', sourceModule(sources['media/Video.jsx'])]
+      ]) {
+        const video = new Video({ media: { source: 'youtube', id: 'M7lc1UVf-VE' } });
+        assert(video.state.youtubeKey === '', variant + ' embeds a print API key');
+        video.sendRequest = () => { throw new Error(variant + ' requested the credentialed video API'); };
+        let rendered;
+        video.onRequestReturn = result => { rendered = result; };
+        video.componentDidMount();
+        assert(rendered.videoScreenshot === '//img.youtube.com/vi/M7lc1UVf-VE/0.jpg', variant + ' lost its thumbnail');
+        assert(rendered.videoUrl.startsWith('//www.youtube.com/embed/M7lc1UVf-VE?'), variant + ' lost its embed');
+        assert(rendered.shortUrl === 'www.youtube.com/watch?v=M7lc1UVf-VE', variant + ' lost its printable link');
+        results.push({ variant, keylessYoutube: true, thumbnail: true, embed: true, printableLink: true });
+      }
       for (const [variant, Text, PrintView] of variants) {
         for (const tag of ['div', 'figcaption']) {
           for (const attack of attacks) {

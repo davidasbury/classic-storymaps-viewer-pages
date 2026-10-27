@@ -112,10 +112,12 @@ for runtime_name in "${runtime_names[@]}"; do
   require_runtime_build "$runtime_name"
   copy_runtime_build "$runtime_name"
   sanitize_runtime_publish "$runtime_name"
+  node "$SCRIPT_DIR/secure-runtime-media.mjs" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/stage-runtime-auth.mjs" "$runtime_name" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/apply-site-base-path.mjs" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/stage-runtime-notices.mjs" "$runtime_name" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/stage-site-favicons.mjs" "$PUBLISH_ROOT/$runtime_name"
 done
 
+node "$SCRIPT_DIR/secure-runtime-media.mjs" --check "$PUBLISH_ROOT"
 echo "Classic Storymaps runtime publish output copied to $PUBLISH_ROOT for: ${runtime_names[*]}"

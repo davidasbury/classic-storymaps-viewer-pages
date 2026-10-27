@@ -46,4 +46,5 @@ test -f "$OUTPUT_PATH/app/main-config.js"
 node "$SCRIPT_DIR/../runtimes/mapseries/patches/embedded-base-path.mjs" "$OUTPUT_PATH"
 node "$SCRIPT_DIR/patch-runtime-edit-controls.mjs" mapseries "$OUTPUT_PATH"
 
+node "$SCRIPT_DIR/secure-runtime-media.mjs" "$OUTPUT_PATH"
 echo "Map Series build output copied to $OUTPUT_PATH"

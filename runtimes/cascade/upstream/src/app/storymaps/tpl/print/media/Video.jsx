@@ -16,7 +16,7 @@ class Video extends Component {
       altMediaUrl: this.props.altMedia ? this.props.altMedia.url : null,
       videoUrl: null,
       shortUrl: null,
-      youtubeKey: 'AIzaSyDevTFP16nz6sA-akiOVi6wWXiplJnQ4qw'
+      youtubeKey: ''
     };
   }
 
@@ -36,8 +36,7 @@ class Video extends Component {
       videoUrl: `//www.youtube.com/embed/${videoId}?wmode=opaque&rel=0&showinfo=0`,
       shortUrl: `www.youtube.com/watch?v=${videoId}`
     };
-    // if we already have alt media, why request a thumbnail from youtube?
-    if (this.state.videoScreenshot) {
+    if (this.state.videoScreenshot || !this.state.youtubeKey) {
       this.onRequestReturn(fallbackInfo);
       return;
     }

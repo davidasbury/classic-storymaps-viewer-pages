@@ -57,7 +57,7 @@ define(["dojo/Deferred", "dojo/_base/lang"],
 			this.getInfo = function(photoUrl)
 			{
 				var photoId = photoUrl.slice(photoUrl.lastIndexOf("/") + 1, photoUrl.indexOf("_"));
-				request('flickr.photos.getInfo', {api_key: "750b36a2ac65a72e03cf9cef06d79f45", photo_id: photoId}).done(function(result){
+				request('flickr.photos.getInfo', {photo_id: photoId}).done(function(result){
 					console.log("RESULT = ", result);
 				});
 			};

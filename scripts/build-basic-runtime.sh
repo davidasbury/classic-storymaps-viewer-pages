@@ -33,4 +33,5 @@ if [[ -f "$defaults_file" && -n "$BASIC_DEFAULT_APPID" ]]; then
   sed -i "s/\"appid\": \"\"/\"appid\": \"$BASIC_DEFAULT_APPID\"/" "$defaults_file"
 fi
 
+node "$SCRIPT_DIR/secure-runtime-media.mjs" "$OUTPUT_PATH"
 echo "Basic runtime output copied to $OUTPUT_PATH"
