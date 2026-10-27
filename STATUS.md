@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  advanced_gallery_search: Explicit expression mode verified with preserved filters, browser regressions and live public owner search; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
   dependency_security: Compatible Dependabot fixes present in deployed 4a9b461; first visitor-code audit and Crowdsource jQuery 3.7.1 fix verified locally; other runtime advisories remain open
@@ -30,6 +31,23 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**The gallery supports explicit advanced ArcGIS search locally.**
+
+The Advanced search checkbox passes a grouped expression to ArcGIS Online while
+retaining the Classic-story, scope and sharing constraints. App-type filtering
+and client-side scope/sharing checks remain active; only the literal title match
+is bypassed. Title search stays the default. Mode changes reset results, paging
+and counting, and session changes reset the mode. Invalid delimiter structure
+and ArcGIS query rejections have explicit error states.
+
+All 251 Node tests and 13 gallery browser cases passed, including advanced
+expressions at desktop and two mobile widths, existing public/signed-in flows,
+pagination and counting. A live public `owner:dwright_storymaps` query displayed
+seven recognized Classic stories whose IDs matched an independent ArcGIS request.
+See [session 0067](session-logs/2026-10-27-0067-session-log.md).
+The implementation is not deployed; existing shared previews and owner sessions
+were untouched.
 
 **Unavailable story references can show their source website across all viewers.**
 

@@ -1034,6 +1034,113 @@ try {
       if (result.pageErrors.length) result.pass = false;
     }
   }
+  if (selectedRuntimes.has('gallery-advanced-search')) {
+    for (const width of [1440, 390, 320]) {
+      const { context, page, errors } = await observePage(width);
+      const result = { runtime: 'gallery-advanced-search', width };
+      results.push(result);
+      const captured = [];
+      const story = (number, overrides = {}) => ({ id: number.toString(16).padStart(32, '0'),
+        title: 'Ocean story ' + number, owner: 'owner-self', orgId: 'synthetic-org', access: 'public',
+        type: 'Web Mapping Application', typeKeywords: ['Story Map Journal'], ...overrides });
+      await context.addInitScript(() => {
+        sessionStorage.setItem('arcgis_access_token', 'synthetic-advanced-session');
+        sessionStorage.setItem('arcgis_access_token_expires', String(Date.now() + 600000));
+      });
+      await context.route('https://www.arcgis.com/sharing/rest/**', async route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        assert.equal(url.searchParams.has('token'), false);
+        if (url.pathname.endsWith('/community/self')) return route.fulfill({ json: { username: 'owner-self', orgId: 'synthetic-org' } });
+        const query = url.searchParams.get('q');
+        assert.ok(query);
+        const online = query.startsWith('access:public');
+        assert.equal(request.headers()['x-esri-authorization'], online ? undefined : 'Bearer synthetic-advanced-session');
+        assert.ok(query.includes('AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)'));
+        captured.push({ query, start: url.searchParams.get('start') });
+        if (query.endsWith('(badfield:)')) return route.fulfill({ json: { error: { code: 400 } } });
+        const access = query.includes('access:private') ? 'private' : query.includes('access:org') ? 'org' : 'public';
+        let entries = Array.from({ length: 55 }, (_, index) => story(index + 1, { access }));
+        if (query.includes('title:"owner\\:')) entries = [];
+        else if (query.endsWith('(owner:dwright_storymaps)')) entries = online ? [story(1, { owner: 'dwright_storymaps' })] : [];
+        else if (query.includes('(owner:dwright_storymaps OR owner:another)')) entries = [
+          story(1, { owner: 'dwright_storymaps' }), story(2, { owner: 'another', typeKeywords: ['Story Map Tour'] })
+        ];
+        if (query.startsWith('orgid:')) entries = [story(1, { access }), story(2, { access, owner: 'colleague' }),
+          story(3, { access, orgId: 'outside-org' }), story(4, { access: access === 'private' ? 'public' : 'private' })];
+        entries.push(story(90, { access, type: 'StoryMap' }), story(91, { access: 'org' }),
+          story(92, { access, owner: 'wrong-owner', orgId: 'outside-org', typeKeywords: ['Dashboard'] }));
+        return route.fulfill({ json: { results: entries, nextStart: -1 } });
+      });
+      const settled = count => page.waitForFunction(count => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false'
+        && document.getElementById('stories-status').textContent !== 'Loading stories...'
+        && document.querySelectorAll('.story-card').length === count, count);
+      try {
+        await page.goto(origin + basePath + '/viewers/');
+        await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
+        await settled(24);
+        assert.equal(await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).isChecked(), false);
+        await page.getByRole('button', { name: 'Page 2', exact: true }).click();
+        await page.waitForFunction(() => document.querySelector('#stories-pages [aria-current="page"]')?.textContent === '2');
+        await page.locator('#stories-search').fill('owner:dwright_storymaps');
+        await settled(0);
+        assert.ok(captured.at(-1).query.endsWith('title:"owner\\:dwright_storymaps"'));
+        await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).check();
+        await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
+        assert.ok(captured.at(-1).query.startsWith('owner:"owner\\-self" AND access:public'));
+        assert.ok(captured.at(-1).query.endsWith('AND (owner:dwright_storymaps)'));
+        assert.equal(await page.locator('.story-card').count(), 0);
+        await page.locator('#stories-scope').selectOption('online');
+        await settled(1);
+        assert.equal(await page.locator('.story-title').innerText(), 'Ocean story 1');
+        assert.equal(captured.at(-1).start, '1');
+        assert.match(await page.locator('#stories-page').innerText(), /Showing 1-1 of 1 stories/);
+        await page.getByLabel('Search expression', { exact: true }).fill('owner:dwright_storymaps OR owner:another');
+        await settled(2);
+        assert.ok(captured.at(-1).query.endsWith('AND (owner:dwright_storymaps OR owner:another)'));
+        await page.locator('#stories-runtime').selectOption('mapjournal');
+        await settled(1);
+        await page.locator('#stories-runtime').selectOption('');
+        await settled(2);
+        const beforeInvalid = captured.length;
+        await page.locator('#stories-search').fill(') OR owner:other (');
+        await page.waitForFunction(() => document.getElementById('stories-search').getAttribute('aria-invalid') === 'true');
+        assert.equal(captured.length, beforeInvalid);
+        assert.match(await page.locator('#stories-status').innerText(), /quotes, parentheses, and escapes/);
+        await page.locator('#stories-search').fill('badfield:');
+        await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('ArcGIS Online rejected'));
+        await page.locator('#stories-search').fill('tags:ocean');
+        await settled(24);
+        assert.equal(await page.locator('#stories-search').getAttribute('aria-invalid'), null);
+        await page.locator('#stories-scope').selectOption('org');
+        await settled(2);
+        await page.locator('#stories-sharing').selectOption('private');
+        await settled(2);
+        assert.ok(captured.at(-1).query.startsWith('orgid:"synthetic\\-org" AND (access:private OR access:shared)'));
+        assert.ok(captured.at(-1).query.endsWith('AND (tags:ocean)'));
+        await page.locator('#stories-search').fill('Ocean');
+        await settled(2);
+        await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).uncheck();
+        await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
+        assert.ok(captured.at(-1).query.endsWith('AND title:"Ocean"'));
+        await page.getByLabel('Search titles', { exact: true }).fill('No matching title');
+        await settled(0);
+        await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).check();
+        await page.locator('#stories-scope').selectOption('online');
+        await page.locator('#stories-search').fill('owner:dwright_storymaps');
+        await settled(1);
+        await page.locator('.story-toolbar').scrollIntoViewIfNeeded();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        assert.equal(await page.locator('.story-toolbar input, .story-toolbar select').evaluateAll(elements => elements.some(element => {
+          const bounds = element.getBoundingClientRect(); return bounds.left < 0 || bounds.right > innerWidth;
+        })), false);
+        await page.screenshot({ path: path.join(temporary, 'gallery-advanced-search-' + width + '.png') });
+        assert.equal(errors.filter(error => error.startsWith('page:')).length, 0);
+        result.pass = true;
+      } catch (error) { result.pass = false; result.failure = error.message; }
+      await context.close();
+    }
+  }
   if (selectedRuntimes.has('gallery-pagination')) {
     for (const width of [1440, 390, 320]) {
       const { context, page, errors } = await observePage(width);
@@ -1241,12 +1348,12 @@ try {
         await context.unroute(storyUrl);
         await page.getByLabel('App type', { exact: true }).selectOption('cascade');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
-        await page.getByLabel('Search stories', { exact: true }).fill('Rupert');
+        await page.getByLabel('Search titles', { exact: true }).fill('Rupert');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
         assert.match(await page.locator('.story-title').innerText(), /Rupert/);
-        await page.getByLabel('Search stories', { exact: true }).fill('no matching synthetic title');
+        await page.getByLabel('Search titles', { exact: true }).fill('no matching synthetic title');
         await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 0 of 0 stories');
-        await page.getByLabel('Search stories', { exact: true }).fill('');
+        await page.getByLabel('Search titles', { exact: true }).fill('');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
         await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');
         await page.getByLabel('Sort', { exact: true }).selectOption('title');

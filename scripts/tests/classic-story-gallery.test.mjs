@@ -362,6 +362,32 @@ test('scope and sharing searches preserve escaping and public-only online search
   assert.match(gallery().searchUrl({ scope: 'org', orgId: 'synthetic-org', sharing: 'private' }).searchParams.get('q'), /orgid:"synthetic\\-org" AND \(access:private OR access:shared\)/);
 });
 
+test('advanced expressions retain syntax while scope, sharing and Classic constraints stay outside their group', () => {
+  for (const selection of [
+    { scope: 'online', sharing: 'public' },
+    { scope: 'mine', owner: 'owner', sharing: 'private' },
+    { scope: 'org', orgId: 'synthetic-org', sharing: 'org' }
+  ]) {
+    const base = gallery().searchUrl(selection).searchParams.get('q');
+    for (const expression of ['owner:dwright_storymaps', 'owner:one OR owner:two',
+      'tags:"ocean science" AND NOT title:test', 'modified:[1600000000000 TO 1800000000000]',
+      '(title:Ocean OR title:Coast) AND owner:dwright_storymaps', 'title:"a (quoted) phrase"', 'title:escaped\\(text\\)']) {
+      const query = gallery().searchUrl({ ...selection, searchMode: 'advanced', title: expression }).searchParams.get('q');
+      assert.equal(query, base + ' AND (' + expression + ')');
+    }
+    assert.equal(gallery().searchUrl({ ...selection, searchMode: 'advanced', title: '  ' }).searchParams.get('q'), base);
+  }
+});
+
+test('advanced expressions cannot close the constraint group or leave its delimiters escaped', () => {
+  for (const title of [') OR owner:other (', 'owner:other)', '(owner:other', 'title:"unclosed', 'owner:other\\']) {
+    assert.throws(() => gallery().searchUrl({ scope: 'online', searchMode: 'advanced', title }),
+      error => error.code === 'invalid_search_expression');
+  }
+  assert.match(gallery().searchUrl({ scope: 'online', title: 'owner:dwright_storymaps' }).searchParams.get('q'),
+    /title:"owner\\:dwright_storymaps"$/);
+});
+
 test('organization results allow accessible other-owner items without granting conversion', () => {
   const config = configuration();
   const selection = { scope: 'org', orgId: 'synthetic-org', owner: 'owner', sharing: 'private' };

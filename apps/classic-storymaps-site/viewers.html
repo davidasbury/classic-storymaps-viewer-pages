@@ -339,8 +339,11 @@
     .story-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
     .story-toolbar label { display: grid; gap: 5px; font-size: .85rem; font-weight: 600; }
     .story-toolbar label:first-child { flex: 1 1 240px; }
+    .story-toolbar label:has(#stories-search) { flex: 2 1 300px; min-width: 0; }
     .story-toolbar input, .story-toolbar select { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--ink-0); font: inherit; }
     .story-toolbar select { max-width: 220px; }
+    .story-toolbar label.story-search-mode { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+    .story-toolbar .story-search-mode input { width: 18px; min-height: 18px; height: 18px; margin: 0; padding: 0; flex-shrink: 0; }
     .story-toolbar label:has(#stories-sort) { min-width: 200px; }
     .story-control { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
     .story-control:disabled { opacity: .5; cursor: default; }
@@ -472,7 +475,8 @@
       <div class="story-toolbar">
         <label>View items in<select id="stories-scope" aria-label="View items in"><option value="mine">My Content</option><option value="org">My Organization</option><option value="online">ArcGIS Online</option></select></label>
         <label>Sharing<select id="stories-sharing" aria-label="Sharing"><option value="public">Public</option><option value="org">My Organization</option><option value="private">Private</option></select></label>
-        <label>Search stories<input id="stories-search" type="search" maxlength="200" autocomplete="off"></label>
+        <label><span id="stories-search-label">Search titles</span><input id="stories-search" type="search" maxlength="200" autocomplete="off" aria-describedby="stories-status"></label>
+        <label class="story-search-mode"><input id="stories-advanced" type="checkbox">Advanced search</label>
         <label>App type<select id="stories-runtime" aria-label="App type"><option value="">All app types</option></select></label>
         <label>Sort<select id="stories-sort" aria-label="Sort"><option value="modified">Date modified</option><option value="created">Date created</option><option value="title">Title</option><option value="owner">Owner</option><option value="numviews">Number of views</option><option value="avgrating">Average rating</option><option value="numratings">Number of ratings</option><option value="numcomments">Number of comments</option><option value="scorecompleteness">Item completeness</option></select></label>
         <label>Direction<select id="stories-sort-order" aria-label="Sort direction"><option value="desc">Descending</option><option value="asc">Ascending</option></select></label>

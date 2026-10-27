@@ -49,6 +49,26 @@
     };
   }
 
+  function advancedExpression(value) {
+    var depth = 0;
+    var quoted = false;
+    var escaped = false;
+    for (var character of value) {
+      if (escaped) { escaped = false; continue; }
+      if (character === '\\') { escaped = true; continue; }
+      if (character === '"') { quoted = !quoted; continue; }
+      if (quoted) continue;
+      if (character === '(') depth++;
+      if (character === ')' && --depth < 0) break;
+    }
+    if (depth || quoted || escaped) {
+      var error = new Error('Check the quotes, parentheses, and escapes in the advanced search expression.');
+      error.code = 'invalid_search_expression';
+      throw error;
+    }
+    return '(' + value + ')';
+  }
+
   function searchUrl(options) {
     var source;
     var sharing = options.sharing || 'public';
@@ -63,7 +83,8 @@
     var sortOrder = ['asc', 'desc'].includes(options.sortOrder) ? options.sortOrder
       : ['title', 'owner'].includes(sortField) ? 'asc' : 'desc';
     var query = source + ' AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)';
-    if (String(options.title || '').trim()) query += ' AND title:' + quote(options.title.trim());
+    var text = String(options.title || '').trim();
+    if (text) query += ' AND ' + (options.searchMode === 'advanced' ? advancedExpression(text) : 'title:' + quote(text));
     url.search = new URLSearchParams({ f: 'json', q: query, num: '100', start: String(options.start || 1),
       sortField: sortField, sortOrder: sortOrder }).toString();
     return url;
@@ -208,6 +229,8 @@
     var heading = document.getElementById('stories-heading');
     var status = document.getElementById('stories-status');
     var search = document.getElementById('stories-search');
+    var advancedSearch = document.getElementById('stories-advanced');
+    var searchLabel = document.getElementById('stories-search-label');
     var scopeFilter = document.getElementById('stories-scope');
     var sharingFilter = document.getElementById('stories-sharing');
     var runtimeFilter = document.getElementById('stories-runtime');
@@ -489,14 +512,16 @@
             return;
           }
           heading.textContent = { mine: 'My Content', org: 'My Organization', online: 'ArcGIS Online' }[scopeFilter.value];
-          var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value, sort: sort.value, sortOrder: sortOrder.value };
+          var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value,
+            searchMode: advancedSearch.checked ? 'advanced' : 'title', sort: sort.value, sortOrder: sortOrder.value };
           var selectedRuntime = runtimeFilter.value;
           var selectedTitle = search.value.trim().toLowerCase();
           pager = createPager({
             fetchPage: function(start, pageSignal) { return client.json(searchUrl(Object.assign({}, queryOptions, { start: start })), queryOptions.scope === 'online' ? null : token, pageSignal); },
             accept: function(candidate) {
               var story = storyFromItem(candidate, config, queryOptions);
-              return story && (!selectedRuntime || story.runtime === selectedRuntime) && story.title.toLowerCase().includes(selectedTitle) ? story : null;
+              return story && (!selectedRuntime || story.runtime === selectedRuntime)
+                && (queryOptions.searchMode === 'advanced' || story.title.toLowerCase().includes(selectedTitle)) ? story : null;
             }
           });
         }
@@ -515,7 +540,11 @@
       } catch (error) {
         if (signal.aborted || epoch !== generation) return;
         if (token && [401, 498, 499].includes(error.code)) { options.onExpired(); return; }
-        status.textContent = 'Stories could not be loaded. Try Refresh.';
+        if (error.code === 'invalid_search_expression' || advancedSearch.checked && error.code === 400) {
+          search.setAttribute('aria-invalid', 'true');
+          status.textContent = error.code === 'invalid_search_expression' ? error.message
+            : 'ArcGIS Online rejected the advanced search expression. Check its syntax and try again.';
+        } else status.textContent = 'Stories could not be loaded. Try Refresh.';
       } finally {
         if (epoch === generation) {
           loading = false; updateButtons();
@@ -530,7 +559,11 @@
         heading.scrollIntoView({ block: 'start', behavior: 'instant' });
       }
     }
-    function restart() { invalidate(); if (!section.hidden) load(); }
+    function restart() { search.removeAttribute('aria-invalid'); invalidate(); if (!section.hidden) load(); }
+    function updateSearchMode() {
+      searchLabel.textContent = advancedSearch.checked ? 'Search expression' : 'Search titles';
+      search.maxLength = advancedSearch.checked ? 2000 : 200;
+    }
     function updateFilters() {
       scopeFilter.querySelector('option[value="mine"]').disabled = !token;
       scopeFilter.querySelector('option[value="org"]').disabled = !token;
@@ -543,6 +576,8 @@
       if (value === token) return;
       token = value;
       search.value = '';
+      advancedSearch.checked = false;
+      updateSearchMode();
       runtimeFilter.value = '';
       sort.value = 'modified';
       sortOrder.value = 'desc';
@@ -561,10 +596,12 @@
     }
     toggle.addEventListener('click', function() { show(section.hidden); });
     search.addEventListener('input', function() {
+      search.removeAttribute('aria-invalid');
       invalidate();
       status.textContent = 'Loading stories...';
       debounce = setTimeout(load, 300);
     });
+    advancedSearch.addEventListener('change', function() { updateSearchMode(); restart(); });
     runtimeFilter.addEventListener('change', restart);
     scopeFilter.addEventListener('change', function() { updateFilters(); restart(); });
     sharingFilter.addEventListener('change', restart);
