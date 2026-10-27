@@ -7,6 +7,7 @@ import vm from 'node:vm';
 const site = new URL('../../apps/classic-storymaps-site/', import.meta.url);
 const require = createRequire(import.meta.url);
 const gallery = () => require(new URL('assets/js/classic-story-gallery.js', site).pathname);
+const input = () => require(new URL('assets/js/classic-story-input.js', site).pathname);
 function configuration(pathname = '/viewers/') {
   const context = vm.createContext({ window: { location: { pathname } } });
   vm.runInContext(readFileSync(new URL('assets/js/classic-storymaps-config.js', site), 'utf8'), context);
@@ -44,9 +45,37 @@ const item = (number, overrides = {}) => ({
   access: 'public', ...overrides
 });
 
+test('omni input accepts IDs, hosted URLs, web map overrides and verified legacy aliases', () => {
+  const appId = '0a48880ceab64924946a0a15a5383916';
+  const webmap = '0c8ae0bb497143db9a29de4fbffaed73';
+  assert.deepEqual(input().parse(appId), { appId, webmap: null });
+  assert.deepEqual(input().parse('https://www.arcgis.com/apps/MapTour/index.html?appid=' + appId + '&webmap=' + webmap), { appId, webmap });
+  assert.equal(input().parse('https://blm-egis.maps.arcgis.com/apps/Cascade/index.html?appid=6a9c3a5af20b43dea05fbd1e121ef6da').appId, '6a9c3a5af20b43dea05fbd1e121ef6da');
+  assert.equal(input().parse('http://storymaps.esri.com/stories/2014/brazil-beyond-the-stadiums/').appId, 'cf69fa9aee724adf8b6f77d059ae08a9');
+  assert.equal(input().parse('http://clear3.uconn.edu/viewers/bears/').appId, '137ee8cb7d05426ca95ae1330ebf4d38');
+  for (const value of ['javascript:alert(1)', 'https://user:password@example.org/', 'https://example.org/?appid=' + appId + '&appid=' + appId,
+    'https://example.org/?appid=' + appId + '&token=synthetic', 'https://example.org/?appid=invalid', 'https://example.org/?webmap=invalid']) assert.throws(() => input().parse(value));
+});
+
+test('self-hosted URL lookup requires an exact, unambiguous Classic item match', async () => {
+  const config = configuration();
+  const address = 'https://custom.example/story/';
+  let candidates = [item(1, { url: address }), item(2, { url: 'https://other.example/story/' })];
+  const client = { json: async url => {
+    assert.equal(url.origin, 'https://www.arcgis.com');
+    assert.ok(!url.searchParams.has('token'));
+    return { results: candidates, nextStart: -1 };
+  } };
+  assert.equal((await input().resolve(address, { client, config })).appId, item(1).id);
+  candidates.push(item(3, { url: address }));
+  await assert.rejects(input().resolve(address, { client, config }), /Several/);
+  candidates = [item(4, { url: address, tags: [], typeKeywords: [] })];
+  await assert.rejects(input().resolve(address, { client, config }), /No accessible/);
+});
+
 test('gallery membership validates owner, type, ID, public access and Classic metadata before routes', () => {
   const config = configuration();
-  const accept = (candidate, owner = 'owner') => gallery().storyFromItem(candidate, config, owner);
+  const accept = (candidate, owner = 'owner', sharing = 'public') => gallery().storyFromItem(candidate, config, { scope: owner ? 'mine' : 'online', owner, sharing });
   assert.equal(accept(item(1)).runtime, 'mapjournal');
   assert.equal(accept(item(1, { typeKeywords: [], tags: ['Story Map Journal'] })).runtime, 'mapjournal');
   assert.equal(accept(item(1, { tags: [] })).runtime, 'mapjournal');
@@ -57,18 +86,34 @@ test('gallery membership validates owner, type, ID, public access and Classic me
     { typeKeywords: ['Story Map Journal', 'Story Map Tour'] }
   ]) assert.equal(accept(item(1, override)), null, JSON.stringify(override));
   assert.equal(accept(item(1, { access: 'private' }), ''), null);
-  assert.equal(accept(item(1, { access: 'private' })).id, item(1).id);
+  assert.equal(accept(item(1, { access: 'private' })), null);
+  assert.equal(accept(item(1, { access: 'private' }), 'owner', 'private').id, item(1).id);
 });
 
-test('search constraints are escaped and public group searches have no owner or credential', () => {
-  const search = gallery().searchUrl({ owner: 'test" OR owner:*', title: '" OR type:*', start: 1, sort: 'title' });
+test('scope and sharing searches preserve escaping and public-only online searches', () => {
+  assert.match(gallery().searchUrl({ scope: 'online', sharing: 'public' }).searchParams.get('q'), /typekeywords:Story\* OR tags:Story\*/);
+  const search = gallery().searchUrl({ scope: 'mine', owner: 'test" OR owner:*', title: '" OR type:*', start: 1, sort: 'title' });
   assert.equal(search.origin, 'https://www.arcgis.com');
-  assert.equal(search.searchParams.get('q'), 'owner:"test\\" OR owner\\:\\*" AND type:"Web Mapping Application" AND title:"\\" OR type\\:\\*"');
-  const publicSearch = gallery().searchUrl({ groupId: 'a'.repeat(32), start: 1 });
-  assert.match(publicSearch.searchParams.get('q'), /group:"a{32}" AND access:public/);
+  assert.equal(search.searchParams.get('q'), 'owner:"test\\" OR owner\\:\\*" AND access:public AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*) AND title:"\\" OR type\\:\\*"');
+  const publicSearch = gallery().searchUrl({ scope: 'online', start: 1 });
+  assert.match(publicSearch.searchParams.get('q'), /^access:public AND type:/);
   assert.doesNotMatch(publicSearch.href, /owner|token/);
   assert.throws(() => gallery().searchUrl({}), /source/);
-  assert.throws(() => gallery().searchUrl({ groupId: 'invalid' }), /group/i);
+  assert.throws(() => gallery().searchUrl({ scope: 'org' }), /source/i);
+  assert.throws(() => gallery().searchUrl({ scope: 'online', sharing: 'private' }), /source/i);
+  assert.match(gallery().searchUrl({ scope: 'org', orgId: 'synthetic-org', sharing: 'private' }).searchParams.get('q'), /orgid:"synthetic\\-org" AND \(access:private OR access:shared\)/);
+});
+
+test('organization results allow accessible other-owner items without granting conversion', () => {
+  const config = configuration();
+  const selection = { scope: 'org', orgId: 'synthetic-org', owner: 'owner', sharing: 'private' };
+  for (const access of ['private', 'shared']) {
+    const story = gallery().storyFromItem(item(1, { owner: 'another', access, orgId: selection.orgId }), config, selection);
+    assert.ok(story);
+    config.gallery.converter.enabled = true;
+    assert.equal(gallery().convertUrl(story, config, 'owner'), null);
+  }
+  assert.equal(gallery().storyFromItem(item(1, { access: 'private', orgId: 'other-org' }), config, selection), null);
 });
 
 test('conversion is gated by identity, deployment approval and supported runtime', () => {

@@ -177,16 +177,25 @@ hosted checks.
 
 The Viewers page starts with eight app-type cards. Each whole card opens its
 launcher. **Browse Stories** replaces those cards with an in-page gallery;
-**Hide Stories** restores them. The manual app-ID form remains available.
+**Hide Stories** restores them. The app-ID or URL form remains available.
 
-Signed-in browsing resolves the current ArcGIS Online username, searches owned
-Web Mapping Applications, and validates ownership, type, ID, Classic tags or
-typeKeywords, and supported runtime before displaying a card. Search, app-type
-filtering, sorting, refresh, and pagination are available. Pages contain up to
-24 stories, with at most three candidate requests per action. A filtered-empty
-page can still have more results; displayed counts are not account-wide totals.
+**View items in** offers My Content (the signed-in default), My Organization,
+and ArcGIS Online. **Sharing** offers Public (default), My Organization, and
+Private. Private includes `private` and group-shared `shared` items. Organization
+searches do not impose an owner filter: ArcGIS determines which other users'
+items the signed-in user can access, including privileged private-item access.
+Accounts without an organization cannot select the organization scope. Online
+browsing is public-only and is the signed-out default; sign-out clears prior
+results and resets the filters. No client-side role check grants access.
 
-Signed-out browsing uses nineteen curated examples. The shared
+Searches select Web Mapping Applications with Story metadata, then validate
+scope, sharing, ID, Classic metadata, and supported runtime before displaying
+a card. Search, app-type filtering, sorting, refresh, and pagination remain
+available. Pages contain up to 24 stories, with at most three candidate requests
+per action. A filtered-empty page can still have more results; displayed counts
+are not account-wide totals. ArcGIS's search-result limit still applies.
+
+The nineteen curated examples remain on the launchers. The shared
 `exampleStoriesByRuntime` records in
 [classic-storymaps-config.js](apps/classic-storymaps-site/assets/js/classic-storymaps-config.js)
 also supply each launcher's two to eight screenshot links. Launcher headers
@@ -197,18 +206,29 @@ Cards without conversion have no separate View button; their title link supports
 keyboard navigation. When Convert is available, the card also shows a green View
 button beside a blue Convert button. Both actions remain independently clickable.
 
-Set `gallery.publicGroupId` in that configuration when a curated public ArcGIS
-Online group is ready. Group browsing replaces the built-in examples, requests
-only public items without credentials, and does not silently substitute examples
-for an empty or inaccessible group. The group, included items, and their required
-services/media must be publicly accessible. This change does not create or share
-any ArcGIS items or groups.
+The catalog no longer uses `gallery.publicGroupId`; the Online scope searches
+public ArcGIS content. This change does not create or share items or groups.
+
+The omni-input accepts a 32-character ID, HTTP/HTTPS app URLs with `appid`, and
+ArcGIS item-details URLs. A valid `webmap` override is retained; builder flags,
+other arbitrary parameters, and fragments are not forwarded. Credential-bearing
+and ambiguous inputs are rejected. The item is checked through the fixed HTTPS
+ArcGIS Online REST endpoint before opening its viewer.
+
+URLs without an app ID require one exact, accessible Classic application URL
+match in ArcGIS search. The resolver also contains verified aliases for the
+supplied Brazil Beyond the Stadiums and UConn legacy URLs, whose page-config
+app IDs were independently checked against public ArcGIS metadata. It does not
+execute or scrape arbitrary remote scripts, fetch HTTP-only sites from HTTPS,
+or provide a proxy. Unindexed URLs, wrapper items without Classic metadata,
+and ambiguous matches require the app ID instead. See
+[classic-story-input.js](apps/classic-storymaps-site/assets/js/classic-story-input.js).
 
 `gallery.converter.enabled` is **false** until an owner-approved converter release
 containing ownership enforcement and app-ID prefill is deployed. The owner has
 verified the sign-in/prefill flow, but the confirmed locked production release
 predates those changes. When enabled, Convert is
-available only to validated signed-in users for Tour, Journal, Series, Cascade,
+available only to validated signed-in owners for Tour, Journal, Series, Cascade,
 and Swipe. Its configured destination is currently
 `https://regal-sable-0a6dde.netlify.app/?appid=<item-id>`; no credentials are passed,
 and conversion is not started automatically. Switching to
@@ -227,7 +247,7 @@ launchers and the gallery at desktop, phone, and narrow-phone widths:
 
 ```sh
 SITE_BASE_PATH=/classic-storymaps-viewer-pages \
-RUNTIME_FILTER=gallery,launchers \
+RUNTIME_FILTER=gallery,input,launchers \
 node scripts/validate-release-viewers-browser.mjs
 ```
 

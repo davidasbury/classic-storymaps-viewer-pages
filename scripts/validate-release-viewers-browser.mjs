@@ -186,10 +186,25 @@ try {
       try {
         await page.goto(origin + basePath + '/viewers/');
         assert.equal(await page.locator('#catalog-grid > a.card').count(), 8);
+        const examples = await page.evaluate(() => {
+          const config = window.ClassicStoryMapsConfig;
+          return Object.values(config.exampleStoriesByRuntime).flat().map(story => ({ ...story,
+            owner: 'public-owner', type: 'Web Mapping Application', access: 'public',
+            tags: ['Story Map', config.appRegistry[story.runtime].classifyFragments[0]] }));
+        });
+        await context.route('https://www.arcgis.com/sharing/rest/search?**', route => {
+          const url = new URL(route.request().url());
+          assert.match(url.searchParams.get('q'), /^access:public AND/);
+          assert.equal(route.request().headers()['x-esri-authorization'], undefined);
+          const stories = url.searchParams.get('sortField') === 'title' ? [...examples].sort((first, second) => first.title.localeCompare(second.title)) : examples;
+          return route.fulfill({ json: { results: stories, nextStart: -1 } });
+        });
         assert.equal(await page.locator('#story-gallery').isVisible(), false);
         await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 19);
-        assert.equal(await page.locator('#stories-sort option:checked').innerText(), 'Featured order');
+        assert.equal(await page.locator('#stories-scope').inputValue(), 'online');
+        assert.equal(await page.locator('#stories-sharing').inputValue(), 'public');
+        assert.equal(await page.locator('#stories-sharing').isDisabled(), true);
         assert.equal(await page.locator('#catalog-grid').isVisible(), false);
         assert.equal(await page.getByRole('link', { name: /^Convert / }).count(), 0);
         assert.equal(await page.locator('.story-title > a').count(), 19);
@@ -261,21 +276,23 @@ try {
       const authorization = request.headers()['x-esri-authorization'];
       const owner = authorization === 'Bearer synthetic-two' ? 'owner-two' : 'owner-one';
       assert.ok(!url.searchParams.has('token'));
-      if (url.pathname.endsWith('/community/self')) { await route.fulfill({ json: { username: owner } }); return; }
+      if (url.pathname.endsWith('/community/self')) { await route.fulfill({ json: { username: owner, orgId: mode === 'no-org' ? undefined : 'synthetic-org' } }); return; }
       if (url.pathname.endsWith('/info/thumbnail/test.png')) {
         await route.fulfill({ contentType: 'image/png', body: await readFile(path.join(publish, 'viewers/assets/images/archive/resources/basics.png')) }); return;
       }
       captured.push({ query: url.searchParams.get('q'), authenticated: Boolean(authorization) });
-      if (mode === 'held') {
+      if (mode === 'held' && authorization) {
         requestHeld();
         await new Promise(resolve => { releaseHeldRequest = resolve; });
       }
       if (mode === 'error') { await route.fulfill({ json: { error: { code: 500 } } }); return; }
-      if (mode === 'expired') { await route.fulfill({ json: { error: { code: 498 } } }); return; }
-      const group = url.searchParams.get('q').includes('group:');
-      let stories = Array.from({ length: 30 }, (_, index) => syntheticItem(index + 1, owner));
-      if (group) stories = [ { ...syntheticItem(1, 'public-owner'), access: 'public' }, syntheticItem(2, 'public-owner') ];
-      stories.push(syntheticItem(100, 'wrong-owner'), { ...syntheticItem(101, owner), type: 'StoryMap' });
+      if (mode === 'expired' && authorization) { await route.fulfill({ json: { error: { code: 498 } } }); return; }
+      const query = url.searchParams.get('q');
+      const access = query.includes('access:private') ? 'private' : query.includes('access:org') ? 'org' : 'public';
+      let stories = Array.from({ length: 30 }, (_, index) => ({ ...syntheticItem(index + 1, owner), access }));
+      stories.push({ ...syntheticItem(100, 'wrong-owner'), access }, { ...syntheticItem(101, owner), type: 'StoryMap', access });
+      if (query.startsWith('orgid:')) stories = [ { ...syntheticItem(1, owner), access }, { ...syntheticItem(100, 'other-owner'), access: access === 'private' ? 'shared' : access } ];
+      if (query.startsWith('access:public')) stories = [ { ...syntheticItem(1, 'public-owner'), access: 'public' }, syntheticItem(2, 'public-owner') ];
       await route.fulfill({ json: { results: stories, nextStart: -1 } }).catch(() => {});
     });
     try {
@@ -288,7 +305,9 @@ try {
         window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
       });
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
-      assert.equal(await page.locator('#stories-heading').innerText(), 'My Stories');
+      assert.equal(await page.locator('#stories-heading').innerText(), 'My Content');
+      assert.equal(await page.locator('#stories-scope').inputValue(), 'mine');
+      assert.equal(await page.locator('#stories-sharing').inputValue(), 'public');
       assert.equal(await page.locator('.story-title').first().innerText(), '<img src=x onerror=alert(1)>');
       assert.equal(await page.locator('.story-title img').count(), 0);
       await page.waitForFunction(() => document.querySelector('.story-image').src.startsWith('blob:'));
@@ -340,6 +359,30 @@ try {
       assert.equal(await conversionPopup.evaluate(() => window.opener), null);
       await conversionPopup.close();
       await context.unroute(conversion.href);
+      await page.getByLabel('Sharing', { exact: true }).selectOption('private');
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
+      assert.match(captured.at(-1).query, /access:private OR access:shared/);
+      await page.getByLabel('View items in', { exact: true }).selectOption('org');
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 2);
+      assert.match(captured.at(-1).query, /^orgid:/);
+      assert.ok(captured.at(-1).authenticated);
+      assert.equal(await page.locator('.story-owner').last().innerText(), 'other-owner');
+      assert.equal(await page.locator('.story-action-secondary').count(), 1);
+      await page.getByLabel('Sharing', { exact: true }).selectOption('org');
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 2);
+      assert.match(captured.at(-1).query, /AND access:org/);
+      await page.getByLabel('View items in', { exact: true }).selectOption('online');
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
+      assert.equal(await page.locator('#stories-sharing').inputValue(), 'public');
+      assert.equal(await page.locator('#stories-sharing').isDisabled(), true);
+      assert.equal(captured.at(-1).authenticated, false);
+      assert.equal(await page.locator('.story-action-secondary').count(), 0);
+      await page.getByLabel('View items in', { exact: true }).selectOption('mine');
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
+      mode = 'no-org';
+      await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
+      assert.equal(await page.locator('#stories-scope option[value="org"]').evaluate(option => option.disabled), true);
       mode = 'error';
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
       await page.waitForFunction(() => document.getElementById('stories-status').textContent.includes('could not be loaded'));
@@ -354,18 +397,19 @@ try {
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
       await held;
       await page.getByRole('button', { name: 'Sign out of ArcGIS Online', exact: true }).click();
-      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 19);
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
       mode = 'normal';
       releaseHeldRequest();
       await page.evaluate(() => new Promise(requestAnimationFrame));
-      assert.equal(await page.locator('.story-owner').count(), 0);
+      assert.equal(await page.locator('.story-owner').innerText(), 'public-owner');
       assert.equal(await page.locator('.story-action-secondary').count(), 0);
-      await page.evaluate(() => { window.ClassicStoryMapsConfig.gallery.publicGroupId = 'a'.repeat(32); });
+      assert.equal(await page.locator('#stories-scope').inputValue(), 'online');
+      assert.equal(await page.locator('#stories-sharing').inputValue(), 'public');
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
       assert.equal(await page.locator('.story-owner').innerText(), 'public-owner');
       assert.equal(captured.at(-1).authenticated, false);
-      assert.match(captured.at(-1).query, /group:"a{32}" AND access:public/);
+      assert.match(captured.at(-1).query, /^access:public AND/);
       await page.evaluate(() => {
         window.ClassicStoryMapsConfig.gallery.publicGroupId = '';
         sessionStorage.setItem('arcgis_access_token', 'synthetic-one');
@@ -375,13 +419,74 @@ try {
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
       mode = 'expired';
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
-      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 19);
+      await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
       assert.equal(await page.evaluate(() => sessionStorage.getItem('arcgis_access_token')), null);
       assert.equal(await page.locator('.story-action-secondary').count(), 0);
       assert.deepEqual(errors.filter(message => message.startsWith('page:')), []);
       result.pass = true;
-      result.checks = ['owner isolation', 'pagination', 'safe text', 'private thumbnail blob', 'conversion gate', 'retry', 'account replacement', 'stale-response rejection', 'public group isolation', 'expiry cleanup'];
-    } catch (error) { result.pass = false; result.failure = error.message; }
+      result.checks = ['owner isolation', 'scope and sharing', 'accessible other-owner private and shared items', 'public-only Online', 'no organization', 'pagination', 'safe text', 'thumbnail blob', 'conversion ownership', 'retry', 'account replacement', 'stale-response rejection', 'expiry cleanup'];
+    } catch (error) { result.pass = false; result.failure = error.stack; }
+    await context.close();
+  }
+  if (selectedRuntimes.has('input')) {
+    const { context, page, errors } = await observePage(1280);
+    const result = { runtime: 'omni-input' };
+    results.push(result);
+    const cases = [
+      { input: 'https://www.arcgis.com/apps/MapTour/index.html?appid=0a48880ceab64924946a0a15a5383916&webmap=0c8ae0bb497143db9a29de4fbffaed73', id: '0a48880ceab64924946a0a15a5383916', runtime: 'maptour', webmap: '0c8ae0bb497143db9a29de4fbffaed73' },
+      { input: 'http://storymaps.esri.com/stories/2014/brazil-beyond-the-stadiums/', id: 'cf69fa9aee724adf8b6f77d059ae08a9', runtime: 'mapjournal' },
+      { input: 'http://clear3.uconn.edu/viewers/bears/', id: '137ee8cb7d05426ca95ae1330ebf4d38', runtime: 'mapjournal' },
+      { input: 'https://blm-egis.maps.arcgis.com/apps/Cascade/index.html?appid=6a9c3a5af20b43dea05fbd1e121ef6da', id: '6a9c3a5af20b43dea05fbd1e121ef6da', runtime: 'cascade' },
+      { input: '137ee8cb7d05426ca95ae1330ebf4d38', id: '137ee8cb7d05426ca95ae1330ebf4d38', runtime: 'mapjournal' },
+      { input: 'https://custom.example/ExactCase/', id: '137ee8cb7d05426ca95ae1330ebf4d38', runtime: 'mapjournal' }
+    ];
+    const itemRequests = [];
+    await context.addInitScript(() => {
+      sessionStorage.setItem('arcgis_access_token', 'synthetic-omni');
+      sessionStorage.setItem('arcgis_access_token_expires', String(Date.now() + 600000));
+    });
+    await context.route('https://www.arcgis.com/sharing/rest/**', route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      assert.equal(url.searchParams.has('token'), false);
+      assert.equal(request.headers()['x-esri-authorization'], 'Bearer synthetic-omni');
+      if (url.pathname.endsWith('/search')) {
+        const match = url.searchParams.get('q').includes('ExactCase');
+        return route.fulfill({ json: { results: match ? [{ id: cases[2].id, type: 'Web Mapping Application', typeKeywords: ['Story Map Journal'], url: cases[5].input }] : [], nextStart: -1 } });
+      }
+      const candidate = cases.find(entry => url.pathname.endsWith('/' + entry.id));
+      itemRequests.push(candidate?.id);
+      return route.fulfill({ json: candidate ? { id: candidate.id, type: 'Web Mapping Application',
+        url: candidate.input.startsWith('http') ? candidate.input : '',
+        typeKeywords: candidate.runtime === 'maptour' ? ['JavaScript', 'Web Map'] : ['Story Map ' + candidate.runtime] }
+        : { id: 'f'.repeat(32), type: 'Web Map', typeKeywords: ['Story Map Journal'] } });
+    });
+    try {
+      await page.goto(origin + basePath + '/viewers/');
+      for (const candidate of cases) {
+        const destination = origin + basePath + '/viewers/' + candidate.runtime + '/index.html?appid=' + candidate.id + (candidate.webmap ? '&webmap=' + candidate.webmap : '');
+        await context.route(destination, route => route.fulfill({ contentType: 'text/html', body: '<title>Resolved viewer</title>' }));
+        await page.getByLabel('Classic app ID or URL', { exact: true }).fill(candidate.input);
+        const opened = page.waitForEvent('popup');
+        await page.getByRole('button', { name: 'Open Viewer', exact: true }).click();
+        const popup = await opened;
+        await popup.waitForLoadState();
+        assert.equal(popup.url(), destination);
+        assert.equal(await popup.evaluate(() => window.opener), null);
+        assert.equal(itemRequests.at(-1), candidate.id);
+        await popup.close();
+        await context.unroute(destination);
+      }
+      for (const invalid of ['javascript:alert(1)', 'https://custom.example/unindexed/', 'https://www.arcgis.com/apps/MapTour/?appid=' + cases[0].id + '&token=synthetic', 'f'.repeat(32)]) {
+        await page.getByLabel('Classic app ID or URL', { exact: true }).fill(invalid);
+        await page.getByRole('button', { name: 'Open Viewer', exact: true }).click();
+        await page.waitForFunction(() => document.getElementById('omni-status').classList.contains('error'));
+        assert.equal(context.pages().length, 1);
+      }
+      assert.deepEqual(errors.filter(message => message.startsWith('page:')), []);
+      result.pass = true;
+      result.checks = ['four supplied URLs', 'plain ID', 'exact case-sensitive indexed URL', 'web map override', 'header-only credential', 'invalid and unresolved input', 'item type validation', 'no opener'];
+    } catch (error) { result.pass = false; result.failure = error.stack; }
     await context.close();
   }
   if (selectedRuntimes.has('crowdsource')) {

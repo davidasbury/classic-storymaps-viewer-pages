@@ -10,9 +10,14 @@
   function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
   function quote(value) { return '"' + String(value).replace(/[+\-!(){}\[\]^"~*?:\\/|&]/g, '\\$&') + '"'; }
 
-  function storyFromItem(item, config, owner) {
+  function storyFromItem(item, config, selection) {
+    selection = selection || { scope: 'online', sharing: 'public' };
     if (!item || !ID.test(item.id) || item.type !== 'Web Mapping Application') return null;
-    if (owner ? String(item.owner).toLowerCase() !== owner.toLowerCase() : item.access !== 'public') return null;
+    if (selection.scope === 'mine' && (!selection.owner || String(item.owner).toLowerCase() !== selection.owner.toLowerCase())) return null;
+    if (selection.scope === 'org' && (!selection.orgId || (item.orgId && item.orgId !== selection.orgId))) return null;
+    if (selection.scope === 'online' && item.access !== 'public') return null;
+    var sharing = selection.sharing || 'public';
+    if (sharing === 'private' ? !['private', 'shared'].includes(item.access) : item.access !== sharing) return null;
     var terms = (Array.isArray(item.tags) ? item.tags : []).concat(Array.isArray(item.typeKeywords) ? item.typeKeywords : []).map(normalize);
     if (!terms.some(function(term) { return term.indexOf('storymap') !== -1 || term.indexOf('storytelling') !== -1; })) return null;
     var matches = Object.keys(config.appRegistry).filter(function(runtime) {
@@ -31,13 +36,15 @@
 
   function searchUrl(options) {
     var source;
-    if (options.owner) source = 'owner:' + quote(options.owner);
-    else if (options.groupId) {
-      if (!ID.test(options.groupId)) throw new Error('Invalid public group ID.');
-      source = 'group:' + quote(options.groupId) + ' AND access:public';
-    } else throw new Error('A gallery source is required.');
+    var sharing = options.sharing || 'public';
+    if (!['public', 'org', 'private'].includes(sharing)) throw new Error('Invalid sharing filter.');
+    if (options.scope === 'mine' && options.owner) source = 'owner:' + quote(options.owner);
+    else if (options.scope === 'org' && options.orgId) source = 'orgid:' + quote(options.orgId);
+    else if (options.scope === 'online' && sharing === 'public') source = 'access:public';
+    else throw new Error('A valid gallery source is required.');
+    if (options.scope !== 'online') source += ' AND ' + (sharing === 'private' ? '(access:private OR access:shared)' : 'access:' + sharing);
     var url = new URL(REST + 'search');
-    var query = source + ' AND type:"Web Mapping Application"';
+    var query = source + ' AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)';
     if (String(options.title || '').trim()) query += ' AND title:' + quote(options.title.trim());
     url.search = new URLSearchParams({ f: 'json', q: query, num: '100', start: String(options.start || 1),
       sortField: options.sort === 'title' ? 'title' : 'modified', sortOrder: options.sort === 'title' ? 'asc' : 'desc' }).toString();
@@ -46,7 +53,7 @@
 
   function convertUrl(story, config, owner) {
     var converter = config.gallery.converter;
-    if (!owner || !converter.enabled || !ID.test(story.id) || converter.runtimes.indexOf(story.runtime) === -1) return null;
+    if (!owner || String(story.owner).toLowerCase() !== owner.toLowerCase() || !converter.enabled || !ID.test(story.id) || converter.runtimes.indexOf(story.runtime) === -1) return null;
     try {
       var url = new URL(converter.url);
       var localHttp = converter.allowLocalHttp === true && url.protocol === 'http:'
@@ -150,6 +157,8 @@
     var heading = document.getElementById('stories-heading');
     var status = document.getElementById('stories-status');
     var search = document.getElementById('stories-search');
+    var scopeFilter = document.getElementById('stories-scope');
+    var sharingFilter = document.getElementById('stories-sharing');
     var runtimeFilter = document.getElementById('stories-runtime');
     var sort = document.getElementById('stories-sort');
     var previous = document.getElementById('stories-previous');
@@ -158,6 +167,7 @@
     var pageLabel = document.getElementById('stories-page');
     var token = null;
     var owner = '';
+    var orgId = '';
     var generation = 0;
     var renderVersion = 0;
     var controller = new AbortController();
@@ -194,6 +204,7 @@
       clearImages();
       cards.replaceChildren();
       owner = '';
+      orgId = '';
       pager = null;
       pages = [];
       pageIndex = -1;
@@ -301,24 +312,21 @@
             }
             owner = profile.username;
           }
-          heading.textContent = owner ? 'My Stories' : 'Featured Stories';
-          sort.options[0].textContent = !owner && !config.gallery.publicGroupId ? 'Featured order' : 'Recently updated';
-          if (!owner && !config.gallery.publicGroupId) {
-            var examples = Object.values(config.exampleStoriesByRuntime).flat().filter(matches);
-            if (sort.value === 'title') examples.sort(function(first, second) { return first.title.localeCompare(second.title); });
-            pager = createPager({ accept: function(story) { return story; }, fetchPage: async function(start) {
-              return { results: examples.slice(start - 1, start + 99), nextStart: start + 100 <= examples.length ? start + 100 : -1 };
-            } });
-          } else {
-            var queryOptions = { owner: owner, groupId: config.gallery.publicGroupId, title: search.value, sort: sort.value };
-            pager = createPager({
-              fetchPage: function(start, pageSignal) { return client.json(searchUrl(Object.assign({}, queryOptions, { start: start })), owner ? token : null, pageSignal); },
-              accept: function(candidate) {
-                var story = storyFromItem(candidate, config, owner);
-                return story && matches(story) ? story : null;
-              }
-            });
+          orgId = token && typeof profile.orgId === 'string' ? profile.orgId : '';
+          scopeFilter.querySelector('option[value="org"]').disabled = !orgId;
+          if (scopeFilter.value === 'org' && !orgId) {
+            status.textContent = 'This account does not belong to an organization.';
+            return;
           }
+          heading.textContent = { mine: 'My Content', org: 'My Organization', online: 'ArcGIS Online' }[scopeFilter.value];
+          var queryOptions = { scope: scopeFilter.value, sharing: sharingFilter.value, owner: owner, orgId: orgId, title: search.value, sort: sort.value };
+          pager = createPager({
+            fetchPage: function(start, pageSignal) { return client.json(searchUrl(Object.assign({}, queryOptions, { start: start })), queryOptions.scope === 'online' ? null : token, pageSignal); },
+            accept: function(candidate) {
+              var story = storyFromItem(candidate, config, queryOptions);
+              return story && matches(story) ? story : null;
+            }
+          });
         }
         var page = await pager.next(signal);
         if (signal.aborted || epoch !== generation) return;
@@ -334,6 +342,13 @@
       }
     }
     function restart() { invalidate(); if (!section.hidden) load(); }
+    function updateFilters() {
+      scopeFilter.querySelector('option[value="mine"]').disabled = !token;
+      scopeFilter.querySelector('option[value="org"]').disabled = !token;
+      if (!token) scopeFilter.value = 'online';
+      sharingFilter.disabled = !token || scopeFilter.value === 'online';
+      if (sharingFilter.disabled) sharingFilter.value = 'public';
+    }
     function setSession(value) {
       value = value || null;
       if (value === token) return;
@@ -341,7 +356,10 @@
       search.value = '';
       runtimeFilter.value = '';
       sort.value = 'modified';
-      heading.textContent = value ? 'My Stories' : 'Featured Stories';
+      scopeFilter.value = value ? 'mine' : 'online';
+      sharingFilter.value = 'public';
+      updateFilters();
+      heading.textContent = value ? 'My Content' : 'ArcGIS Online';
       restart();
     }
     function show(open) {
@@ -358,6 +376,8 @@
       debounce = setTimeout(load, 300);
     });
     runtimeFilter.addEventListener('change', restart);
+    scopeFilter.addEventListener('change', function() { updateFilters(); restart(); });
+    sharingFilter.addEventListener('change', restart);
     sort.addEventListener('change', restart);
     refresh.addEventListener('click', restart);
     previous.addEventListener('click', function() { if (!loading && pageIndex > 0) { pageIndex--; render(pages[pageIndex]); } });
@@ -368,6 +388,7 @@
     });
     window.addEventListener('pagehide', invalidate);
     window.addEventListener('pageshow', function(event) { if (event.persisted) restart(); });
+    updateFilters();
     updateButtons();
     return { setSession: setSession, show: function() { show(true); }, isOpen: function() { return !section.hidden; } };
   }

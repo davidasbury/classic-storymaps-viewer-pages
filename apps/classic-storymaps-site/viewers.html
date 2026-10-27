@@ -428,7 +428,7 @@
       <h1 id="catalog-title">Classic Story Maps have been retired.
         But you can still view them here!</h1>
       <p class="summary">
-        To view a Classic Esri Story Map, enter its app ID below. 
+        To view a Classic Esri Story Map, enter its app ID or URL below.
         Editing a Classic Story Map is unfortunately not supported, but some stories can be converted using the buttons on subsequent pages. 
         Use the button above to sign in to ArcGIS Online for a filtered Gallery of your Classic Story Maps. Or you can use <a href="https://classic-story-search.netlify.app/">this helpful tool</a>.
       </p>
@@ -440,7 +440,7 @@
       </p>
 
       <form id="omni-form" class="omni-row" novalidate>
-        <input id="omni-appid" class="omni-input" name="appid" type="text" maxlength="64" autocomplete="off" inputmode="latin" placeholder="Enter a 32-character Classic Story Map app ID from ArcGIS Online" aria-describedby="omni-status">
+        <input id="omni-appid" class="omni-input" name="appid" type="text" maxlength="4096" autocomplete="off" placeholder="Classic app ID or URL" aria-label="Classic app ID or URL" aria-describedby="omni-status">
         <button class="omni-btn" type="submit">Open Viewer</button>
       </form>
       <p id="omni-status" class="omni-status" role="status" aria-live="polite"></p>
@@ -452,8 +452,10 @@
     </div>
     <section class="grid" id="catalog-grid" aria-label="Classic app catalog"></section>
     <section id="story-gallery" class="story-gallery" aria-labelledby="stories-heading" hidden>
-      <h2 id="stories-heading">Featured Stories</h2>
+      <h2 id="stories-heading">ArcGIS Online</h2>
       <div class="story-toolbar">
+        <label>View items in<select id="stories-scope" aria-label="View items in"><option value="mine">My Content</option><option value="org">My Organization</option><option value="online">ArcGIS Online</option></select></label>
+        <label>Sharing<select id="stories-sharing" aria-label="Sharing"><option value="public">Public</option><option value="org">My Organization</option><option value="private">Private</option></select></label>
         <label>Search stories<input id="stories-search" type="search" maxlength="200" autocomplete="off"></label>
         <label>App type<select id="stories-runtime" aria-label="App type"><option value="">All app types</option></select></label>
         <label>Sort<select id="stories-sort" aria-label="Sort"><option value="modified">Recently updated</option><option value="title">Title A-Z</option></select></label>
@@ -476,6 +478,7 @@
   <script src="assets/js/classic-storymaps-config.js"></script>
   <script src="assets/js/arcgis-auth-helpers.js"></script>
   <script src="assets/js/classic-story-gallery.js"></script>
+  <script src="assets/js/classic-story-input.js"></script>
   <script>
     const CLASSIC_CONFIG = window.ClassicStoryMapsConfig || {};
     const apps = Array.isArray(CLASSIC_CONFIG.catalogApps) ? CLASSIC_CONFIG.catalogApps : [];
@@ -643,53 +646,43 @@
     }
 
     async function fetchArcgisItem(itemId, token) {
-      const params = new URLSearchParams();
-      params.set("f", "json");
-      if (token) {
-        params.set("token", token);
-      }
-
-      const response = await fetch("https://www.arcgis.com/sharing/rest/content/items/" + encodeURIComponent(itemId) + "?" + params.toString());
-      const json = await response.json();
-      return json;
+      return window.ClassicStoryGallery.createClient().json(new URL("https://www.arcgis.com/sharing/rest/content/items/" + encodeURIComponent(itemId) + "?f=json"), token);
     }
 
     async function handleOmniSubmit(evt) {
       evt.preventDefault();
 
-      const appId = normalizeId(omniInput.value);
-      if (!APP_ID_REGEX.test(appId)) {
-        setOmniStatus("App ID must be exactly 32 hexadecimal characters (a-f, 0-9).", "error");
-        omniInput.focus();
-        return;
-      }
-
+      const submitted = omniInput.value;
       setOmniStatus("Checking ArcGIS Online item...", "");
 
       const token = getStoredToken();
       let item;
+      let resolved;
+      const submit = omniForm.querySelector('button[type="submit"]');
+      submit.disabled = true;
       try {
-        item = await fetchArcgisItem(appId, token);
+        resolved = await window.ClassicStoryInput.resolve(submitted, { config: CLASSIC_CONFIG,
+          client: window.ClassicStoryGallery.createClient(), token });
+        item = await fetchArcgisItem(resolved.appId, token);
       } catch (error) {
-        setOmniStatus("Could not reach ArcGIS Online. Please try again.", "error");
-        return;
-      }
-
-      if (item && item.error) {
-        if (!token && item.error.code === 400) {
-          setOmniStatus("Item could be private or org-restricted. Log in and try again.", "error");
-          return;
+        if (token !== getStoredToken() || submitted !== omniInput.value) return;
+        if ([401, 498, 499].includes(error.code) && token) {
+          clearStoredToken();
+          setAuthUi(null);
+          setOmniStatus("Your session expired. Sign in again and retry.", "error");
+        } else if (error.code) {
+          setOmniStatus("Item was not found or is not accessible. Sign in if it is restricted.", "error");
+        } else {
+          setOmniStatus(error.message || "Could not reach ArcGIS Online. Please try again.", "error");
         }
-        if (token && (item.error.code === 498 || item.error.code === 499)) {
-          setOmniStatus("Session token expired. Please log in again.", "error");
-          return;
-        }
-        setOmniStatus("Item was not found or is not accessible.", "error");
         return;
+      } finally {
+        submit.disabled = false;
       }
+      if (token !== getStoredToken() || submitted !== omniInput.value) return;
 
       const runtime = classifyClassicRuntime(item);
-      if (!runtime) {
+      if (!runtime || item.type !== 'Web Mapping Application') {
         setOmniStatus("This item is not recognized as a Classic Story Map application.", "error");
         return;
       }
@@ -705,7 +698,9 @@
         return;
       }
 
-      const viewerUrl = viewerBase + "?appid=" + encodeURIComponent(appId);
+      const params = new URLSearchParams({ appid: resolved.appId });
+      if (resolved.webmap) params.set('webmap', resolved.webmap);
+      const viewerUrl = viewerBase + "?" + params.toString();
       setOmniStatus("Opening " + runtime + " viewer in a new tab...", "ok");
       window.open(viewerUrl, "_blank", "noopener,noreferrer");
     }

@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: All eight viewers reuse catalog sign-in locally; private-content owner acceptance and versioned release pending
+  phase: Gallery scope/sharing and URL input implemented locally; owner acceptance and versioned release pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,33 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Gallery scope, sharing and URL input implemented locally, 2026-10-26.**
+
+Signed-in users now start at My Content / Public. The gallery also supports
+My Organization and public-only ArcGIS Online, with Public, My Organization,
+and Private sharing choices. Private includes group-shared items. Organization
+searches allow accessible other-owner items returned by ArcGIS without a
+client-side role gate; Convert remains restricted to owned items. Signed-out
+browsing uses ArcGIS Online / Public instead of the curated launcher examples.
+
+The omni-input accepts IDs, explicit app-ID URLs and exact indexed Classic app
+URLs, plus verified aliases for the two supplied self-hosted examples. Web-map
+overrides survive; credentials and arbitrary parameters do not. This is not a
+general self-hosted configuration scraper. Unknown or ambiguous URLs require
+the app ID. The supplied Cascade item was inaccessible or absent anonymously;
+its actual authorized rendering remains unverified.
+
+All 148 Node tests passed under Node 24, and five isolated browser scenarios
+passed: three public-gallery widths, signed-in filter/session transitions, and
+URL routing. Screenshots were inspected at desktop and narrow-phone widths.
+Public service responses independently confirmed the two legacy app IDs and
+the Map Tour URL. Private access checks used synthetic sessions, not the owner's
+credentials; real permission and full story-rendering acceptance remain pending.
+Only catalog output was refreshed in the existing local preview. The transparent
+favicon hash, runtime outputs, OAuth registrations, account settings and production
+were preserved. No release, version bump or deployment was performed. See
+[session 0032](session-logs/2026-10-26-0032-session-log.md).
 
 **Catalog sign-in reuse implemented locally for all eight apps, 2026-10-26.**
 
