@@ -13,7 +13,7 @@ extra:
   agents: [claude, copilot-enterprise]
   legacy_basic: Two legacy Basic URL aliases recognized; Traffic Fatalities renders; Mussel services fail DNS; publication pending
   esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
-  code_scanning: Twelve inert-template alerts dismissed as owner-approved false positives; Map Series mobile title sanitized in source/release and browser-verified; 263 staged Node tests passed; broader review and publication pending
+  code_scanning: Twelve inert-template false-positive dismissals retained; CodeQL confirms Map Series mobile-title alert 48 fixed; 263 staged Node tests and native checks passed; 171 alerts remain; publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
@@ -90,8 +90,9 @@ from GitHub; no scanning rules or files were excluded.
 Map Series' separate live mobile-title insertion now uses a formatting-only
 sanitizer in source and the checksum-verified official release. Both native
 desktop/mobile cases passed hostile-title and menu checks, and 263 Node tests
-passed in the exact staged snapshot. Its next CodeQL result remains to be reconciled.
-Other rich-HTML sinks, library findings and URL checks remain open.
+passed in the exact staged snapshot. CodeQL marked mobile-title alert 48 fixed
+and retained all twelve dismissals. There are 171 open alerts, including a separate
+URL-fallback warning; other rich-HTML sinks, library findings and URL checks remain open.
 See [scope and evidence](docs/testing/code-scanning-remediation.md) and
 [session 0069](session-logs/2026-10-27-0069-session-log.md) with
 [follow-up 0070](session-logs/2026-10-27-0070-session-log.md) and

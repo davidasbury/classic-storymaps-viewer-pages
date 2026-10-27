@@ -1,6 +1,6 @@
 # Code-Scanning Remediation
 
-Verified: `2026-10-27 14:46:41-07:00[America/Los_Angeles]`.
+Verified: `2026-10-27 16:17:59-07:00[America/Los_Angeles]`.
 
 ## Scope
 
@@ -96,8 +96,14 @@ The exact staged snapshot subsequently passed all 263 discovered Node tests.
 An earlier shared-worktree run saw a concurrent Basic classification test failure;
 those unrelated edits were not repaired or reverted here. Full legacy source-build,
 private-content and all-layout acceptance remain unverified. Publication requires
-separate owner authorization; GitHub must analyze the implementation commit before
-alert 48 can be reported as fixed by the scanner.
+separate owner authorization.
+
+The [successful CodeQL run](https://github.com/davidasbury/classic-storymaps-viewer-pages/actions/runs/40600777169)
+for implementation commit `348ba0c5ddfda21bb7136e5fa4d840f1909ddb4c` marked alert 48
+fixed at `2026-10-27 16:17:59-07:00[America/Los_Angeles]`. All twelve reviewed
+dismissals remained in place. GitHub reported 171 open alerts, including the
+separate URL-fallback warning 198, which was not changed or dismissed here.
+No Pages deployment was recorded for the implementation commit.
 
 ## Map Tour Description Follow-Up
 
@@ -216,8 +222,8 @@ node scripts/validate-release-viewers-browser.mjs
 
 ## Remaining Work
 
-1. Reconcile GitHub's next CodeQL analysis with the mobile-title change and verify
-   the twelve scoped false-positive dismissals remain recorded. Do not use
+1. Continue reviewing remaining alerts, including URL-fallback warning 198.
+   Preserve the scope of the twelve false-positive dispositions; do not use
    source-only fixes as a substitute for delivered-code evidence.
 2. Trace remaining visitor DOM-XSS sinks, beginning with mobile titles and detail
    panels. Preserve intentional story formatting through an explicit safe policy.
