@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
   dependency_security: Compatible Dependabot fixes present in deployed 4a9b461; first visitor-code audit and Crowdsource jQuery 3.7.1 fix verified locally; other runtime advisories remain open
   media_credentials: Inherited provider defaults removed from source and isolated publication; upstream revocation and production publication pending
@@ -20,7 +21,7 @@ extra:
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: First visitor-code security pass verified; Crowdsource patch publication and remaining advisory reachability review pending
+  phase: General source-website fallback verified locally; publication and remaining security reachability review pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -29,6 +30,22 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Unavailable story references can show their source website across all viewers.**
+
+The shared error UI now offers a sandboxed HTTPS source iframe with a persistent
+direct link, including catalog input failures. Source metadata survives failed
+reference lookups; unsafe URLs are rejected and HTTP-only sources stay link-only.
+This is a general fallback, not a Shortlist or St. Albert exception. Sites may
+still refuse embedding, return errors or need capabilities excluded by the sandbox;
+no restrictions are bypassed and no source URL is invented for missing metadata.
+
+All 249 Node tests and 18 desktop/mobile browser cases passed across eight native
+viewers and the catalog, including blocked frames and direct opening. See
+[behavior and limits](docs/testing/story-pointer-resolution.md#source-website-fallback)
+and [session 0066](session-logs/2026-10-27-0066-session-log.md).
+The change is not deployed; existing previews, owner sessions and ArcGIS content
+were untouched. The unrelated broader visitor-code security audit remains open.
 
 **Visitor-code security has a verified first fix; the broader audit remains open.**
 

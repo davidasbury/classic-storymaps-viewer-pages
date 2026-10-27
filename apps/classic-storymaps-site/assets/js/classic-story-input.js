@@ -70,6 +70,12 @@
       try {
         return await options.client.json(url, options.token, options.signal, allowEmpty);
       } catch (error) {
+        if (sourceItem && sourceItem.url) {
+          try {
+            parse(sourceItem.url);
+            error.source = { id: sourceItem.id, url: sourceItem.url, access: sourceItem.access, webmap: input.webmap };
+          } catch (_) {}
+        }
         if (sourceItem && options.onSourceStatus && !(options.signal && options.signal.aborted)) {
           options.onSourceStatus(sourceItem, error.subscriptionInactive === true);
         }
@@ -91,6 +97,7 @@
         unavailable.messageCode = error.messageCode;
         unavailable.subscriptionInactive = error.subscriptionInactive === true;
         unavailable.referencedStory = true;
+        unavailable.source = error.source;
         throw unavailable;
       }
       if (!item || String(item.id).toLowerCase() !== input.appId || item.type !== 'Web Mapping Application') {

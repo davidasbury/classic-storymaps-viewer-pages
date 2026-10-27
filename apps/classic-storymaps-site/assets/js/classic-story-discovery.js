@@ -1,8 +1,14 @@
 (function() {
   'use strict';
   window.ClassicStoryDiscovery = { mount: function(container, source, options) {
+    var sourceUrl;
+    try {
+      window.ClassicStoryInput.parse(source.url);
+      sourceUrl = new URL(source.url);
+      if (sourceUrl.origin === window.location.origin) return function() {};
+    } catch (_) { return function() {}; }
     var section = document.createElement('section');
-    section.style.cssText = 'max-width:48rem;overflow-wrap:anywhere;margin:16px 0;';
+    section.style.cssText = 'width:100%;overflow-wrap:anywhere;margin:16px 0;';
     function link(text, href) {
       var anchor = document.createElement('a');
       anchor.textContent = text;
@@ -12,7 +18,16 @@
       anchor.style.cssText = 'display:block;margin:12px 0;';
       return anchor;
     }
-    section.appendChild(link('Open source website', source.url));
+    section.appendChild(link('Open source website', sourceUrl.href));
+    if (sourceUrl.protocol === 'https:') {
+      var frame = document.createElement('iframe');
+      frame.title = 'Source website';
+      frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox');
+      frame.referrerPolicy = 'no-referrer';
+      frame.style.cssText = 'display:block;box-sizing:border-box;width:100%;height:65vh;min-height:320px;border:1px solid #ccc;background:white;';
+      frame.src = sourceUrl.href;
+      section.appendChild(frame);
+    }
     container.appendChild(section);
     if (!window.ClassicStoryInput.archiveEndpoint(source, options)) return function() { section.remove(); };
     var consent = document.createElement('input');

@@ -48,6 +48,95 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('source-iframe')) {
+    for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic', 'catalog']) {
+      if (process.env.SOURCE_RUNTIME_FILTER && !process.env.SOURCE_RUNTIME_FILTER.split(',').includes(runtime)) continue;
+      for (const width of [1280, 390]) {
+        const { context, page, errors } = await observePage(width);
+        const result = { runtime, check: 'source-website-fallback', width };
+        results.push(result);
+        const itemId = 'b'.repeat(32);
+        const missingId = 'd'.repeat(32);
+        const source = 'https://source.example/original/' + (width === 390 ? '?appid=' + missingId : '');
+        const sourceRequests = [];
+        let blocked = false;
+        await context.route('**/*', route => {
+          const request = route.request();
+          const url = new URL(request.url());
+          if (!['GET', 'OPTIONS'].includes(request.method())) return route.abort();
+          if (url.origin === 'https://source.example') {
+            sourceRequests.push({ referer: request.headers().referer, authorization: request.headers().authorization, url: request.url() });
+            return route.fulfill({ contentType: 'text/html', headers: blocked ? { 'Content-Security-Policy': "frame-ancestors 'none'" } : {},
+              body: '<!doctype html><title>Original website</title><h1>Original recreation website</h1><button onclick="document.querySelector(\'h1\').textContent=\'Facilities directory\'">Facilities</button>' });
+          }
+          if (url.pathname.endsWith('/content/items/' + missingId)) return route.fulfill({ json: { error: { code: 403, message: 'Unavailable reference' } } });
+          if (url.pathname.endsWith('/content/items/' + itemId + '/data')) return route.fulfill({ json: {} });
+          if (url.pathname.endsWith('/content/items/' + itemId)) return route.fulfill({ json: {
+            id: itemId, title: 'Unavailable reference', type: 'Web Mapping Application', access: 'public', url: source, typeKeywords: [] } });
+          return route.continue();
+        });
+        try {
+          await page.goto(origin + basePath + '/viewers/' + (runtime === 'catalog' ? '' : runtime + '/?appid=' + itemId));
+          if (runtime === 'catalog') {
+            await page.locator('#omni-appid').fill(itemId);
+            await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+          } else await page.getByRole('heading', { name: 'Story unavailable', exact: true }).waitFor({ timeout: 60000 });
+          const frame = page.frameLocator('iframe[title="Source website"]');
+          await frame.getByRole('heading', { name: 'Original recreation website' }).waitFor();
+          await page.waitForLoadState('networkidle');
+          await frame.getByRole('button', { name: 'Facilities', exact: true }).click();
+          await frame.getByRole('heading', { name: 'Facilities directory' }).waitFor();
+          const iframe = page.locator('iframe[title="Source website"]');
+          assert.equal(await iframe.getAttribute('sandbox'), 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox');
+          assert.equal(await iframe.getAttribute('referrerpolicy'), 'no-referrer');
+          assert.equal(await iframe.evaluate(element => { const bounds = element.getBoundingClientRect(); return bounds.width > 200 && bounds.left >= 0 && bounds.right <= innerWidth; }), true);
+          assert.ok(sourceRequests.length > 0);
+          assert.ok(sourceRequests.every(request => !request.referer && !request.authorization && request.url === source));
+          await page.screenshot({ path: path.join(temporary, 'source-iframe-' + runtime + '-' + width + '.png') });
+          blocked = true;
+          const refused = page.waitForEvent('console', { predicate: message => /frame-ancestors/.test(message.text()), timeout: 15000 });
+          refused.catch(() => {});
+          await page.reload();
+          if (runtime === 'catalog') {
+            await page.locator('#omni-appid').fill(itemId);
+            await page.locator('#omni-form').evaluate(form => form.requestSubmit());
+          }
+          await refused;
+          const direct = page.getByRole('link', { name: 'Open source website', exact: true });
+          assert.equal(await direct.getAttribute('href'), source);
+          const opened = page.waitForEvent('popup');
+          await direct.click();
+          const website = await opened;
+          await website.getByRole('heading', { name: 'Original recreation website' }).waitFor();
+          assert.equal(await website.evaluate(() => window.opener), null);
+          await website.close();
+          const safety = await page.evaluate(() => {
+            const outcomes = [];
+            for (const url of ['javascript:alert(1)', 'https://user:password@source.example/', 'https://source.example/?token=hidden', 'https://source.example/#access_token=hidden', location.href, 'http://source.example/']) {
+              const container = document.createElement('div');
+              document.body.appendChild(container);
+              const cleanup = ClassicStoryDiscovery.mount(container, { url }, { config: ClassicStoryMapsConfig });
+              outcomes.push({ frames: container.querySelectorAll('iframe').length, links: container.querySelectorAll('a').length });
+              cleanup();
+              container.remove();
+            }
+            return outcomes;
+          });
+          assert.ok(safety.every(value => value.frames === 0));
+          assert.ok(safety.slice(0, 5).every(value => value.links === 0));
+          assert.equal(safety[5].links, 1);
+          if (runtime === 'catalog') {
+            await page.locator('#omni-appid').fill('changed');
+            assert.equal(await iframe.count(), 0);
+          }
+          result.pass = true;
+        } catch (error) { result.pass = false; result.failure = error.message; }
+        await context.close();
+        result.pageErrors = errors.filter(message => message.startsWith('page:'));
+        if (result.pageErrors.length) result.pass = false;
+      }
+    }
+  }
   if (selectedRuntimes.has('basemap-fallback') || selectedRuntimes.has('crowdsource-jquery')) {
     const mapId = '18af4863d44d45968360795e547cc5d1';
     const endpoint = 'https://www.arcgis.com/sharing/rest/content/items/' + mapId;

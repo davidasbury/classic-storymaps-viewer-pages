@@ -205,7 +205,27 @@ test('story references reject loops, unsafe URLs and inaccessible targets', asyn
     error.code = 403;
     throw error;
   };
-  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), error => error.code === 403 && /referenced story is unavailable/.test(error.message));
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config }), error => {
+    assert.equal(error.code, 403);
+    assert.equal(error.source.url, wrapper.url);
+    assert.equal(error.source.id, wrapper.id);
+    return /referenced story is unavailable/.test(error.message);
+  });
+});
+
+test('failed external item-data reads retain a validated source without forwarding credentials', async () => {
+  const wrapper = item(1, { url: 'https://source.example/original/' });
+  const client = { json: async url => {
+    if (url.pathname.endsWith('/data')) throw new Error('Source data unavailable');
+    return wrapper;
+  } };
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config: configuration(), token: 'synthetic-private-session' }), error => {
+    assert.equal(error.source.url, wrapper.url);
+    assert.equal(JSON.stringify(error.source).includes('synthetic-private-session'), false);
+    return true;
+  });
+  wrapper.url += '?token=synthetic-private-session';
+  await assert.rejects(input().resolveItem(wrapper.id, { client, config: configuration() }), error => !error.source && /credentials/.test(error.message));
 });
 
 test('pointer subscription errors retain their reason and report status against the source item', async () => {

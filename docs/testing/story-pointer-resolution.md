@@ -42,12 +42,55 @@ when the wrapper contained no story data.
   not an ownership transfer or converter change. Existing gallery links and
   direct native viewer URLs both benefit without modifying ArcGIS items.
 - Credentials stay in the authorization header on the fixed REST origin.
-  Pointer pages are not fetched or scraped. Credential-bearing, ambiguous and
+  During resolution, pointer pages are not fetched or scraped. Credential-bearing, ambiguous and
   invalid URLs are rejected. Only known local runtime routes are destinations.
 - An inaccessible target displays a readable error and a link back to Viewers.
   Initial protected-item access failures still permit the native SDK's normal
   sign-in path; pointer targets do not bypass their own access requirements.
   Catalog sign-out, expiry and replacement handling remain intact.
+
+## Source Website Fallback
+
+Verified at `2026-10-27 13:52:19-07:00[America/Los_Angeles]`; publication pending.
+
+The shared unavailable-story UI now embeds a known HTTPS source website in a
+sandboxed iframe and keeps an **Open source website** link above it. This applies
+to all eight native viewers and the catalog input, not to a particular story or
+format. Both unresolved empty external wrappers and unavailable referenced-item
+chains retain source metadata. An initial inaccessible item with no readable
+source URL cannot provide a source fallback. Healthy stories still use native
+rendering; initial authentication failures still use the native sign-in path.
+
+The existing URL parser rejects unsafe schemes, URL credentials and credential
+parameters before a link or frame is created. Same-origin sources are excluded
+to avoid recursive viewer embeds; HTTP-only sources remain link-only. No ArcGIS
+token is added to the source URL, and the iframe sends no referrer. Its sandbox
+allows scripts, forms and popups, but not same-origin access, top-level navigation,
+downloads or other unlisted capabilities. Catalog input changes remove the frame.
+Archive lookup still requires its separate existing consent and deployment policy.
+
+Embedding is best-effort, not a recovery proxy. External HTTP errors, frame
+restrictions and sandbox-incompatible storage or APIs are not bypassed. Cross-origin
+iframe load events cannot reliably establish successful rendering, so the direct
+link is always available rather than claiming automatic blocked-frame detection.
+The St. Albert example independently returned HTTP 404 and `X-Frame-Options:
+SAMEORIGIN`; an isolated Chrome frame was refused. No per-story workaround was added.
+
+All 249 Node tests and 18 browser cases passed: desktop/mobile coverage across
+eight native entry points plus the catalog, both pointer-error paths, interactive
+source content, CSP-refused embedding, direct opening without an opener, unsafe
+URL rejection, no forwarded authorization/referrer, responsive bounds and catalog
+cleanup. No page exceptions occurred in the final run. Screenshots were inspected.
+Initial Map Tour pointer clicks were intermittent before resources settled; a
+separate direct-pointer diagnostic worked and the test now waits for network idle.
+Source fixtures were local interceptions, not claims that arbitrary remote sites
+are embeddable. Existing tests cover unchanged resolver and authentication rules;
+full private-story acceptance was not repeated.
+
+Run `RUNTIME_FILTER=source-iframe` with the existing release-browser validator and
+a complete publication snapshot. `SOURCE_RUNTIME_FILTER` optionally selects one
+viewer or `catalog`. Shared previews, owner sessions, ArcGIS items and production
+were not changed. See [session 0066](../../session-logs/2026-10-27-0066-session-log.md).
 
 ## Verification
 
