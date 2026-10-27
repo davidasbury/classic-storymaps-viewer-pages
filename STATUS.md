@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
+  dependency_security: Four targeted Dependabot fixes verified; three major upgrades and remaining legacy advisories deferred; no deployment
   media_credentials: Inherited provider defaults removed from source and isolated publication; upstream revocation and production publication pending
   basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
   legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
@@ -27,6 +28,17 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Targeted dependency fixes preserve the served runtime artifacts.**
+
+Four overlapping Dependabot PRs were consolidated into compatible Cascade and
+Crowdsource updates. Clean installs, existing lint/Babel tasks, focused package
+checks and byte-identical staged runtime inventories passed. The ESLint/Babel/Sass
+major upgrades remain deferred because their legacy configurations are not
+compatible. Many other advisories and inherited full source-build gaps remain;
+this is not a clean security audit. See
+[the per-PR evidence and limits](docs/testing/dependency-security.md) and
+[session 0063](session-logs/2026-10-27-0063-session-log.md). No deployment was performed.
 
 **Inherited media defaults are removed locally; publication and upstream revocation remain pending.**
 
