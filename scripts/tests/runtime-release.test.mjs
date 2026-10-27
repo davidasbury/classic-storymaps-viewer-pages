@@ -68,24 +68,33 @@ test('Crowdsource authenticated editors cannot open the owner banner', async () 
   assert.match(readFileSync(path.join(repo, 'scripts/build-crowdsource-runtime.sh'), 'utf8'), /patch-runtime-edit-controls\.mjs" crowdsource/);
 });
 
-test('Cascade print release adapter wires both HTML sinks and CSS through security policy', async () => {
+test('Cascade print release adapter renders sanitized React children and CSS text without HTML sinks', async () => {
   const { patchCascadePrintBundle, secureCascadePrint } = await import('../../runtimes/cascade/patches/print-security.mjs');
-  const text = 'define("storymaps-react/tpl/print/media/Text",["module","exports","react"],function(e,t,n){var a={default:n};t.default={render:function(){var e=this.createMarkup(this.props.text);return a.default.createElement(this.props.tag,{dangerouslySetInnerHTML:e})}}})';
+  const text = 'define("storymaps-react/tpl/print/media/Text",["module","exports","react"],function(e,t,n){var a={default:n};t.default={render:function(){var e=this.createMarkup(this.props.text);return "figcaption"===this.props.tag?a.default.createElement("figcaption",{dangerouslySetInnerHTML:e}):a.default.createElement("div",{className:"text-block",dangerouslySetInnerHTML:e})}}})';
   const theme = 'define("storymaps-react/tpl/print/PrintViewReact",["module","exports","react","helper"],function(e,t,n,r,i,o,a,s,l,u,c){var g={default:n};t.default={renderCustomStyles:function(){},methods:[{key:"renderCustomStyles",value:function(){var t=[];return g.default.createElement("style",{dangerouslySetInnerHTML:{__html:t.join(" ")}})}},{key:"render",value:function(){}}]}})';
   const original = text + ',' + theme;
   const patched = patchCascadePrintBundle(original);
   const modules = new Map();
   vm.runInNewContext(patched, { define: (name, dependencies, factory) => modules.set(name, { dependencies, factory }) });
   const react = { createElement: (tag, props, children) => ({ tag, props, children }) };
-  const security = { sanitize: value => 'sanitized:' + value, themeStyles: () => 'body { color: black; }' };
+  const security = { toReact: (value, receivedReact) => {
+    assert.equal(receivedReact, react);
+    return [react.createElement('strong', null, value)];
+  }, themeStyles: () => 'body { color: black; }' };
   const textModule = modules.get('storymaps-react/tpl/print/media/Text');
   assert.equal(textModule.dependencies[3], 'storymaps/tpl/print/PrintSanitizer');
   const exports = {};
   textModule.factory({}, exports, react, security);
   for (const tag of ['div', 'figcaption']) {
     const rendered = exports.default.render.call({ props: { tag, text: 'sample' }, createMarkup: value => ({ __html: value }) });
-    assert.equal(rendered.props.dangerouslySetInnerHTML.__html, 'sanitized:sample');
+    assert.equal(rendered.tag, tag);
+    assert.equal(rendered.props?.dangerouslySetInnerHTML, undefined);
+    assert.deepEqual(rendered.children, [{ tag: 'strong', props: null, children: 'sample' }]);
   }
+  assert.doesNotMatch(patched, /dangerouslySetInnerHTML/);
+  const source = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/app/storymaps/tpl/print/media/Text.jsx'), 'utf8');
+  assert.doesNotMatch(source, /dangerouslySetInnerHTML/);
+  assert.match(source, /react\/no-danger: "error"/);
   const themeModule = modules.get('storymaps-react/tpl/print/PrintViewReact');
   assert.equal(themeModule.dependencies[3], 'storymaps/tpl/print/PrintSanitizer');
   themeModule.factory({}, exports, react, security);
@@ -106,6 +115,8 @@ test('Cascade print release adapter wires both HTML sinks and CSS through securi
     assert.throws(() => secureCascadePrint(temporary), /Unsupported Cascade print build source/);
     writeFileSync(path.join(temporary, 'BUILD_SOURCE'), 'grunt');
     secureCascadePrint(temporary);
+    writeFileSync(path.join(temporary, 'app/print-min.js'), patched.replace('null,e)', '{dangerouslySetInnerHTML:e})'));
+    assert.throws(() => secureCascadePrint(temporary), /Grunt output lacks Cascade print security/);
     const vendor = readFileSync(path.join(repo, 'runtimes/cascade/upstream/src/resources/dompurify/purify.min.js'), 'utf8');
     const generated = readFileSync(path.join(temporary, 'resources/dompurify/purify.min.js'), 'utf8');
     assert.ok(generated.includes(vendor + '\n'));

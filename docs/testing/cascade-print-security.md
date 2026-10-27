@@ -26,10 +26,47 @@ local release and independently downloaded live file:
 72069ea46e51f2e1e6915f2859a60377811f22f3be62c701892efca0ef45363d
 ```
 
+## React-Node Rendering Follow-Up
+
+Verified at `2026-10-26 23:53:06-07:00[America/Los_Angeles]`.
+The original sanitizer fix left two `react/no-danger` warnings because it still
+used HTML-injection properties. Those properties have now been removed from
+both the text-block and caption branches, including the actual release bundle.
+
+The existing DOMPurify policy returns a filtered DOM fragment directly to a
+React-node converter. Text becomes React text children; elements become
+`React.createElement` calls. Explicit mappings preserve classes, table spans,
+boolean list attributes and camel-cased style properties. Void elements receive
+no children. There is no sanitized-HTML serialization/reparse step.
+
+- Cascade's installed legacy ESLint reproduced the two original warnings at
+  lines 40 and 44 from the committed previous source. The changed Text and
+  PrintSanitizer files have zero lint errors and zero warnings. `react/no-danger`
+  is now an error for Text, not disabled or suppressed.
+- The release adapter requires both exact old render calls and transforms them
+  into React children. Its Grunt-output guard rejects either remaining HTML
+  sink. Unit checks verify both branches and the rejection behavior.
+- Source and release passed 72 unsafe-markup renders at 1280 and 390 pixels,
+  plus formatting/theme checks and new entity, whitespace, class, title,
+  direction, language, style, list, table-span, void-element and empty-input
+  checks. The React trees themselves contain no HTML-injection props. There
+  were no page exceptions or external requests in this scoped browser suite.
+- An independent comparison loaded the committed previous sanitized-HTML
+  component and policy alongside the new code in the actual bundled React.
+  Both branches at both widths had identical DOM semantics, computed styles,
+  element bounds and screenshot bytes for a representative formatted fixture.
+  React bookkeeping attributes were excluded from semantic comparison.
+- All 192 Node tests passed under Node 24, including release-fallback builds.
+  This follow-up did not rerun native private-story or print-dialog/PDF
+  acceptance. The shared preview and production were not changed.
+
+See `session-logs/2026-10-26-0049-session-log.md`.
+
 ## Implementation
 
-- Both source text/caption sinks sanitize after the existing print color
-  adjustment. The existing `react/no-danger` warning remains enabled.
+- Source text/caption content is sanitized after the existing print color
+  adjustment and rendered as React nodes. The HTML-injection properties are
+  absent; `react/no-danger` remains enforced as an error for this component.
 - Theme font families and background colors pass through the browser's CSS
   property parser. React renders the resulting stylesheet as text, not raw HTML.
 - `runtimes/cascade/patches/print-security.mjs` adapts the exact pinned release

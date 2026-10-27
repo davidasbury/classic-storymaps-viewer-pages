@@ -17,9 +17,9 @@ define(['resources/dompurify/purify.min'], function(DOMPurify) {
     return declaration.getPropertyValue(property);
   }
 
-  function sanitize(html) {
+  function sanitizeFragment(html) {
     if (typeof html !== 'string' || !html.trim()) {
-      return '';
+      return document.createDocumentFragment();
     }
     if (!DOMPurify || !DOMPurify.isSupported) {
       throw new Error('Cascade print requires a supported HTML sanitizer');
@@ -70,9 +70,43 @@ define(['resources/dompurify/purify.min'], function(DOMPurify) {
         element.setAttribute('rel', 'noopener noreferrer');
       }
     });
-    var container = document.createElement('div');
-    container.appendChild(fragment);
-    return container.innerHTML;
+    return fragment;
+  }
+
+  function toReact(html, React) {
+    var attributeNames = { 'class': 'className', colspan: 'colSpan', rowspan: 'rowSpan' };
+    function renderNode(node, index) {
+      if (node.nodeType === 3) {
+        return node.nodeValue;
+      }
+      if (node.nodeType !== 1) {
+        return null;
+      }
+      var props = { key: index };
+      Array.prototype.forEach.call(node.attributes, function(attribute) {
+        if (attribute.name === 'style') {
+          var style = {};
+          formattingProperties.forEach(function(property) {
+            var value = node.style.getPropertyValue(property);
+            if (value) {
+              var name = property.replace(/-([a-z])/g, function(match, letter) {
+                return letter.toUpperCase();
+              });
+              style[name] = value;
+            }
+          });
+          props.style = style;
+        }
+        else {
+          props[attributeNames[attribute.name] || attribute.name] = attribute.name === 'reversed' ? true : attribute.value;
+        }
+      });
+      if (!node.childNodes.length) {
+        return React.createElement(node.localName, props);
+      }
+      return React.createElement(node.localName, props, Array.prototype.map.call(node.childNodes, renderNode));
+    }
+    return Array.prototype.map.call(sanitizeFragment(html).childNodes, renderNode);
   }
 
   function themeStyles(settings, customBackground) {
@@ -94,5 +128,5 @@ define(['resources/dompurify/purify.min'], function(DOMPurify) {
     return styles.join(' ');
   }
 
-  return { sanitize: sanitize, themeStyles: themeStyles };
+  return { toReact: toReact, themeStyles: themeStyles };
 });

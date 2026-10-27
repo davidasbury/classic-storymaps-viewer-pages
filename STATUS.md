@@ -13,7 +13,7 @@ extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
-  phase: Owner editing controls disabled and Cascade print hardened; publication and remaining acceptance pending
+  phase: Cascade print uses React nodes and owner controls are disabled; publication and remaining acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -43,14 +43,23 @@ separate from this control-specific acceptance. See
 These changes are unpublished. The shared preview, signed-in browser sessions,
 ArcGIS content, Netlify and concurrent Map Tour work were not changed.
 
-**Cascade print hardened and runners pinned; not deployed, 2026-10-26.**
+**Cascade print HTML sinks removed and runners pinned; not deployed, 2026-10-26.**
 
 Both Pages jobs now select Ubuntu 24.04. Cascade print text and captions use
-pinned DOMPurify with a restrictive formatting policy, and theme styles use
-validated CSS text. A checksum-guarded adapter also secures the actual official
-release bundle; source-only edits would not have reached the shipped path.
-The existing HTML-sink warnings were not suppressed. License notices and a
-pre-publication Chromium regression gate are included.
+pinned DOMPurify with a restrictive formatting policy, then render the filtered
+DOM as React nodes. Theme styles use validated CSS text. A checksum-guarded
+adapter also updates the actual official release bundle; source-only edits
+would not have reached the shipped path. Both HTML-injection properties are
+removed, not suppressed. Legacy ESLint reproduces the old two warnings but
+reports zero errors/warnings for the changed component and policy. License
+notices and a pre-publication Chromium regression gate are included.
+
+The React-node follow-up passed all 192 Node tests and all 72 source/release
+unsafe-markup renders, plus expanded formatting/attribute checks. A separate
+old/new comparison produced identical DOM semantics, computed styles, bounds
+and screenshot bytes for text and captions at desktop/mobile widths. See
+[session 0049](session-logs/2026-10-26-0049-session-log.md). These changes remain
+unpublished; the shared preview and ArcGIS content were not changed.
 
 Source/release desktop/mobile checks passed 72 attack render cases plus
 formatting and theme tests; the original bundle failed the same control.

@@ -1,5 +1,5 @@
 /* eslint brace-style: 0 */
-/* eslint react/no-danger: "warn" */
+/* eslint react/no-danger: "error" */
 import React, { Component } from 'react';
 import PrintSanitizer from 'storymaps/tpl/print/PrintSanitizer';
 
@@ -7,13 +7,13 @@ class Text extends Component {
 
   createMarkup(html) {
     if (!html || !html.trim()) {
-      return {__html: ''};
+      return [];
     }
     // strip background colors, add text shadow for lighter colors
     let colorAdjusted = html.replace(/background-color: rgba?\([^;]*;/g, '').replace(/color: rgb\([^;]*/g, (color) => {
       return this.maybeAddTextShadow(color);
     });
-    return {__html: PrintSanitizer.sanitize(colorAdjusted)};
+    return PrintSanitizer.toReact(colorAdjusted, React);
   }
 
   maybeAddTextShadow(colorStr) {
@@ -37,11 +37,11 @@ class Text extends Component {
     const markup = this.createMarkup(this.props.text);
     if (this.props.tag === 'figcaption') {
       return (
-        <figcaption dangerouslySetInnerHTML={markup} />
+        <figcaption>{markup}</figcaption>
       );
     }
     return (
-      <div className="text-block" dangerouslySetInnerHTML={markup} />
+      <div className="text-block">{markup}</div>
     );
   }
 }

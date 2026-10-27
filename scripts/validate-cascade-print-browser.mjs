@@ -104,6 +104,15 @@ try {
       };
       const fixture = document.getElementById('fixture');
       const assert = (condition, message) => { if (!condition) throw new Error(message); };
+      const assertReactTree = node => {
+        if (Array.isArray(node)) {
+          node.forEach(assertReactTree);
+        } else if (node && typeof node === 'object') {
+          assert(React.isValidElement(node), 'Expected a React element');
+          assert(!Object.prototype.hasOwnProperty.call(node.props, 'dangerouslySetInnerHTML'), 'HTML injection prop remains');
+          assertReactTree(node.props.children);
+        }
+      };
       const attacks = [
         '<p onclick="window.__printProbe++">Event</p><img src="/missing.png" onerror="window.__printProbe++">',
         '<ScRiPt>window.__printProbe++</ScRiPt><script type="text/javascript">window.__printProbe++</script>',
@@ -116,6 +125,7 @@ try {
         '<math><mtext><table><mglyph><style><!--</style><img title="--><img src=x onerror=window.__printProbe++>">'
       ];
       const benign = '<h2>Formatted story</h2><p style="color: rgb(255,255,255);background-color: rgb(0,0,0);text-align:center"><strong>Bold</strong> <em>italic</em> <u>underline</u> H<sub>2</sub>O</p><ul><li>First</li><li>Second</li></ul><table><tbody><tr><th scope="col">Place</th><td colspan="2">Details</td></tr></tbody></table><a href="https://example.org/story" target="_blank">External</a> <a href="/relative">Relative</a> <a href="mailto:example@example.org">Email</a>';
+      const semantics = '<p class="story-copy" title="Quoted &quot;text&quot;" dir="rtl" lang="ar" style="font-family:Georgia;font-size:18px;font-weight:bold;line-height:1.5;letter-spacing:2px;white-space:pre-wrap">A &amp; B &lt;literal&gt; &#169;<br>Next</p><ol start="4" reversed type="A"><li>Four</li><li>Three</li></ol><table><tbody><tr><th rowspan="2" scope="row">Row</th><td>One</td></tr><tr><td>Two</td></tr></tbody></table><pre> first\n  second</pre><hr><img src="/resources/tpl/viewer/icons/esri-logo.png" alt="Example &amp; logo" width="80" height="40"><a href="tel:+15555550100">Phone</a>';
       const variants = [
         ['release', window.__getModule('storymaps-react/tpl/print/media/Text'), window.__getModule('storymaps-react/tpl/print/PrintViewReact')],
         ['source', sourceModule(sources['media/Text.jsx']), sourceModule(sources['PrintViewReact.jsx'])]
@@ -125,6 +135,7 @@ try {
       for (const [variant, Text, PrintView] of variants) {
         for (const tag of ['div', 'figcaption']) {
           for (const attack of attacks) {
+            assertReactTree(new Text({ text: attack, tag }).render());
             ReactDOM.render(React.createElement(Text, { text: attack, tag }), fixture);
             assert(!fixture.querySelector('script,svg,math,iframe,object,form,input,style'), variant + ' executable element');
             for (const element of fixture.querySelectorAll('*')) {
@@ -144,7 +155,27 @@ try {
           assert(fixture.querySelector('p').style.textAlign === 'center', variant + ' alignment lost');
           assert(fixture.firstElementChild.tagName === tag.toUpperCase(), variant + ' wrong container');
           benignOutputs.push(fixture.innerHTML);
-          results.push({ variant, tag, attackCases: attacks.length, formatting: true });
+          assertReactTree(new Text({ text: semantics, tag }).render());
+          ReactDOM.render(React.createElement(Text, { text: semantics, tag }), fixture);
+          const paragraph = fixture.querySelector('p');
+          assert(paragraph.className === 'story-copy' && paragraph.title === 'Quoted "text"', variant + ' class/title mapping lost');
+          assert(paragraph.dir === 'rtl' && paragraph.lang === 'ar', variant + ' language/direction lost');
+          assert(paragraph.textContent === 'A & B <literal> \u00a9Next', variant + ' text entities were reinterpreted');
+          assert(paragraph.style.fontFamily === 'Georgia' && paragraph.style.fontSize === '18px'
+            && paragraph.style.fontWeight === 'bold' && paragraph.style.lineHeight === '1.5'
+            && paragraph.style.letterSpacing === '2px' && paragraph.style.whiteSpace === 'pre-wrap', variant + ' CSS property mapping lost');
+          assert(fixture.querySelector('ol').start === 4 && fixture.querySelector('ol').reversed
+            && fixture.querySelector('ol').type === 'A', variant + ' list attributes lost');
+          assert(fixture.querySelector('th').rowSpan === 2 && fixture.querySelector('th').scope === 'row', variant + ' row span lost');
+          assert(fixture.querySelector('pre').textContent === ' first\n  second', variant + ' preformatted whitespace lost');
+          assert(fixture.querySelector('img').alt === 'Example & logo' && fixture.querySelector('img').width === 80
+            && fixture.querySelector('img').height === 40 && fixture.querySelectorAll('br,hr,img').length === 3, variant + ' void elements lost');
+          assert(fixture.querySelector('a').getAttribute('href') === 'tel:+15555550100', variant + ' phone link lost');
+          for (const text of ['', '   ', null, undefined]) {
+            ReactDOM.render(React.createElement(Text, { text, tag }), fixture);
+            assert(fixture.firstElementChild.textContent === '' && fixture.firstElementChild.childNodes.length === 0, variant + ' empty content handling');
+          }
+          results.push({ variant, tag, attackCases: attacks.length, formatting: true, reactChildren: true, semantics: true });
         }
         const settings = { theme: { fonts: { titleFont: { fontFamily: 'Georgia' }, bodyFont: { fontFamily: 'Arial' } }, colors: { bgMain: 'rgb(240, 240, 240)' } } };
         const view = new PrintView({ props: { appSettings: settings, printSettings: {} } });
@@ -159,7 +190,7 @@ try {
         assert(view.renderCustomStyles().props.children.includes('Georgia'), variant + ' missing body font failed');
       }
       assert(benignOutputs[0] === benignOutputs[2] && benignOutputs[1] === benignOutputs[3], 'Source/release formatting differs');
-      assert(sanitizer.sanitize('') === '' && sanitizer.sanitize(null) === '', 'Empty input handling');
+      assert(sanitizer.toReact('', React).length === 0 && sanitizer.toReact(null, React).length === 0, 'Empty input handling');
       const Text = variants[0][1];
       ReactDOM.render(React.createElement(Text, { text: benign, tag: 'div' }), fixture);
       return results;

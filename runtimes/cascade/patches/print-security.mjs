@@ -34,7 +34,11 @@ export function patchCascadePrintBundle(original) {
     if (name === 'media/Text') {
       module = replaceOnce(module, 'function(e,t,n){', 'function(e,t,n,classicPrintSecurity){');
       module = replaceOnce(module, 'var e=this.createMarkup(this.props.text);',
-        'var e=this.createMarkup(this.props.text);e.__html=classicPrintSecurity.sanitize(e.__html);');
+        'var e=classicPrintSecurity.toReact(this.createMarkup(this.props.text).__html,a.default);');
+      module = replaceOnce(module, 'a.default.createElement("figcaption",{dangerouslySetInnerHTML:e})',
+        'a.default.createElement("figcaption",null,e)');
+      module = replaceOnce(module, 'a.default.createElement("div",{className:"text-block",dangerouslySetInnerHTML:e})',
+        'a.default.createElement("div",{className:"text-block"},e)');
     } else {
       module = replaceOnce(module, 'function(e,t,n,r,i,o,a,s,l,u,c){',
         'function(e,t,n,classicPrintSecurity,r,i,o,a,s,l,u,c){');
@@ -62,11 +66,11 @@ export function secureCascadePrint(output) {
     if (digest(Buffer.from(bundle)) !== releaseHash) throw new Error('Unexpected Cascade release print checksum');
     bundle = patchCascadePrintBundle(bundle);
   } else if (source === 'grunt') {
-    for (const [name, method] of [['media/Text', 'sanitize'], ['PrintViewReact', 'themeStyles']]) {
+    for (const [name, method] of [['media/Text', 'toReact'], ['PrintViewReact', 'themeStyles']]) {
       const [start, end] = moduleRange(bundle, name);
       const module = bundle.slice(start, end);
       if (!module.includes(sanitizerId) || !module.includes('.' + method + '(')
-        || name === 'PrintViewReact' && module.includes('dangerouslySetInnerHTML')) {
+        || module.includes('dangerouslySetInnerHTML')) {
         throw new Error('Grunt output lacks Cascade print security: ' + name);
       }
     }
