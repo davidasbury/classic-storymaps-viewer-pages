@@ -18,7 +18,7 @@ execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyo
 const server = https.createServer({ key: await readFile(path.join(temporary, 'key.pem')), cert: await readFile(path.join(temporary, 'cert.pem')) }, createPreviewHandler({ root: publish, basePath }));
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const origin = 'https://127.0.0.1:' + server.address().port;
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || undefined });
 const results = [];
 const selectedRuntimes = new Set((process.env.RUNTIME_FILTER || 'crowdsource,shortlist,mapseries,cascade').split(','));
 async function observePage(width) {
@@ -32,6 +32,94 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
+  if (selectedRuntimes.has('auth')) {
+    for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
+      if (process.env.AUTH_RUNTIME_FILTER && !process.env.AUTH_RUNTIME_FILTER.split(',').includes(runtime)) continue;
+      for (const mode of ['anonymous', 'cookie-only', 'catalog']) {
+        const context = await browser.newContext({ ignoreHTTPSErrors: true });
+        const page = await context.newPage();
+        const signedIn = mode !== 'anonymous';
+        const result = { runtime, check: 'catalog-session', mode };
+        results.push(result);
+        const itemId = '0123456789abcdef0123456789abcdef';
+        const syntheticToken = 'synthetic-runtime-browser-session';
+        const itemRequests = [];
+        const requestPaths = new Set();
+        const startupErrors = [];
+        page.on('pageerror', error => startupErrors.push(error.message.replaceAll(syntheticToken, '[synthetic credential]')));
+        const portal = { id: 'synthetic-org', name: 'Synthetic organization', access: 'public',
+          portalHostname: 'www.arcgis.com', portalMode: 'multitenant', isPortal: false,
+          urlKey: 'www', customBaseUrl: 'arcgis.com', allSSL: true, helperServices: {},
+          defaultBasemap: { baseMapLayers: [] }, featuredGroups: [] };
+        await context.route('**/*', async route => {
+          const request = route.request();
+          const url = new URL(request.url());
+          requestPaths.add(url.origin + url.pathname);
+          if (url.origin === origin) {
+            if (mode === 'cookie-only' && url.pathname.endsWith('/arcgis-runtime-auth.js')) {
+              return route.fulfill({ contentType: 'application/javascript', body: 'define([], function() {});' });
+            }
+            return route.continue();
+          }
+          if (['https://js.arcgis.com', 'https://jsdev.arcgis.com'].includes(url.origin) && !url.searchParams.has('token')) return route.continue();
+          const params = new URLSearchParams(request.postData() || url.search);
+          if (url.origin === 'https://www.arcgis.com' && url.pathname.includes('/sharing/')) {
+            if (url.pathname.includes('/content/items/' + itemId)) {
+              const authenticated = params.get('token') === syntheticToken
+                || request.headers()['x-esri-authorization'] === 'Bearer ' + syntheticToken;
+              itemRequests.push(authenticated);
+              return route.fulfill({ json: authenticated
+                ? (url.pathname.endsWith('/data') ? {} : { id: itemId, owner: 'synthetic-owner',
+                    title: 'Synthetic private story', type: 'Web Mapping Application', access: 'private',
+                    typeKeywords: [runtime === 'maptour' ? 'Story Map Tour' : 'Story Map Shortlist'] })
+                : { error: { code: 499, message: 'Token required', details: [] } } });
+            }
+            return route.fulfill({ json: url.pathname.endsWith('/info')
+              ? { owningSystemUrl: 'https://www.arcgis.com', authInfo: { isTokenBasedSecurity: true,
+                  tokenServicesUrl: 'https://www.arcgis.com/sharing/rest/generateToken' } }
+              : portal });
+          }
+          return route.abort();
+        });
+        try {
+          if (signedIn) await context.addCookies([{ name: 'esri_auth', value: encodeURIComponent(JSON.stringify({
+            token: syntheticToken, expires: Date.now() + 600000, ssl: true
+          })), url: origin, secure: true, sameSite: 'Lax' }]);
+          const firstItem = page.waitForResponse(response => response.url().includes('/content/items/' + itemId), { timeout: 30000 });
+          firstItem.catch(() => {});
+          await page.goto(origin + basePath + '/viewers/' + runtime + '/?appid=' + itemId);
+          await firstItem;
+          assert.ok(itemRequests.length, 'Native runtime requested the synthetic private item');
+          if (mode === 'catalog') {
+            assert.ok(itemRequests.every(Boolean), 'Every private-item request uses the catalog credential');
+            assert.equal(await page.locator('.esriSignInDialog:visible').count(), 0);
+            const reload = page.waitForNavigation();
+            const requestsBeforeSignOut = itemRequests.length;
+            const signedOutItem = page.waitForResponse(response => response.url().includes('/content/items/' + itemId)
+              && itemRequests.length > requestsBeforeSignOut, { timeout: 30000 });
+            signedOutItem.catch(() => {});
+            await context.clearCookies();
+            await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+            await reload;
+            await signedOutItem;
+            assert.ok(itemRequests.slice(requestsBeforeSignOut).every(value => !value));
+            assert.equal(await page.evaluate(() => sessionStorage.getItem('arcgis_access_token')), null);
+          } else {
+            assert.ok(itemRequests.every(value => !value));
+          }
+          result.pass = true;
+          result.itemRequests = itemRequests.length;
+        } catch (error) {
+          result.pass = false;
+          result.failure = error.message.replaceAll(syntheticToken, '[synthetic credential]');
+          result.startupErrors = startupErrors;
+          result.requestPaths = [...requestPaths].filter(value => !value.startsWith('https://js.arcgis.com/')).slice(-20);
+        } finally {
+          await context.close();
+        }
+      }
+    }
+  }
   if (selectedRuntimes.has('launchers')) {
     for (const width of [1440, 390, 320]) {
       const { context, page, errors } = await observePage(width);

@@ -52,7 +52,32 @@
       : null;
   }
 
-  const helpers = { TOKEN_EXPIRATION_MINUTES, buildAuthorizeUrl, buildEsriAuthCookie, parseAuthReturn };
+  function readCatalogCredential(cookies, now = Date.now()) {
+    try {
+      const match = String(cookies || '').match(/(?:^|;\s*)esri_auth=([^;]+)/);
+      if (!match) return null;
+      const session = JSON.parse(decodeURIComponent(match[1]));
+      if (!session || typeof session.token !== 'string' || !session.token
+        || !Number.isSafeInteger(session.expires) || session.expires <= now) return null;
+      return { server: 'https://www.arcgis.com/sharing/rest',
+        token: session.token, expires: session.expires, ssl: true };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function registerCatalogCredential(identity, cookies, now = Date.now()) {
+    const credential = readCatalogCredential(cookies, now);
+    if (!credential) return false;
+    try {
+      identity.registerToken(credential);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  const helpers = { TOKEN_EXPIRATION_MINUTES, buildAuthorizeUrl, buildEsriAuthCookie, parseAuthReturn, readCatalogCredential, registerCatalogCredential };
   if (typeof window !== "undefined") {
     window.ClassicArcgisAuthHelpers = helpers;
   }

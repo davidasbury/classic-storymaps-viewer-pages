@@ -102,11 +102,14 @@ sanitize_runtime_publish() {
 mkdir -p "$PUBLISH_ROOT"
 mkdir -p "$PUBLISH_ROOT/assets/js"
 cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/social-link-policy.js" "$PUBLISH_ROOT/assets/js/social-link-policy.js"
+cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/arcgis-auth-helpers.js" "$PUBLISH_ROOT/assets/js/arcgis-auth-helpers.js"
+cp "$SCRIPT_DIR/../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js" "$PUBLISH_ROOT/assets/js/arcgis-runtime-auth.js"
 
 for runtime_name in "${runtime_names[@]}"; do
   require_runtime_build "$runtime_name"
   copy_runtime_build "$runtime_name"
   sanitize_runtime_publish "$runtime_name"
+  node "$SCRIPT_DIR/stage-runtime-auth.mjs" "$runtime_name" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/apply-site-base-path.mjs" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/stage-runtime-notices.mjs" "$runtime_name" "$PUBLISH_ROOT/$runtime_name"
   node "$SCRIPT_DIR/stage-site-favicons.mjs" "$PUBLISH_ROOT/$runtime_name"

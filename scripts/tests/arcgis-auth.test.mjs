@@ -66,6 +66,61 @@ test('login requests a 120-minute token', () => {
   assert.equal(authorizeUrl.searchParams.get('redirect_uri'), context.AUTH_CONFIG.redirectUri);
 });
 
+test('a new runtime tab registers a valid catalog cookie with the SDK', () => {
+  const { registerCatalogCredential } = require(helperUrl.pathname);
+  const registered = [];
+  const identity = { registerToken: credential => registered.push(credential) };
+  const expires = Date.now() + 60000;
+  const cookie = 'esri_auth=' + encodeURIComponent(JSON.stringify({ token: 'synthetic-catalog-session', expires, ssl: true }));
+  assert.equal(registerCatalogCredential(identity, cookie), true);
+  assert.deepEqual(registered, [{ server: 'https://www.arcgis.com/sharing/rest', token: 'synthetic-catalog-session', expires, ssl: true }]);
+});
+
+test('runtime registration rejects absent, expired and malformed catalog cookies', () => {
+  const { registerCatalogCredential } = require(helperUrl.pathname);
+  const identity = { registerToken: () => assert.fail('Invalid cookie registered') };
+  for (const cookie of ['', 'esri_auth=%', 'esri_auth=' + encodeURIComponent(JSON.stringify({ token: 'synthetic-expired', expires: Date.now() - 1 })),
+    'esri_auth=' + encodeURIComponent(JSON.stringify({ token: 'synthetic-no-expiry' }))]) {
+    assert.equal(registerCatalogCredential(identity, cookie), false);
+  }
+});
+
+for (const change of ['sign-out', 'expiry', 'replacement']) {
+  test('an open runtime clears inherited credentials on catalog ' + change, () => {
+    const helpers = require(helperUrl.pathname);
+    const cookie = token => 'esri_auth=' + encodeURIComponent(JSON.stringify({ token, expires: Date.now() + 60000 }));
+    const events = new Map();
+    const document = { cookie: cookie('synthetic-runtime-session'),
+      addEventListener: (name, callback) => events.set(name, callback), removeEventListener: name => events.delete(name) };
+    let registered = 0;
+    let cleared = 0;
+    let reloaded = 0;
+    let poll;
+    const context = {
+      document,
+      define: (dependencies, factory) => {
+        assert.deepEqual(Array.from(dependencies), ['esri/IdentityManager']);
+        factory({ registerToken: () => { registered++; }, destroyCredentials: () => { cleared++; } });
+      },
+      window: { ClassicArcgisAuthHelpers: helpers, location: { reload: () => { reloaded++; } },
+        setInterval: callback => { poll = callback; return 1; }, clearInterval: id => assert.equal(id, 1),
+        addEventListener: (name, callback) => events.set(name, callback), removeEventListener: name => events.delete(name) }
+    };
+    vm.runInNewContext(readFileSync(new URL('../../apps/classic-storymaps-site/assets/js/arcgis-runtime-auth.js', import.meta.url), 'utf8'), context);
+    assert.equal(registered, 1);
+    poll();
+    assert.equal(cleared, 0);
+    document.cookie = change === 'sign-out' ? '' : change === 'replacement' ? cookie('synthetic-replacement')
+      : 'esri_auth=' + encodeURIComponent(JSON.stringify({ token: 'synthetic-runtime-session', expires: Date.now() - 1 }));
+    events.get('focus')();
+    assert.equal(cleared, 1);
+    assert.equal(reloaded, 1);
+    assert.equal(events.size, 0);
+    assert.equal(helpers.registerCatalogCredential({ registerToken: () => { registered++; } }, document.cookie), change === 'replacement');
+    assert.equal(registered, change === 'replacement' ? 2 : 1);
+  });
+}
+
 test('OAuth return reads expires_in with the token', () => {
   const context = authContext();
   context.sessionStorage.setItem(context.AUTH_STATE_KEY, JSON.stringify(pendingState));

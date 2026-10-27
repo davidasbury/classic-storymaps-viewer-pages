@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Viewer cutover accepted; registry owner updated; owner-directed converter/viewer linking next
+  phase: All eight viewers reuse catalog sign-in locally; private-content owner acceptance and versioned release pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,27 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Catalog sign-in reuse implemented locally for all eight apps, 2026-10-26.**
+
+At David's request, runtime startup now registers the valid catalog session with
+the ArcGIS IdentityManager before loading content. This applies to Map Tour,
+Swipe, Journal, Series, Cascade, Shortlist, Crowdsource and Basic. The existing
+cookie alone did not authenticate native item requests in isolated controls;
+registration removed that gap. Credentials are scoped to the fixed HTTPS ArcGIS
+Online sharing endpoint, never added to story navigation URLs. Malformed or
+expired cookies are rejected. An open runtime clears inherited SDK credentials
+and reloads when the catalog cookie is removed, expires or changes.
+
+All 145 Node tests passed under Node 24. All 48 isolated native-browser auth
+cases passed across root and prefixed deployment paths, including cookie-only
+controls, authenticated private-item requests and loss of access after sign-out.
+These used synthetic credentials and intercepted responses, not owner sessions
+or a full private-story rendering certification. The existing local preview now
+includes the fix for all apps; owner acceptance with actual private stories is
+pending. Upstream sources, OAuth registrations, account settings and production
+remain unchanged. No version bump or deployment was performed. See
+[session 0031](session-logs/2026-10-26-0031-session-log.md).
 
 **Edited tab favicon preserved in source, 2026-10-26.**
 
@@ -46,7 +67,7 @@ See [session 0030](session-logs/2026-10-26-0030-session-log.md).
 - The owner approved the restored post-transfer comparison, retained `dasbury-esri` write access and confirmed no destination GitHub Apps. Secret scanning and push protection initially became disabled after transfer; the owner restored both and the agent independently verified restoration before binding. Branches, visibility and the remaining captured controls were preserved.
 - Accepted deployment: run `40416446662`, source `cc5af80ba15216dad86ed2d982e3d670cd51cdb4`, a verified documentation-only descendant of approved `1ce19fd6532950b8333e49da4eca7cd009ed9195`. All 139 tests and 68 published-link checks passed. The Pages-specific deployment API returned `succeed`; the downloaded artifact matched GitHub's SHA-256, and twelve sampled live files matched the artifact byte-for-byte, including the disabled conversion configuration. This is sampled byte verification, not a whole-site equality claim.
 - Pages binds `classicstorymaps.com`, uses GitHub Actions and enforces HTTPS. `SITE_BASE_PATH` was removed before the build; the workflow log confirms its empty value. Both authoritative nameservers and a public resolver matched the approved DNS records, so no DNS change was required. HTTPS and `www` redirects preserved the tested path and query. The old GitHub Pages root and catalog returned 404; saved links to those addresses require updating.
-- The owner reported successful catalog sign-in/return/sign-out at both `/viewers/` and `/viewers/index.html`, visual checks for all eight runtimes, private-content rendering, and loss of private access after sign-out and reload. These are owner-observed results, not agent-authenticated browser tests. The second sign-in remains a deferred issue with no established cause; previously accepted conditional OAuth limitations remain unchanged.
+- The owner reported successful catalog sign-in/return/sign-out at both `/viewers/` and `/viewers/index.html`, visual checks for all eight runtimes, private-content rendering, and loss of private access after sign-out and reload. These are owner-observed results, not agent-authenticated browser tests. The later local session-reuse fix is described above; hosted behavior and previously accepted conditional OAuth limitations remain unchanged pending release.
 - At `2026-10-26 16:13:55-07:00[America/Los_Angeles]`, remote `main`, the successful run and Pages deployment still matched the accepted SHA, all five outstanding queue counts were zero, and published conversion integration was disabled. The owner subsequently accepted the cutover and authorized documentation-only `[skip ci]` commits/pushes, canonical-link updates and this clone's remote update. No application changes, new deployment, directory move, cleanup or restricted registry access were authorized.
 - The existing viewer registry entry now records the destination owner. David set the project to active, green, priority 2, with next action "link converter and viewer pages". Other-clone updates remain a separate handoff. This tracking update does not implement linking or authorize deployment; retained-content rights and new-release gates remain in force. Preserve recovery packages, the validation branch, deploy key, old callbacks and destination verification TXT.
 

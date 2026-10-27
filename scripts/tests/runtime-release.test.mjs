@@ -285,6 +285,12 @@ test('Crowdsource release patches are exact, view-only, and published with one b
       const buildPath = path.join(temporary, 'runtimes', runtime, 'build');
       mkdirSync(buildPath, { recursive: true });
       writeFileSync(path.join(buildPath, 'index.html'), '<!doctype html>\n<html>\n<head>\n</head><body></body></html>');
+      if (runtime === 'basic') {
+        writeFileSync(path.join(buildPath, 'index.html'), '<!doctype html>\n<html>\n<head>\n</head><body><script>require([], function() {});</script></body></html>');
+      } else {
+        mkdirSync(path.join(buildPath, 'app'), { recursive: true });
+        writeFileSync(path.join(buildPath, 'app/main-app.js'), 'require([], function() {});');
+      }
     }
     const publish = spawnSync('bash', [path.join(repo, 'scripts/build-classic-storymaps-runtime-publish.sh')], {
       cwd: temporary, env: { ...process.env, PUBLISH_ROOT: path.join(temporary, 'publish/viewers') }, encoding: 'utf8'

@@ -42,6 +42,14 @@ before(() => {
     writeFileSync(path.join(build, 'index.html'), '<!doctype html><html><head></head><body><img src="/viewers/' + runtime + '/image.png"></body></html>');
     writeFileSync(path.join(build, 'image.png'), 'fixture');
     writeFileSync(path.join(build, 'BUILD_SOURCE'), runtime === 'crowdsource' ? 'release:0.10.0\n' : 'grunt\n');
+    if (runtime === 'basic') {
+      writeFileSync(path.join(build, 'index.html'), '<!doctype html><html><head></head><body><script>require(["synthetic-dependency"], function(originalArgument) { window.started = originalArgument; });</script></body></html>');
+    } else {
+      mkdirSync(path.join(build, 'app'), { recursive: true });
+      const startup = runtime === 'crowdsource' ? '"dojo/_base/kernel"' : '"synthetic-dependency"';
+      const preload = runtime === 'cascade' ? 'if (false) { require(["Handlebars"], function() {}); }\n' : '';
+      writeFileSync(path.join(build, runtime === 'crowdsource' ? 'app/main-app.min.js' : 'app/main-app.js'), preload + 'require([' + startup + '], function(originalArgument) { window.started = originalArgument; });');
+    }
     if (runtime === 'shortlist') {
       mkdirSync(path.join(build, 'resources/tpl/builder/icons'), { recursive: true });
       writeFileSync(path.join(build, 'resources/tpl/builder/icons/builder-help.png'), 'shared viewer icon');
@@ -62,6 +70,28 @@ function htmlFiles(directory) {
     return entry.isDirectory() ? htmlFiles(file) : entry.name.endsWith('.html') ? [file] : [];
   });
 }
+
+test('private-story runtimes wait for catalog credential registration before startup', () => {
+  for (const runtime of runtimes) {
+    const directory = path.join(publish, 'viewers', runtime);
+    const mainFile = path.join(directory, runtime === 'basic' ? 'index.html'
+      : runtime === 'crowdsource' ? 'app/main-app.min.js' : 'app/main-app.js');
+    const original = readFileSync(mainFile, 'utf8');
+    assert.ok(original.includes(`${base}/viewers/assets/js/arcgis-runtime-auth.js`));
+    assert.ok(readFileSync(path.join(directory, 'index.html'), 'utf8').includes(`${base}/viewers/assets/js/arcgis-auth-helpers.js`));
+    execFileSync(process.execPath, [path.join(repo, 'scripts/stage-runtime-auth.mjs'), runtime, directory], { env: { ...process.env, SITE_BASE_PATH: base } });
+    assert.equal(readFileSync(mainFile, 'utf8'), original);
+    if (!process.env.PUBLISH_CHECK_ROOT) {
+      const context = { window: {}, require(dependencies, callback) {
+        assert.deepEqual(Array.from(dependencies), [runtime === 'crowdsource' ? 'dojo/_base/kernel' : 'synthetic-dependency', `${base}/viewers/assets/js/arcgis-runtime-auth.js`]);
+        callback('original-value');
+      } };
+      const script = runtime === 'basic' ? original.match(/<script>([\s\S]*?)<\/script>/)[1] : original;
+      vm.runInNewContext(script, context);
+      assert.equal(context.window.started, 'original-value');
+    }
+  }
+});
 
 test('published HTML links stay under the base path and resolve on disk', () => {
   const failures = [];
