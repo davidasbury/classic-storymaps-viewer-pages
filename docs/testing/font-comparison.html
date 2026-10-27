@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classic Story Maps | Icon comparison</title>
+  <style>
+    @font-face { font-family: TailcoatBefore; src: url('../../apps/classic-storymaps-site/assets/fonts/tailcoat/tailcoat.woff') format('woff'); }
+    @font-face { font-family: BasicBefore; src: url('../../runtimes/basic/upstream/font/social.woff') format('woff'); }
+    @font-face { font-family: FontAwesomeAfter; src: url('../../runtimes/maptour/upstream/MapTour/src/resources/icons/font-awesome-4.7.0/fonts/fontawesome-webfont.woff') format('woff'); }
+    :root { --ink: #263b38; --muted: #596966; --line: #d7dfdc; --accent: #006b58; --size: 24px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: #f7faf9; font: 16px/1.5 Georgia, serif; letter-spacing: 0; }
+    header { padding: 28px max(20px, calc((100% - 1040px) / 2)); border-bottom: 1px solid var(--line); background: #fff; }
+    h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; }
+    h2 { font-size: 23px; margin: 28px 0 14px; }
+    h3 { font-size: 17px; margin: 0 0 12px; }
+    p { margin: 6px 0; }
+    main { max-width: 1080px; padding: 0 20px 36px; margin: auto; }
+    .status { color: #854229; font: 14px/1.5 Verdana, sans-serif; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--line); font: 14px Verdana, sans-serif; }
+    input { accent-color: var(--accent); max-width: 100%; }
+    output { min-width: 44px; }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .sample { padding: 18px 0; border-top: 3px solid #9a6a55; min-width: 0; }
+    .sample.after { border-color: var(--accent); }
+    .menu { display: grid; gap: 4px; background: #fff; border: 1px solid var(--line); padding: 12px; }
+    .menu-item { display: flex; gap: 12px; align-items: center; min-height: 40px; font: 15px Verdana, sans-serif; }
+    .icon { display: inline-flex; align-items: center; justify-content: center; font-size: var(--size); font-weight: normal; font-style: normal; line-height: 1; width: 48px; height: 48px; flex-shrink: 0; }
+    .tailcoat { font-family: TailcoatBefore; }
+    .basic { font-family: BasicBefore; }
+    .replacement { font-family: FontAwesomeAfter; }
+    .basic-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--line); padding: 10px; }
+    .legend { margin-top: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; background: #e7efec; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: center; overflow-wrap: anywhere; }
+    th { font: bold 13px/1.4 Verdana, sans-serif; color: var(--muted); background: #edf3f0; }
+    th:first-child, td:first-child { width: 44%; text-align: left; }
+    td:first-child { font: 14px/1.5 Verdana, sans-serif; }
+    small { display: block; color: var(--muted); font-size: 11px; }
+    footer { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 30px; font-size: 14px; }
+    a { color: var(--accent); }
+    @media (max-width: 540px) { h1 { font-size: 25px; } .pair { gap: 12px; } .menu { padding: 6px; } .menu-item { gap: 2px; font-size: 12px; } .icon { width: 40px; height: 44px; } th, td { padding: 8px 5px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Classic Story Maps icon review</h1>
+    <p>Current fonts / Font Awesome 4.7</p>
+    <p class="status">Proposal only. No shipped fonts have been replaced.</p>
+  </header>
+  <main>
+    <div class="toolbar"><label for="size">Icon size</label><input id="size" type="range" min="16" max="40" value="24" step="2"><output for="size" id="size-value">24 px</output></div>
+    <h2>Archive navigation</h2>
+    <div class="pair" id="navigation"></div>
+    <h2>Basic sharing and legend</h2>
+    <div class="pair" id="basic-controls"></div>
+    <h2>Archive icon set</h2>
+    <table aria-label="Archive icon comparison"><thead><tr><th>Use / CSS class</th><th>Before<br>Tailcoat</th><th>After<br>Font Awesome</th></tr></thead><tbody id="archive-rows"></tbody></table>
+    <h2>Basic icon set</h2>
+    <table aria-label="Basic icon comparison"><thead><tr><th>Use</th><th>Before<br>Fontello</th><th>After<br>Font Awesome</th></tr></thead><tbody id="basic-rows"></tbody></table>
+    <footer>
+      <p>Archive samples cover the 28 icon classes found in the archive root and 64 captured HTML pages. Basic samples cover all five social-font glyphs. Grouped controls are isolated specimens, not screenshots of a modified application.</p>
+      <p>CSS-generated states, dynamic content, brand treatment and runtime accessibility still require validation before replacement. Body-text fonts are unchanged.</p>
+      <p><a href="https://fontawesome.com/v4/license/">Font Awesome 4.7: SIL OFL 1.1 font license</a>. Preserve the license and copyright notices; brand marks remain subject to their owners' trademark rights. Existing-font provenance remains unresolved.</p>
+    </footer>
+  </main>
+  <script>
+    const archive = [
+      ['Apps', 'stack', 'e017', 'clone', 'f24d'],
+      ['Viewers', 'grid', '45', 'th', 'f00a'],
+      ['Resources', 'support', '35', 'life-ring', 'f1cd'],
+      ['Blog / community', 'community', 'e00e', 'comments', 'f086'],
+      ['FAQs / map', 'map', 'e013', 'map-o', 'f278'],
+      ['Mobile menu', 'navigation', 'e603', 'bars', 'f0c9'],
+      ['Account', 'user', '5f', 'user', 'f007'],
+      ['Twitter', 'twitter', '64', 'twitter', 'f099'],
+      ['Facebook', 'facebook', '6f', 'facebook', 'f09a'],
+      ['GitHub', 'github', 'f00a', 'github', 'f09b'],
+      ['Email', 'email', '38', 'envelope', 'f0e0'],
+      ['Comment', 'comment', '25', 'comment', 'f075'],
+      ['Back to top', 'arrow-up', 'e01b', 'arrow-up', 'f062'],
+      ['Organization', 'building', '43', 'building-o', 'f0f7'],
+      ['Close / cancel', 'cancel', '6b', 'times', 'f00d'],
+      ['Find', 'find', '42', 'binoculars', 'f1e5'],
+      ['Alternate grid', 'grid-alt', 'e012', 'th-large', 'f009'],
+      ['Help', 'help', '46', 'question-circle', 'f059'],
+      ['Key', 'key', '7e', 'key', 'f084'],
+      ['Previous', 'left-arrow', '73', 'arrow-left', 'f060'],
+      ['Idea / tip', 'light-bulb', 'e003', 'lightbulb-o', 'f0eb'],
+      ['Map trail', 'map-trail', '59', 'map-signs', 'f277'],
+      ['Open book', 'open-book', '7b', 'book', 'f02d'],
+      ['Next', 'right-arrow', '74', 'arrow-right', 'f061'],
+      ['Search', 'search', '2b', 'search', 'f002'],
+      ['Settings', 'settings-2', '36', 'cog', 'f013'],
+      ['Storage', 'storage', 'e004', 'database', 'f1c0'],
+      ['Video', 'video', 'e014', 'video-camera', 'f03d']
+    ];
+    const basic = [
+      ['Facebook', 'facebook', 'e800', 'facebook-square', 'f082'],
+      ['Twitter', 'twitter', 'e801', 'twitter', 'f099'],
+      ['Share link', 'link', 'e802', 'link', 'f0c1'],
+      ['Collapse legend', 'up', 'e803', 'chevron-up', 'f077'],
+      ['Expand legend', 'down', 'e804', 'chevron-down', 'f078']
+    ];
+    function glyph(code, family, label) {
+      const element = document.createElement('span');
+      element.className = 'icon ' + family;
+      element.textContent = String.fromCodePoint(parseInt(code, 16));
+      element.setAttribute('aria-hidden', 'true');
+      element.title = label;
+      return element;
+    }
+    function renderRows(rows, target, family) {
+      for (const [label, original, before, replacement, after] of rows) {
+        const row = document.createElement('tr');
+        const name = document.createElement('td');
+        name.textContent = label;
+        const detail = document.createElement('small');
+        detail.textContent = 'icon-' + original + ' / fa-' + replacement;
+        name.append(detail);
+        const left = document.createElement('td');
+        left.append(glyph(before, family, label));
+        const right = document.createElement('td');
+        right.append(glyph(after, 'replacement', label));
+        row.append(name, left, right);
+        document.getElementById(target).append(row);
+      }
+    }
+    for (const after of [false, true]) {
+      const panel = document.createElement('section');
+      panel.className = 'sample' + (after ? ' after' : '');
+      const title = document.createElement('h3');
+      title.textContent = after ? 'After: Font Awesome' : 'Before: Tailcoat';
+      const menu = document.createElement('div');
+      menu.className = 'menu';
+      for (const row of archive.slice(0, 6)) {
+        const item = document.createElement('div');
+        item.className = 'menu-item';
+        item.append(glyph(row[after ? 4 : 2], after ? 'replacement' : 'tailcoat', row[0]), document.createTextNode(row[0].split(' / ')[0]));
+        menu.append(item);
+      }
+      panel.append(title, menu);
+      document.getElementById('navigation').append(panel);
+      const basicPanel = document.createElement('section');
+      basicPanel.className = panel.className;
+      const basicTitle = document.createElement('h3');
+      basicTitle.textContent = after ? 'After: Font Awesome' : 'Before: Fontello';
+      const bar = document.createElement('div');
+      bar.className = 'basic-bar';
+      for (const row of basic.slice(0, 3)) bar.append(glyph(row[after ? 4 : 2], after ? 'replacement' : 'basic', row[0]));
+      const legend = document.createElement('div');
+      legend.className = 'legend';
+      legend.append(document.createTextNode('Legend'), glyph(basic[4][after ? 4 : 2], after ? 'replacement' : 'basic', 'Expand legend'));
+      basicPanel.append(basicTitle, bar, legend);
+      document.getElementById('basic-controls').append(basicPanel);
+    }
+    renderRows(archive, 'archive-rows', 'tailcoat');
+    renderRows(basic, 'basic-rows', 'basic');
+    document.getElementById('size').addEventListener('input', event => {
+      document.documentElement.style.setProperty('--size', event.target.value + 'px');
+      document.getElementById('size-value').textContent = event.target.value + ' px';
+    });
+  </script>
+</body>
+</html>

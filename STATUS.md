@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Viewer technical preflight passed; retained-content decisions, attribution and owner acceptance pending
+  phase: Archive image retention accepted; font comparison ready; font approval, attribution and owner acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,26 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Archive images retained by owner decision; font comparison ready, 2026-10-26.**
+
+David approved retaining unresolved archive images under their existing
+archive/runtime basis unless specifically flagged. The exact inventory selector
+and hashes are recorded in [transfer decisions](.github/prompts/transfer-decisions.prompt.md#image-decision-recorded-2026-10-26):
+663 image paths / 647 distinct contents, with 245 paths / 230 distinct contents
+matching the tested release artifact. This is an owner disposition, not a new
+third-party license or acceptance of non-image candidates.
+
+The [before/after font comparison](docs/testing/font-comparison.html) presents
+the existing fonts alongside verified Font Awesome 4.7 equivalents for 28 static
+archive icon classes and Basic's five icons. The replacement WOFF matches the
+official release bytes. Source-CSS mapping checks, desktop/mobile rendering,
+missing-glyph checks and size controls passed. These are isolated specimens,
+not an implemented runtime replacement. Exact current-font licensing remains
+unresolved; no finding that the fonts are proprietary was established. Owner
+appearance approval, complete runtime/CSS-state coverage and release acceptance
+remain pending. No fonts, application CSS, preview output or production were
+changed. See [session 0038](session-logs/2026-10-26-0038-session-log.md).
 
 **Viewer-only release preflight passed; publication remains gated, 2026-10-26.**
 
@@ -33,9 +53,10 @@ verified. The owner preview was not rebuilt. See
 digest, scope, independent checks and limits.
 
 The eight unresolved Tailcoat/Basic social font files remain byte-identical
-and present in the candidate. Their keep/replace decision, the archive-image
-disposition, open attribution checks and owner acceptance with real private
-content remain release gates. Synthetic browser checks do not clear them.
+and present in the candidate. Their keep/replace decision, open attribution
+checks and owner acceptance with real private content remain release gates.
+The archive-image disposition is recorded above. Synthetic browser checks do
+not clear the remaining gates.
 No workflow was dispatched: accepted Pages run `40416446662` remains live.
 Netlify was untouched. The full intended publication SHA must be selected and
 rechecked after documentation closure; this preflight is not release approval.

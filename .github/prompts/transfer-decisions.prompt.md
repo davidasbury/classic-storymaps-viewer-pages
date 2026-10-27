@@ -266,6 +266,28 @@ release candidate.
 1. **Four Tailcoat and four Basic Fontello font files:** keep (owner accepts the documented risk) / replace with Font Awesome or Ionicons glyphs, after the owner approves how they look.
 2. **Unresolved archive images and other candidates with no recorded basis:** keep under their existing runtime and archive basis unless a specific file is flagged / continue tracing.
 
+### Image Decision Recorded 2026-10-26
+
+David approved: "for the Unresolved archive images: retain under their existing
+archive/runtime basis unless specifically flagged". This dispositions the image
+cohort only; it does not accept unresolved fonts or other non-image candidates,
+certify third-party rights, or authorize deployment.
+
+Exact source paths and SHA-256 values are the 663 image rows (647 distinct
+contents) selected from `docs/testing/remaining-content-inventory.json`, whose
+SHA-256 is `e61e0b0d1fb52ccec02bfc9e34320694dbb4966b30badd449937e7fa0059cc3c`:
+category `asset-review-candidate` or `catalog-or-captured-asset`, extension
+`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` or `.svg`, excluding
+`docs/testing/artifacts/` and `classic-apps/custom/bee-tour/resources/font/`.
+The two separately approved favicon copies are outside this selector.
+All selected source hashes were verified unchanged. Of these, 245 source
+paths representing 230 distinct contents matched the selected `c005ec7` release
+artifact exactly; lack of an exact match is not proof of artifact exclusion.
+New or changed bytes and specifically flagged files require a separate decision.
+
+The font decision remains pending. David requested openly licensed alternatives
+and a before/after appearance comparison before choosing a replacement.
+
 ## Viewer Transfer Steps
 
 Agents do not change GitHub, Cloudflare or ArcGIS settings; the owner does.
