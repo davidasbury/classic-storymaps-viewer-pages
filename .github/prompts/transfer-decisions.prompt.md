@@ -288,6 +288,21 @@ New or changed bytes and specifically flagged files require a separate decision.
 The font decision remains pending. David requested openly licensed alternatives
 and a before/after appearance comparison before choosing a replacement.
 
+### Basic Font Replacement Approved 2026-10-26
+
+David approved the compared Font Awesome replacement for Basic's Fontello icons.
+This applies to the four `runtimes/basic/upstream/font/social.{eot,svg,ttf,woff}`
+identities recorded in `docs/testing/remaining-content-inventory.json` and the
+exact hash table in `docs/licenses/runtime-font-provenance.md`. Original source
+copies remain intact; new Basic output excludes them and uses pinned, unchanged
+Font Awesome 4.7.0 files with updated glyph mappings and full font notices.
+The replacement hash table and verification evidence are in that font record.
+
+Only Basic is approved. David questioned the differing Tailcoat shapes and asked
+whether Tailcoat can be redistributed; this is not approval to replace Tailcoat
+or acceptance of its licensing risk. Its four existing path/hash identities
+remain unchanged and unresolved. Deployment and other release gates remain.
+
 ## Viewer Transfer Steps
 
 Agents do not change GitHub, Cloudflare or ArcGIS settings; the owner does.

@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Archive image retention accepted; font comparison ready; font approval, attribution and owner acceptance pending
+  phase: Basic Font Awesome replacement implemented; Tailcoat permission, attribution and release acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -20,6 +20,28 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Basic Fontello replaced in new output; Tailcoat unchanged, 2026-10-26.**
+
+David approved Basic's Font Awesome proposal. Its build now uses the verified,
+unchanged Font Awesome 4.7.0 formats, updates all five icon codepoints and the
+separate legend font rule, excludes the old social font from generated output,
+and packages full OFL/copyright/source notices. Upstream originals remain intact.
+The adapter checks pinned hashes and expected CSS and is repeatable.
+
+All 150 tests passed in an isolated source tree containing only this change.
+Three Basic native auth cases passed. Desktop/mobile native checks confirmed
+sharing glyphs, both legend states and replacement-font requests; the public
+example's legend was enabled only in an intercepted browser response. No ArcGIS
+item was changed. Only Basic's CSS/fonts/notices were refreshed in the owner
+preview, along with a missing notice link; catalog and Tailcoat were not edited.
+Concurrent Map Tour compatibility work was kept outside this change. See
+[session 0039](session-logs/2026-10-26-0039-session-log.md).
+
+Tailcoat redistribution permission is still unverified, not established as
+proprietary or forbidden. The image-retention decision stands; Tailcoat risk
+acceptance or replacement has not been approved. The prior release candidate
+must be refreshed before publication. No Pages or Netlify deployment occurred.
 
 **Archive images retained by owner decision; font comparison ready, 2026-10-26.**
 
@@ -34,12 +56,11 @@ The [before/after font comparison](docs/testing/font-comparison.html) presents
 the existing fonts alongside verified Font Awesome 4.7 equivalents for 28 static
 archive icon classes and Basic's five icons. The replacement WOFF matches the
 official release bytes. Source-CSS mapping checks, desktop/mobile rendering,
-missing-glyph checks and size controls passed. These are isolated specimens,
-not an implemented runtime replacement. Exact current-font licensing remains
-unresolved; no finding that the fonts are proprietary was established. Owner
-appearance approval, complete runtime/CSS-state coverage and release acceptance
-remain pending. No fonts, application CSS, preview output or production were
-changed. See [session 0038](session-logs/2026-10-26-0038-session-log.md).
+missing-glyph checks and size controls passed. These remain isolated specimens;
+Basic's subsequent approved implementation is described above. Tailcoat's exact
+licensing and any replacement approval remain unresolved. No finding that the
+fonts are proprietary was established. See
+[session 0038](session-logs/2026-10-26-0038-session-log.md).
 
 **Viewer-only release preflight passed; publication remains gated, 2026-10-26.**
 

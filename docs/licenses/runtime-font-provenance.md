@@ -125,11 +125,44 @@ metadata supplies the missing font-specific permission evidence.
 
 ### Current Disposition
 
-Keep both families in place pending a scoped decision on original glyph sources,
-applicable terms and required attribution, or an owner-approved replacement.
-Unlike the retired unused Shortlist fonts, these have direct CSS references;
-no removal is proposed or authorized by this inventory. EOT files were hashed
-but their metadata was not independently decoded. No font bytes were changed.
+**2026-10-26:** David approved replacing Basic's custom Fontello font with
+the compared Font Awesome glyphs. New Basic builds use the existing Map Tour
+Font Awesome 4.7.0 files, unchanged, with all five glyph mappings and the separate
+legend font-family rule adapted in generated CSS. The four original
+`font/social.*` files are excluded from new Basic output; upstream originals
+remain preserved for provenance and the historical comparison. No source font
+bytes were rewritten. This replacement does not establish a license for the
+retained original files or authorize a public deployment.
+
+All four replacement formats matched the official
+[Font Awesome v4.7.0 source](https://github.com/FortAwesome/Font-Awesome/tree/v4.7.0/fonts)
+byte-for-byte. The [official license](https://fontawesome.com/v4/license/) assigns
+SIL OFL 1.1 to the font files. Basic notices retain full OFL terms, copyright
+Dave Gandy 2016, source/version and the unmodified-font statement.
+
+| Replacement file | SHA-256 |
+| --- | --- |
+| fontawesome-webfont.eot | 7bfcab6db99d5cfbf1705ca0536ddc78585432cc5fa41bbd7ad0f009033b2979 |
+| fontawesome-webfont.svg | ad6157926c1622ba4e1d03d478f1541368524bfc46f51e42fe0d945f7ef323e4 |
+| fontawesome-webfont.ttf | aa58f33f239a0fb02f5c7a6c45c043d7a9ac9a093335806694ecd6d4edc0d6a8 |
+| fontawesome-webfont.woff | ba0c59deb5450f5cb41b3f93609ee2d0d995415877ddfa223e8a8a7533474f07 |
+
+The build adapter `runtimes/basic/patches/social-font.mjs` verifies these hashes
+and rejects unexpected CSS. A regression checks byte identity, all glyphs,
+the legend override, repeat staging, original-output exclusion and notices.
+Native desktop/mobile Basic checks confirmed the three sharing icons and both
+legend arrows. The public example's disabled legend was enabled only in an
+isolated browser response; no ArcGIS item was changed.
+
+**Tailcoat remains unchanged and unresolved.** Its four recorded hashes have
+not acquired a verified font/glyph redistribution grant. That does not establish
+proprietary status or prove that no grant exists. Public availability, an IcoMoon
+generator label and unrelated root licenses are not enough to conclude that
+these exact files may be redistributed. Obtain applicable license evidence or
+permission from the actual rights holder before calling this cleared. An owner
+risk decision would document disposition, not create third-party permission.
+David asked about retention; he did not approve replacing Tailcoat or accepting
+its licensing risk. The historical investigation below remains bounded evidence.
 
 ### Execution Investigation
 

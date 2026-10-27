@@ -41,6 +41,9 @@ export function stageRuntimeNotices(runtime, output) {
     supplement(filename, fs.readFileSync(path.join(repository, 'runtimes/cascade/upstream/src/resources/fonts', filename)));
   }
   supplement('font-attribution.txt', 'Fontelico: Copyright (C) 2012 by Fontello project. Entypo: Copyright (C) 2012 by Daniel Bruce. Source-font credits and SIL license references are preserved in the upstream font LICENSE files.\nFont Awesome fonts: Dave Gandy; SIL OFL 1.1. Map Tour includes Font Awesome 4.7.0, copyright Dave Gandy 2016. Font Awesome CSS/LESS/Sass use MIT; see https://github.com/FortAwesome/Font-Awesome/blob/v4.7.0/README.md#license .\nFull OFL terms are reproduced verbatim from the bundled CKEditor license Appendix E. Open Sans and Glyphicons terms are copied verbatim from the Cascade upstream font notices. These terms do not establish the origin of unidentified custom IcoMoon or Fontello glyphs.\n');
+  if (runtime === 'basic') {
+    supplement('FontAwesome-4.7.0-attribution.txt', 'Font Awesome 4.7.0\nCopyright Dave Gandy 2016. All rights reserved.\nFont files: SIL Open Font License 1.1; complete terms in OFL-1.1.txt.\nSource: https://github.com/FortAwesome/Font-Awesome/tree/v4.7.0/fonts\nThe Basic build uses unchanged Font Awesome files in place of its original custom social font. Only the local CSS glyph mapping changes; the font files are unmodified.\nBrand icons represent their respective services; no endorsement is implied.\n');
+  }
   if (runtime === 'shortlist') {
     for (const family of ['icomoon', 'fontelloIcons']) {
       for (const extension of ['eot', 'svg', 'ttf', 'woff']) {

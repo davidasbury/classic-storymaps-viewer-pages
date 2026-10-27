@@ -9,6 +9,44 @@ import vm from 'node:vm';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
+test('Basic build replaces social glyphs with licensed Font Awesome without changing upstream', async () => {
+  const temporary = mkdtempSync(path.join(os.tmpdir(), 'classic-basic-font-'));
+  const sourceCss = path.join(repo, 'runtimes/basic/upstream/css/main.css');
+  const originalCss = readFileSync(sourceCss);
+  try {
+    const result = spawnSync('bash', ['scripts/build-basic-runtime.sh'], {
+      cwd: repo, encoding: 'utf8', env: { ...process.env, OUTPUT_PATH: temporary, BASIC_DEFAULT_APPID: '' }
+    });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const css = readFileSync(path.join(temporary, 'css/main.css'), 'utf8');
+    assert.match(css, /font-family: 'FontAwesome'/);
+    assert.doesNotMatch(css, /font-family:\s*["']social["']|font\/social\./);
+    assert.ok(css.includes('.toggle-icon {\n  font-family: "FontAwesome";'));
+    for (const [name, code] of [['facebook', 'f082'], ['twitter', 'f099'], ['link', 'f0c1'], ['up', 'f077'], ['down', 'f078']]) {
+      assert.ok(css.includes(`.icon-${name}:before {\n  content: "\\${code}";`), name);
+    }
+    for (const extension of ['eot', 'svg', 'ttf', 'woff']) {
+      assert.equal(existsSync(path.join(temporary, `font/social.${extension}`)), false);
+      assert.deepEqual(readFileSync(path.join(temporary, `font/fontawesome-webfont.${extension}`)),
+        readFileSync(path.join(repo, `runtimes/maptour/upstream/MapTour/src/resources/icons/font-awesome-4.7.0/fonts/fontawesome-webfont.${extension}`)));
+    }
+    assert.deepEqual(readFileSync(sourceCss), originalCss);
+    const { replaceBasicSocialFont } = await import('../../runtimes/basic/patches/social-font.mjs');
+    replaceBasicSocialFont(temporary);
+    assert.equal(readFileSync(path.join(temporary, 'css/main.css'), 'utf8'), css);
+    writeFileSync(path.join(temporary, 'css/main.css'), css.replace('"\\f078"', '"\\ffff"'));
+    assert.throws(() => replaceBasicSocialFont(temporary), /Unrecognized Basic social font CSS/);
+    writeFileSync(path.join(temporary, 'css/main.css'), css);
+    assert.throws(() => replaceBasicSocialFont(path.join(repo, 'runtimes/basic/upstream')), /Cannot patch Basic upstream/);
+    const { stageRuntimeNotices } = await import('../stage-runtime-notices.mjs');
+    stageRuntimeNotices('basic', temporary);
+    assert.match(readFileSync(path.join(temporary, 'notices/supplemental/OFL-1.1.txt'), 'utf8'), /SIL OPEN FONT LICENSE Version 1.1/);
+    assert.match(readFileSync(path.join(temporary, 'notices/supplemental/FontAwesome-4.7.0-attribution.txt'), 'utf8'), /Copyright.*Dave Gandy.*2016/);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
 test('runtime publishing preserves root, font and editor license documents verbatim', async () => {
   const { stageRuntimeNotices } = await import('../stage-runtime-notices.mjs');
   const temporary = mkdtempSync(path.join(os.tmpdir(), 'classic-runtime-notices-'));
