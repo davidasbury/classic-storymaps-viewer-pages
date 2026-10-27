@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
-  phase: Basic Font Awesome replacement implemented; Tailcoat permission, attribution and release acceptance pending
+  phase: Basic Font Awesome implemented; Tailcoat source verified, permission and release acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -38,8 +38,14 @@ preview, along with a missing notice link; catalog and Tailcoat were not edited.
 Concurrent Map Tour compatibility work was kept outside this change. See
 [session 0039](session-logs/2026-10-26-0039-session-log.md).
 
-Tailcoat redistribution permission is still unverified, not established as
-proprietary or forbidden. The image-retention decision stands; Tailcoat risk
+The official ArcGIS Tailcoat documentation now supplies verified source
+identity: its EOT, TTF and WOFF match the local bytes, and its SVG matches after
+line-ending normalization. The TTF name table and official CSS establish a
+Tailcoat icon font, separate from the documented Avenir heading font. See
+[font provenance](docs/licenses/runtime-font-provenance.md#official-tailcoat-documentation-source)
+and [session 0040](session-logs/2026-10-26-0040-session-log.md).
+Redistribution permission is still unverified, not established as proprietary
+or forbidden. The image-retention decision stands; Tailcoat risk
 acceptance or replacement has not been approved. The prior release candidate
 must be refreshed before publication. No Pages or Netlify deployment occurred.
 
