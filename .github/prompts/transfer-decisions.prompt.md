@@ -263,6 +263,10 @@ Ask these as **one message**, and record each answer under its exact paths and
 hashes. Do not start new audits; refresh the inventory only for a selected
 release candidate.
 
+The recorded answers below supersede these original questions for their stated
+scope. Do not re-ask settled image, Basic replacement or Tailcoat retention
+decisions; new or changed files and specifically flagged files remain separate.
+
 1. **Four Tailcoat and four Basic Fontello font files:** keep (owner accepts the documented risk) / replace with Font Awesome or Ionicons glyphs, after the owner approves how they look.
 2. **Unresolved archive images and other candidates with no recorded basis:** keep under their existing runtime and archive basis unless a specific file is flagged / continue tracing.
 
@@ -285,8 +289,8 @@ paths representing 230 distinct contents matched the selected `c005ec7` release
 artifact exactly; lack of an exact match is not proof of artifact exclusion.
 New or changed bytes and specifically flagged files require a separate decision.
 
-The font decision remains pending. David requested openly licensed alternatives
-and a before/after appearance comparison before choosing a replacement.
+At the time of the image decision, the font decision remained pending. The
+subsequent Basic replacement and Tailcoat retention decisions below supersede it.
 
 ### Basic Font Replacement Approved 2026-10-26
 
@@ -298,10 +302,39 @@ copies remain intact; new Basic output excludes them and uses pinned, unchanged
 Font Awesome 4.7.0 files with updated glyph mappings and full font notices.
 The replacement hash table and verification evidence are in that font record.
 
-Only Basic is approved. David questioned the differing Tailcoat shapes and asked
-whether Tailcoat can be redistributed; this is not approval to replace Tailcoat
-or acceptance of its licensing risk. Its four existing path/hash identities
-remain unchanged and unresolved. Deployment and other release gates remain.
+Only Basic's replacement was approved. David questioned the differing Tailcoat
+shapes; his subsequent decision below retains the original Tailcoat files
+instead. Deployment and other release gates remain.
+
+### Tailcoat Retention Approved 2026-10-26
+
+David explicitly approved:
+
+> Retain the existing Tailcoat icons under their archive basis unless specifically flagged; redistribution terms remain unverified
+
+This applies only to the four existing files under
+`apps/classic-storymaps-site/assets/fonts/tailcoat/`, with these SHA-256 values:
+
+| File | SHA-256 |
+| --- | --- |
+| tailcoat.eot | 3ce19b159c5609c3667ee864e54aa6a2b366d6bfc6dfd30a4d59afc5915123fb |
+| tailcoat.svg | ef161435e05933a75f8da062d9537dc91836075d4b5ab30925b50b31408c8789 |
+| tailcoat.ttf | 620b005ffb2388e5a4aea73258c204575d03bb3fa29a45fc243e1c123ba35023 |
+| tailcoat.woff | fffe88671a4956518063cc654cfc525ab2e2b45b28608552a3ce06025abb18b5 |
+
+This closes the owner keep/replace decision for these exact files. It records
+retention despite unverified redistribution terms, not a third-party license
+grant or a finding that the icons are proprietary or forbidden. Do not replace
+or remove them under the earlier pending-decision language. New or changed
+bytes and specifically flagged files require a separate decision.
+
+The [verified source evidence](../../docs/licenses/runtime-font-provenance.md#official-tailcoat-documentation-source)
+remains separate from licensing. [Calcite Web issue 954](https://github.com/Esri/calcite-web/issues/954)
+documents My Stories migrating from Tailcoat to Calcite in 2018; it does not
+address icon redistribution terms. The existing image decision and Basic
+replacement are unchanged. This is not deployment approval or a waiver of
+other attribution, account-use or private-content acceptance requirements.
+See [session 0042](../../session-logs/2026-10-26-0042-session-log.md).
 
 ## Viewer Transfer Steps
 

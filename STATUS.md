@@ -12,7 +12,7 @@ updated: 2026-10-26
 extra:
   agents: [claude, copilot-enterprise]
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
-  phase: Basic Font Awesome implemented; Tailcoat source verified, permission and release acceptance pending
+  phase: Basic Font Awesome implemented; Tailcoat retained by owner; attribution and release acceptance pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -47,7 +47,7 @@ changed. This implementation and
 [session 0041](session-logs/2026-10-26-0041-session-log.md) were authorized by
 David for commit and push with deployment disabled using `[skip ci]`.
 
-**Basic Fontello replaced in new output; Tailcoat unchanged, 2026-10-26.**
+**Basic Fontello replaced in new output; Tailcoat retention approved, 2026-10-26.**
 
 David approved Basic's Font Awesome proposal. Its build now uses the verified,
 unchanged Font Awesome 4.7.0 formats, updates all five icon codepoints and the
@@ -70,10 +70,15 @@ line-ending normalization. The TTF name table and official CSS establish a
 Tailcoat icon font, separate from the documented Avenir heading font. See
 [font provenance](docs/licenses/runtime-font-provenance.md#official-tailcoat-documentation-source)
 and [session 0040](session-logs/2026-10-26-0040-session-log.md).
-Redistribution permission is still unverified, not established as proprietary
-or forbidden. The image-retention decision stands; Tailcoat risk
-acceptance or replacement has not been approved. The prior release candidate
-must be refreshed before publication. No Pages or Netlify deployment occurred.
+David explicitly approved: "Retain the existing Tailcoat icons under their
+archive basis unless specifically flagged; redistribution terms remain
+unverified". The [exact four-file decision](.github/prompts/transfer-decisions.prompt.md#tailcoat-retention-approved-2026-10-26)
+closes the pending owner retention question without creating a third-party
+license grant or approving replacement. See
+[session 0042](session-logs/2026-10-26-0042-session-log.md).
+The image-retention decision stands. Other attribution and release acceptance
+requirements remain; the prior candidate must be refreshed before publication.
+No font files, Pages or Netlify deployment changed for this decision.
 
 **Archive images retained by owner decision; font comparison ready, 2026-10-26.**
 
@@ -90,8 +95,8 @@ archive icon classes and Basic's five icons. The replacement WOFF matches the
 official release bytes. Source-CSS mapping checks, desktop/mobile rendering,
 missing-glyph checks and size controls passed. These remain isolated specimens;
 Basic's subsequent approved implementation is described above. Tailcoat's exact
-licensing and any replacement approval remain unresolved. No finding that the
-fonts are proprietary was established. See
+licensing remains unverified; the owner selected retention, not replacement.
+No finding that the fonts are proprietary was established. See
 [session 0038](session-logs/2026-10-26-0038-session-log.md).
 
 **Viewer-only release preflight passed; publication remains gated, 2026-10-26.**
@@ -105,11 +110,13 @@ verified. The owner preview was not rebuilt. See
 [session 0037](session-logs/2026-10-26-0037-session-log.md) for the artifact
 digest, scope, independent checks and limits.
 
-The eight unresolved Tailcoat/Basic social font files remain byte-identical
-and present in the candidate. Their keep/replace decision, open attribution
-checks and owner acceptance with real private content remain release gates.
-The archive-image disposition is recorded above. Synthetic browser checks do
-not clear the remaining gates.
+The eight original Tailcoat/Basic social font files were byte-identical and
+present in that candidate. The subsequent Basic output replacement and Tailcoat
+retention decision resolve their owner keep/replace question; a refreshed
+candidate must reflect those dispositions. Open attribution checks and owner
+acceptance with real private content remain release gates. The archive-image
+disposition is recorded above. Synthetic browser checks do not clear the
+remaining gates.
 No workflow was dispatched: accepted Pages run `40416446662` remains live.
 Netlify was untouched. The full intended publication SHA must be selected and
 rechecked after documentation closure; this preflight is not release approval.

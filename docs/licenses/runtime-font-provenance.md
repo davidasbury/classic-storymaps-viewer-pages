@@ -191,15 +191,23 @@ Native desktop/mobile Basic checks confirmed the three sharing icons and both
 legend arrows. The public example's disabled legend was enabled only in an
 isolated browser response; no ArcGIS item was changed.
 
-**Tailcoat remains unchanged and unresolved.** Its four recorded hashes have
-not acquired a verified font/glyph redistribution grant. That does not establish
-proprietary status or prove that no grant exists. Public availability, an IcoMoon
-generator label and unrelated root licenses are not enough to conclude that
-these exact files may be redistributed. Obtain applicable license evidence or
-permission from the actual rights holder before calling this cleared. An owner
-risk decision would document disposition, not create third-party permission.
-David asked about retention; he did not approve replacing Tailcoat or accepting
-its licensing risk. The historical investigation below remains bounded evidence.
+**Tailcoat retention approved, 2026-10-26; redistribution terms unverified.**
+David explicitly approved:
+
+> Retain the existing Tailcoat icons under their archive basis unless specifically flagged; redistribution terms remain unverified
+
+This closes the owner keep/replace decision for the four Tailcoat paths and
+hashes above. They remain unchanged; no replacement was approved. The exact
+scope is recorded in [transfer decisions](../../.github/prompts/transfer-decisions.prompt.md#tailcoat-retention-approved-2026-10-26).
+New or changed bytes and specifically flagged files require a separate decision.
+This owner disposition does not create third-party permission, establish
+proprietary status, or authorize deployment. Source identity is verified;
+font/glyph redistribution terms remain unverified.
+
+[Calcite Web issue 954](https://github.com/Esri/calcite-web/issues/954) documents
+My Stories migrating from Tailcoat to Calcite in 2018, not icon licensing.
+The historical investigation below remains bounded evidence. The image
+retention decision and approved Basic replacement are unchanged.
 
 ### Execution Investigation
 
@@ -225,6 +233,7 @@ had no `tailcoat` path in its available Git history. These were bounded source
 checks, not exhaustive searches or evidence that no grant exists elsewhere.
 The checked README/root license terms were not extended to unidentified glyphs.
 
-The next decision is owner-supplied source/permission evidence, an approved
-replacement proposal, or explicit owner-risk retention for the eight recorded
-hashes. No new permission or replacement decision has been inferred.
+At the time of that investigation, the eight recorded hashes awaited source or
+permission evidence, replacement approval, or an owner retention decision. The
+subsequent Basic replacement and Tailcoat retention dispositions above supersede
+that pending keep/replace request; they do not supply licenses for the originals.
