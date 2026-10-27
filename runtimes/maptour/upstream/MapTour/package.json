@@ -2,7 +2,7 @@
 	"name": "StorytellingMapTour",
 	"version": "2.14.0",
 	"devDependencies": {
-		"grunt": "~0.4.1",
+		"grunt": "~1.6.3",
 		"grunt-contrib-clean": "~0.4.0",
 		"grunt-contrib-concat": "~0.2.0",
 		"grunt-contrib-uglify": "~0.2.0",
