@@ -1080,6 +1080,22 @@ try {
         await page.getByRole('button', { name: 'Browse Stories', exact: true }).click();
         await settled(24);
         assert.equal(await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).isChecked(), false);
+        const help = page.getByRole('link', { name: 'Advanced search', exact: true });
+        const documentation = 'https://doc.arcgis.com/en/arcgis-online/reference/advanced-search.htm';
+        assert.equal(await help.getAttribute('href'), documentation);
+        assert.match(await help.getAttribute('title'), /Check the box.*operators.*Classic Story Maps.*scope, sharing level and app type.*public items only/);
+        await context.route(documentation, route => route.fulfill({ contentType: 'text/html', body: '<title>Advanced search documentation</title>' }));
+        const opened = page.waitForEvent('popup');
+        await help.click();
+        const documentationPage = await opened;
+        await documentationPage.waitForLoadState('domcontentloaded');
+        assert.equal(documentationPage.url(), documentation);
+        await documentationPage.close();
+        assert.equal(await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).isChecked(), false);
+        assert.equal(await page.getByRole('searchbox', { name: 'Search', exact: true }).count(), 1);
+        assert.deepEqual(await page.locator('.story-filter-row label').evaluateAll(labels => labels.map(label => label.firstChild.textContent.trim())),
+          ['View items in', 'Sharing', 'App type', 'Sort by', 'Sort direction']);
+        assert.equal(await page.locator('.story-search-row').evaluate(row => row.getBoundingClientRect().bottom <= document.querySelector('.story-filter-row').getBoundingClientRect().top), true);
         await page.getByRole('button', { name: 'Page 2', exact: true }).click();
         await page.waitForFunction(() => document.querySelector('#stories-pages [aria-current="page"]')?.textContent === '2');
         await page.locator('#stories-search').fill('owner:dwright_storymaps');
@@ -1095,7 +1111,7 @@ try {
         assert.equal(await page.locator('.story-title').innerText(), 'Ocean story 1');
         assert.equal(captured.at(-1).start, '1');
         assert.match(await page.locator('#stories-page').innerText(), /Showing 1-1 of 1 stories/);
-        await page.getByLabel('Search expression', { exact: true }).fill('owner:dwright_storymaps OR owner:another');
+        await page.getByLabel('Search', { exact: true }).fill('owner:dwright_storymaps OR owner:another');
         await settled(2);
         assert.ok(captured.at(-1).query.endsWith('AND (owner:dwright_storymaps OR owner:another)'));
         await page.locator('#stories-runtime').selectOption('mapjournal');
@@ -1123,7 +1139,7 @@ try {
         await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).uncheck();
         await page.waitForFunction(() => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false');
         assert.ok(captured.at(-1).query.endsWith('AND title:"Ocean"'));
-        await page.getByLabel('Search titles', { exact: true }).fill('No matching title');
+        await page.getByLabel('Search', { exact: true }).fill('No matching title');
         await settled(0);
         await page.getByRole('checkbox', { name: 'Advanced search', exact: true }).check();
         await page.locator('#stories-scope').selectOption('online');
@@ -1230,7 +1246,7 @@ try {
         assert.equal(await page.locator('#stories-page').innerText(), 'Showing 1-24 of 245 stories');
         assert.equal(requests.length, beforeBack);
         for (const field of Object.keys(fields)) {
-          await page.getByLabel('Sort', { exact: true }).selectOption(field);
+          await page.getByLabel('Sort by', { exact: true }).selectOption(field);
           await settled();
           assert.equal(await page.locator('#stories-sort').evaluate(select => {
             const style = getComputedStyle(select);
@@ -1348,15 +1364,15 @@ try {
         await context.unroute(storyUrl);
         await page.getByLabel('App type', { exact: true }).selectOption('cascade');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
-        await page.getByLabel('Search titles', { exact: true }).fill('Rupert');
+        await page.getByLabel('Search', { exact: true }).fill('Rupert');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 1);
         assert.match(await page.locator('.story-title').innerText(), /Rupert/);
-        await page.getByLabel('Search titles', { exact: true }).fill('no matching synthetic title');
+        await page.getByLabel('Search', { exact: true }).fill('no matching synthetic title');
         await page.waitForFunction(() => document.getElementById('stories-status').textContent === 'Showing 0 of 0 stories');
-        await page.getByLabel('Search titles', { exact: true }).fill('');
+        await page.getByLabel('Search', { exact: true }).fill('');
         await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 3);
         await page.getByLabel('Sort direction', { exact: true }).selectOption('asc');
-        await page.getByLabel('Sort', { exact: true }).selectOption('title');
+        await page.getByLabel('Sort by', { exact: true }).selectOption('title');
         await page.waitForFunction(() => document.querySelector('.story-title')?.textContent === 'Palau');
         await page.locator('.story-image').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

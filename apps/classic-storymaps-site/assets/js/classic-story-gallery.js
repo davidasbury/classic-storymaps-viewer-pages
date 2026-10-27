@@ -230,7 +230,6 @@
     var status = document.getElementById('stories-status');
     var search = document.getElementById('stories-search');
     var advancedSearch = document.getElementById('stories-advanced');
-    var searchLabel = document.getElementById('stories-search-label');
     var scopeFilter = document.getElementById('stories-scope');
     var sharingFilter = document.getElementById('stories-sharing');
     var runtimeFilter = document.getElementById('stories-runtime');
@@ -561,7 +560,6 @@
     }
     function restart() { search.removeAttribute('aria-invalid'); invalidate(); if (!section.hidden) load(); }
     function updateSearchMode() {
-      searchLabel.textContent = advancedSearch.checked ? 'Search expression' : 'Search titles';
       search.maxLength = advancedSearch.checked ? 2000 : 200;
     }
     function updateFilters() {

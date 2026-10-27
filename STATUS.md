@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
-  advanced_gallery_search: Explicit expression mode verified with preserved filters, browser regressions and live public owner search; publication pending
+  advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
   dependency_security: Compatible Dependabot fixes present in deployed 4a9b461; first visitor-code audit and Crowdsource jQuery 3.7.1 fix verified locally; other runtime advisories remain open
@@ -41,7 +41,16 @@ is bypassed. Title search stays the default. Mode changes reset results, paging
 and counting, and session changes reset the mode. Invalid delimiter structure
 and ArcGIS query rejections have explicit error states.
 
-All 251 Node tests and 13 gallery browser cases passed, including advanced
+Search now has a dedicated row with its advanced checkbox and a stable Search
+label. The Advanced search text links to ArcGIS documentation in a new tab; its
+tooltip explains operator opt-in and retained filtering. Below it, controls are
+ordered View items in, Sharing, App type, Sort by and Sort direction. The toolbar
+passed 35 gallery tests and 10 browser cases, including responsive screenshots
+at desktop and mobile widths. See
+[session 0068](session-logs/2026-10-27-0068-session-log.md).
+
+The initial search-mode implementation passed all 251 Node tests and 13 gallery
+browser cases, including advanced
 expressions at desktop and two mobile widths, existing public/signed-in flows,
 pagination and counting. A live public `owner:dwright_storymaps` query displayed
 seven recognized Classic stories whose IDs matched an independent ArcGIS request.

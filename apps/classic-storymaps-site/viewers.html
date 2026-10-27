@@ -336,15 +336,16 @@
     .catalog-switch { margin: 26px 0 0; display: flex; justify-content: flex-end; }
     .story-gallery { margin-top: 20px; }
     .story-gallery h2 { font-size: 1.4rem; margin: 0 0 18px; }
-    .story-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+    .story-toolbar { display: grid; gap: 12px; }
+    .story-search-row, .story-filter-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
     .story-toolbar label { display: grid; gap: 5px; font-size: .85rem; font-weight: 600; }
-    .story-toolbar label:first-child { flex: 1 1 240px; }
-    .story-toolbar label:has(#stories-search) { flex: 2 1 300px; min-width: 0; }
+    .story-search-row label { flex: 1 1 300px; min-width: 0; }
+    .story-filter-row label { flex: 1 1 150px; min-width: 0; }
     .story-toolbar input, .story-toolbar select { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--ink-0); font: inherit; }
-    .story-toolbar select { max-width: 220px; }
-    .story-toolbar label.story-search-mode { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+    .story-search-mode { display: flex; align-items: center; gap: 8px; min-height: 40px; font-size: .85rem; font-weight: 600; }
+    .story-search-mode a { color: var(--accent); text-underline-offset: 2px; }
+    .story-search-mode a:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
     .story-toolbar .story-search-mode input { width: 18px; min-height: 18px; height: 18px; margin: 0; padding: 0; flex-shrink: 0; }
-    .story-toolbar label:has(#stories-sort) { min-width: 200px; }
     .story-control { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
     .story-control:disabled { opacity: .5; cursor: default; }
     .story-control:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
@@ -379,7 +380,7 @@
     @media (max-width: 540px) { .story-pagination { gap: 3px; } .story-pages { gap: 3px; } .story-pagination button { width: 36px; flex-basis: 36px; } .story-page-gap { width: 10px; } }
     .omni-input { min-width: 0; }
     @media (max-width: 900px) { .story-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 540px) { .story-grid { grid-template-columns: minmax(0, 1fr); } .story-toolbar label { flex: 1 1 120px; } }
+    @media (max-width: 540px) { .story-grid { grid-template-columns: minmax(0, 1fr); } }
     @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
 
     .footer-note {
@@ -473,14 +474,18 @@
     <section id="story-gallery" class="story-gallery" aria-labelledby="stories-heading" hidden>
       <h2 id="stories-heading" tabindex="-1">ArcGIS Online</h2>
       <div class="story-toolbar">
+        <div class="story-search-row">
+          <label><span id="stories-search-label">Search</span><input id="stories-search" type="search" maxlength="200" autocomplete="off" aria-describedby="stories-status"></label>
+          <div class="story-search-mode"><input id="stories-advanced" type="checkbox" aria-labelledby="stories-advanced-help"><a id="stories-advanced-help" href="https://doc.arcgis.com/en/arcgis-online/reference/advanced-search.htm" target="_blank" rel="noopener noreferrer" title="Check the box to use ArcGIS search operators; otherwise Search matches titles only. Results are limited to recognized Classic Story Maps within the selected scope, sharing level and app type. ArcGIS Online searches public items only.">Advanced search</a></div>
+        </div>
+        <div class="story-filter-row">
         <label>View items in<select id="stories-scope" aria-label="View items in"><option value="mine">My Content</option><option value="org">My Organization</option><option value="online">ArcGIS Online</option></select></label>
         <label>Sharing<select id="stories-sharing" aria-label="Sharing"><option value="public">Public</option><option value="org">My Organization</option><option value="private">Private</option></select></label>
-        <label><span id="stories-search-label">Search titles</span><input id="stories-search" type="search" maxlength="200" autocomplete="off" aria-describedby="stories-status"></label>
-        <label class="story-search-mode"><input id="stories-advanced" type="checkbox">Advanced search</label>
         <label>App type<select id="stories-runtime" aria-label="App type"><option value="">All app types</option></select></label>
-        <label>Sort<select id="stories-sort" aria-label="Sort"><option value="modified">Date modified</option><option value="created">Date created</option><option value="title">Title</option><option value="owner">Owner</option><option value="numviews">Number of views</option><option value="avgrating">Average rating</option><option value="numratings">Number of ratings</option><option value="numcomments">Number of comments</option><option value="scorecompleteness">Item completeness</option></select></label>
-        <label>Direction<select id="stories-sort-order" aria-label="Sort direction"><option value="desc">Descending</option><option value="asc">Ascending</option></select></label>
+        <label>Sort by<select id="stories-sort" aria-label="Sort by"><option value="modified">Date modified</option><option value="created">Date created</option><option value="title">Title</option><option value="owner">Owner</option><option value="numviews">Number of views</option><option value="avgrating">Average rating</option><option value="numratings">Number of ratings</option><option value="numcomments">Number of comments</option><option value="scorecompleteness">Item completeness</option></select></label>
+        <label>Sort direction<select id="stories-sort-order" aria-label="Sort direction"><option value="desc">Descending</option><option value="asc">Ascending</option></select></label>
         <button id="stories-refresh" class="story-control" type="button" title="Refresh stories" aria-label="Refresh stories">&#8635;</button>
+        </div>
       </div>
       <div class="story-results">
         <p id="stories-status" class="story-status" role="status" aria-live="polite"></p>
