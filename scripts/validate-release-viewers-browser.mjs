@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { parse } from 'acorn';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import https from 'node:https';
@@ -773,6 +774,35 @@ try {
               return { jquery: jquery.fn.jquery, checks };
             }, { readers, payload });
             assert.ok(result.textChecks.checks.every(check => check.benign && check.hostile === 'A & B'));
+            if (target.runtime === 'maptour') {
+              const descriptions = [];
+              function visit(node) {
+                if (!node || typeof node !== 'object') return;
+                if (node.type === 'BinaryExpression' && typeof node.left.value === 'string'
+                  && node.left.value.endsWith('<div style="height: 0;">')) {
+                  const expression = bundle.slice(node.right.start, node.right.end);
+                  const receiver = expression.match(/([\w$]+)\.attributes\.getDescription\(\)/);
+                  if (receiver) descriptions.push({ expression, receiver: receiver[1] });
+                }
+                for (const value of Object.values(node)) {
+                  if (Array.isArray(value)) value.forEach(visit);
+                  else if (value && typeof value === 'object') visit(value);
+                }
+              }
+              visit(parse(bundle, { ecmaVersion: 'latest' }));
+              assert.equal(descriptions.length, 1);
+              result.carouselDescription = await page.evaluate(({ expression, receiver, payload }) => {
+                const encoded = $('<div>').text(payload).html();
+                const render = new Function(receiver, 'return (' + expression + ')');
+                const html = render({ attributes: { getDescription: () => encoded } });
+                const container = $('<div>').html(html).appendTo(document.body);
+                try { return { text: container.text(), images: container.find('img').length, svg: container.find('svg').length }; }
+                finally { container.remove(); }
+              }, { ...descriptions[0], payload });
+              assert.equal(result.carouselDescription.text, payload);
+              assert.equal(result.carouselDescription.images, 0);
+              assert.equal(result.carouselDescription.svg, 0);
+            }
             if (['mapjournal', 'mapseries', 'shortlist'].includes(target.runtime)) {
               result.nativeShares = await page.evaluate(payload => new Promise((resolve, reject) => {
                 require(['storymaps/common/utils/HeaderHelper', 'storymaps/common/utils/SocialSharing'], (helper, social) => {

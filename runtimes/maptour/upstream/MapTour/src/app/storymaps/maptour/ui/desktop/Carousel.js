@@ -187,7 +187,7 @@ define(["dojo/has",
 					// Insert a hidden description for text2speech so that the description immediately follow the point title
 					// Use two hidden divs as a way to create a large pause between title and description
 					carouselHTML += '  <div style="height: 0;">.</div><div style="height: 0;">.</div>';
-					carouselHTML += '  <div style="height: 0;">' + ((function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + slide.attributes.getDescription() + '</div>')) + '</div>'; // "." for chromevox to break
+					carouselHTML += '  <div style="height: 0;">' + $('<div>').text((function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})('<div>' + slide.attributes.getDescription() + '</div>')).html() + '</div>'; // "." for chromevox to break
 					carouselHTML += ' </div>';
 					carouselHTML += '</li>';
 				});

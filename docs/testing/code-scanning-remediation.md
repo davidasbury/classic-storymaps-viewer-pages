@@ -1,6 +1,6 @@
 # Code-Scanning Remediation
 
-Verified: `2026-10-27 14:30:19-07:00[America/Los_Angeles]`.
+Verified: `2026-10-27 14:46:41-07:00[America/Los_Angeles]`.
 
 ## Scope
 
@@ -15,6 +15,39 @@ delivered runtime code. It did not dismiss alerts, change scanning coverage,
 upgrade legacy toolchains, deploy, write ArcGIS content or inspect owner sessions.
 GitHub alert resolution requires a subsequent analysis; the initial count must
 not be reduced merely by subtracting the locations edited here.
+
+## Post-Push Analysis
+
+GitHub's [completed CodeQL run](https://github.com/davidasbury/classic-storymaps-viewer-pages/actions/runs/40588150661)
+for `84f7b2c2ae449e887ed21e2f2d8282d678ba70e6` marked all thirteen targeted
+alerts fixed at `2026-10-27 14:38:55-07:00[America/Los_Angeles]`. However, the
+JavaScript analysis and open-alert inventory still contained 184 findings:
+thirteen new records, 185-197, replaced the thirteen closed records.
+
+Twelve new records flag innerHTML assignments to inert templates. The standard
+and browser evidence below explain why these nodes do not execute, but the records
+remain open for explicit review; they were not hidden with scanning exclusions,
+suppression comments or dismissals. The thirteenth, alert 193, exposed an additional
+Map Tour output boundary and received the follow-up repair below. Closing the old
+records alone is not a net reduction or a clean security audit.
+
+## Map Tour Description Follow-Up
+
+The carousel inserted its extracted screen-reader description back into an HTML
+string. Encoded markup in the description could therefore become active again.
+The repair uses a text setter followed by HTML serialization at that output
+boundary. It preserves literal description text rather than treating it as markup.
+The build patch handles both the original expression and the previously emitted
+inert-reader form; a second pass makes no changes.
+
+Both native Map Tour browser cases passed after the repair. The expression taken
+from the actual delivered bundle received encoded image and SVG markup, and its
+result was inserted into a live test container. The container retained the exact
+literal text and contained zero image or SVG elements; no candidate event or
+resource request occurred. All 254 Node 24 tests passed, including original/cached
+output parity and idempotency. The remaining five viewers were unchanged from the
+earlier twelve-case run. This follow-up does not change the carousel's separately
+supported rich-text title rendering or claim to fix all remaining HTML sinks.
 
 ## Inert Text Extraction
 

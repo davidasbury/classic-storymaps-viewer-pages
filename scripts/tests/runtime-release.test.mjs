@@ -57,6 +57,21 @@ test('Cascade sharing removes only edit and locale query parameters without back
   assert.equal(released({ url: 'https://example.org/?edit=' + '='.repeat(100000) }), 'https://example.org/');
 });
 
+test('Map Tour hidden descriptions remain text when inserted back into carousel HTML', async () => {
+  const { patchHtmlText } = await import('../patch-runtime-html-text.mjs');
+  const original = 'var html=\'  <div style="height: 0;">\'+$("<div>"+description+"</div>").text()+"</div>";';
+  const patched = patchHtmlText(original);
+  assert.equal(patched.count, 1);
+  assert.match(patched.source, /\$\("<div>"\)\.text\(\(function/);
+  assert.equal(patchHtmlText(patched.source).count, 0);
+  const oldReader = '(function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;})("<div>"+description+"</div>")';
+  const cached = 'var html=\'  <div style="height: 0;">\'+' + oldReader + '+"</div>";';
+  assert.equal(patchHtmlText(cached).source, patched.source);
+  const source = readFileSync(path.join(repo, 'runtimes/maptour/upstream/MapTour/src/app/storymaps/maptour/ui/desktop/Carousel.js'), 'utf8');
+  assert.equal(patchHtmlText(source).count, 0);
+  assert.ok(source.includes("$('<div>').text((function(html)"));
+});
+
 test('Media credential sanitizer uses fingerprints and rejects newly embedded provider keys', async () => {
   const { secureRuntimeHtmlText } = await import('../patch-runtime-html-text.mjs');
   assert.throws(() => secureRuntimeHtmlText(path.join(repo, 'runtimes/mapseries/upstream')), /Cannot modify runtime sources/);

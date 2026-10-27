@@ -11,7 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
-  code_scanning: First two visitor-facing root causes repaired in source and publication output; 253 Node and twelve affected-viewer browser cases passed; remaining alerts and publication pending
+  code_scanning: Inert extraction, Cascade URLs and Map Tour description encoding verified; 254 Node tests passed; thirteen original alerts closed but template warnings and broader review remain open; publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
   source_website_fallback: Shared sandboxed source iframe and direct link verified across eight viewers and catalog; publication pending
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
@@ -33,20 +33,25 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Two CodeQL root causes are repaired locally; broader remediation remains open.**
+**Visitor-code root-cause repairs are verified locally; broader remediation remains open.**
 
 Inert HTML-to-text extraction replaced 29 source expressions and 26 publication
 expressions across six viewers. Cascade sharing now filters query parameters
 without the flagged backtracking regex, including the pinned release and print
 bundle. Existing checksum, print sanitization and authentication protections remain.
 
-All 253 Node tests and twelve desktop/mobile browser cases passed. Native sharing
+The first batch passed 253 Node tests and twelve desktop/mobile browser cases. Native sharing
 handlers and a freshly built Cascade Controller received additional hostile-input
-checks, and screenshots from all six viewers were inspected. Twelve DOM-XSS alert
-locations and one ReDoS location were changed, not assumed closed before CodeQL
-reanalyzes them. Other rich-HTML sinks, library findings and URL checks remain open.
+checks, and screenshots from all six viewers were inspected. CodeQL subsequently
+closed twelve original DOM-XSS alerts and one ReDoS alert, but raised thirteen new
+records, leaving 184 open in that analysis. Twelve flag inert-template assignments
+and remain open for review. The remaining record exposed Map Tour's description
+being inserted back into HTML; that boundary now encodes the extracted text and
+passed both native browser cases plus all 254 Node tests. Other rich-HTML sinks,
+library findings and URL checks remain open; no scanner warnings were suppressed.
 See [scope and evidence](docs/testing/code-scanning-remediation.md) and
-[session 0069](session-logs/2026-10-27-0069-session-log.md). Nothing was deployed;
+[session 0069](session-logs/2026-10-27-0069-session-log.md) with
+[follow-up 0070](session-logs/2026-10-27-0070-session-log.md). Nothing was deployed;
 owner sessions, ArcGIS content and scanner coverage were unchanged.
 
 **The gallery supports explicit advanced ArcGIS search locally.**

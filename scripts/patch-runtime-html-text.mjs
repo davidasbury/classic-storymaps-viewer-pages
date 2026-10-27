@@ -5,8 +5,17 @@ import { fileURLToPath } from 'node:url';
 
 export function patchHtmlText(source) {
   const replacements = [];
-  function visit(node) {
+  function visit(node, parent) {
     if (!node || typeof node !== 'object') return;
+    const textInMarkup = parent?.type === 'BinaryExpression' && parent.operator === '+'
+      && parent.right === node && parent.left.type === 'Literal'
+      && typeof parent.left.value === 'string' && parent.left.value.endsWith('<div style="height: 0;">');
+    if (textInMarkup && node.type === 'CallExpression' && node.callee.type === 'FunctionExpression'
+      && source.slice(node.callee.start, node.callee.end) === 'function(html){var template=document.createElement("template");template.innerHTML=html;return template.content.textContent;}') {
+      replacements.push({ start: node.start, end: node.end,
+        text: '$("<div>").text(' + source.slice(node.start, node.end) + ').html()' });
+      return;
+    }
     if (node.type === 'CallExpression' && node.arguments.length === 0
       && node.callee.type === 'MemberExpression' && !node.callee.computed
       && node.callee.property.name === 'text') {
@@ -23,17 +32,18 @@ export function patchHtmlText(source) {
         flatten(fragment.arguments[0]);
         if (parts.length >= 3 && parts[0].type === 'Literal' && parts[0].value === '<div>'
           && parts.at(-1).type === 'Literal' && parts.at(-1).value === '</div>') {
-          replacements.push({ start: node.start, end: node.end,
-            text: '(function(html){var template=document.createElement("template");'
+          let text = '(function(html){var template=document.createElement("template");'
               + 'template.innerHTML=html;return template.content.textContent;})('
-              + source.slice(fragment.arguments[0].start, fragment.arguments[0].end) + ')' });
+              + source.slice(fragment.arguments[0].start, fragment.arguments[0].end) + ')';
+          if (textInMarkup) text = '$("<div>").text(' + text + ').html()';
+          replacements.push({ start: node.start, end: node.end, text });
           return;
         }
       }
     }
     for (const value of Object.values(node)) {
-      if (Array.isArray(value)) value.forEach(visit);
-      else if (value && typeof value === 'object') visit(value);
+      if (Array.isArray(value)) value.forEach(child => visit(child, node));
+      else if (value && typeof value === 'object') visit(value, node);
     }
   }
   visit(parse(source, { ecmaVersion: 'latest', sourceType: 'script' }));
