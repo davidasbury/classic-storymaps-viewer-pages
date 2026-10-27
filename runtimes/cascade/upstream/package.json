@@ -34,7 +34,7 @@
     "grunt-mkdir": "^1.0.0",
     "grunt-newer": "^1.1.2",
     "grunt-regex-replace": "^0.2.9",
-    "less": "^3.11.1",
+    "less": "^3.13.1",
     "load-grunt-tasks": "^3.4.1"
   }
 }
