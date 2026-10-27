@@ -48,7 +48,7 @@ async function observePage(width) {
   return { context, page, errors };
 }
 try {
-  if (selectedRuntimes.has('basemap-fallback')) {
+  if (selectedRuntimes.has('basemap-fallback') || selectedRuntimes.has('crowdsource-jquery')) {
     const mapId = '18af4863d44d45968360795e547cc5d1';
     const endpoint = 'https://www.arcgis.com/sharing/rest/content/items/' + mapId;
     const item = await (await fetch(endpoint + '?f=json')).json();
@@ -56,7 +56,7 @@ try {
     assert.equal(item.id, mapId);
     assert.equal(itemData.operationalLayers.length, 2);
     const fixture = { item, itemData };
-    for (const runtime of ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic']) {
+    for (const runtime of selectedRuntimes.has('basemap-fallback') ? ['maptour', 'swipe', 'mapjournal', 'mapseries', 'cascade', 'shortlist', 'crowdsource', 'basic'] : []) {
       const { context, page, errors } = await observePage(runtime === 'basic' ? 390 : 1280);
       const result = { runtime, check: 'shared-basemap-sdk', writes: [] };
       results.push(result);
@@ -147,6 +147,20 @@ try {
           return bounds.width > 100 && bounds.height > 100 && center && map.contains(center);
         });
         assert.ok(await page.locator('.gallery-item').count() > 0);
+        if (selectedRuntimes.has('crowdsource-jquery')) {
+          result.jquerySecurity = await page.evaluate(() => new Promise((resolve, reject) => {
+            require(['jquery', 'babel/store/reducers/items/app/App', 'babel/constants/actionsTypes/Arcgis'], (jquery, reducer, types) => {
+              try {
+                const response = JSON.parse('{"item":{"title":"Audit"},"data":{"__proto__":{"classicVisitorAuditMarker":true},"values":{"normal":"kept"}}}');
+                const state = reducer.app({}, { type: types.RECEIVE_APP_ITEM, response });
+                resolve({ version: jquery.fn.jquery, polluted: ({}).classicVisitorAuditMarker === true,
+                  normal: state.data.values.normal, title: state.item.title });
+              } catch (error) { reject(error); }
+              finally { delete Object.prototype.classicVisitorAuditMarker; }
+            }, reject);
+          }));
+          assert.deepEqual(result.jquerySecurity, { version: '3.7.1', polluted: false, normal: 'kept', title: 'Audit' });
+        }
         assert.equal(await page.locator('.classic-basemap-notice').evaluate(element => {
           const bounds = element.getBoundingClientRect();
           return bounds.left >= 0 && bounds.right <= innerWidth && element.scrollWidth <= element.clientWidth;

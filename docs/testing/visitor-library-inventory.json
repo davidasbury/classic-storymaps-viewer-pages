@@ -1,0 +1,4140 @@
+{
+  "schemaVersion": 1,
+  "scope": "Anonymous startup sample; not a complete library inventory or security certification",
+  "capturedAt": "2026-10-27T20:14:45.287Z",
+  "baseline": {
+    "commit": "4a9b4615d053bb050750556be843862c59e4a8e5",
+    "run": "40572400125",
+    "artifactId": "12766335433",
+    "githubReportedZipSha256": "14b44cd242eb700c3ae6feebcdd5e44cc2cabcfe091a03fe9675744b2074167b",
+    "zipIndependentlyHashed": false
+  },
+  "scanner": {
+    "name": "retire",
+    "version": "6.1.0",
+    "staticErrors": [],
+    "networkErrors": [],
+    "coverage": "Recognized components only; absence of advisories does not certify code"
+  },
+  "counts": {
+    "responses": 365,
+    "uniqueAvailableBodies": 170
+  },
+  "viewers": [
+    {
+      "runtime": "maptour",
+      "item": "10c62c6bd29f4175b26386aa46cf5a40",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "1.9.1",
+        "dojo": "1.14.2 (d6e8ff38)",
+        "esri": "3.31"
+      },
+      "scriptResponses": 24,
+      "pageErrors": [],
+      "blocked": []
+    },
+    {
+      "runtime": "swipe",
+      "item": "5c851a0bd60d42f0b2955966ee933465",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "1.9.1",
+        "dojo": "1.14.2 (d6e8ff38)",
+        "esri": "3.31"
+      },
+      "scriptResponses": 55,
+      "pageErrors": [],
+      "blocked": []
+    },
+    {
+      "runtime": "mapjournal",
+      "item": "68affb679afc40718babf3493927b4ac",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "1.11.0",
+        "lodash": "4.17.21",
+        "dojo": "1.16.4 (NaN)",
+        "esri": "3.41",
+        "bootstrapTooltip": "3.3.5"
+      },
+      "scriptResponses": 77,
+      "pageErrors": [],
+      "blocked": [
+        {
+          "method": "POST",
+          "url": "https://www.arcgis.com/sharing/rest/oauth2/platformSelf"
+        }
+      ]
+    },
+    {
+      "runtime": "mapseries",
+      "item": "167ca9b1c85e4c7ea5eac8c6be43358b",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "1.11.0",
+        "lodash": "4.17.21",
+        "dojo": "1.16.4 (NaN)",
+        "esri": "3.41",
+        "bootstrapTooltip": "3.3.5"
+      },
+      "scriptResponses": 46,
+      "pageErrors": [],
+      "blocked": [
+        {
+          "method": "POST",
+          "url": "https://www.arcgis.com/sharing/rest/oauth2/platformSelf"
+        }
+      ]
+    },
+    {
+      "runtime": "cascade",
+      "item": "f2e8448fef064238ace4f324ffc16fde",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "2.2.4",
+        "dojo": "1.16.4 (NaN)",
+        "esri": "3.41",
+        "bootstrapTooltip": "3.3.6"
+      },
+      "scriptResponses": 34,
+      "pageErrors": [],
+      "blocked": [
+        {
+          "method": "POST",
+          "url": "https://www.arcgis.com/sharing/rest/oauth2/platformSelf"
+        }
+      ]
+    },
+    {
+      "runtime": "shortlist",
+      "item": "5a9c34acf59a49f0a67d5f7293b44d6b",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "1.11.0",
+        "lodash": "2.4.1",
+        "dojo": "1.14.2 (d6e8ff38)",
+        "esri": "3.31",
+        "bootstrapTooltip": "3.3.5"
+      },
+      "scriptResponses": 45,
+      "pageErrors": [],
+      "blocked": []
+    },
+    {
+      "runtime": "crowdsource",
+      "item": "38e18b052b9440a0927a5adb524c2c4a",
+      "networkSettled": true,
+      "globals": {
+        "jquery": "3.3.1",
+        "dojo": "1.13.0 (aaa6750)",
+        "esri": "3.25",
+        "bootstrapTooltip": "3.3.7"
+      },
+      "scriptResponses": 56,
+      "pageErrors": [],
+      "blocked": []
+    },
+    {
+      "runtime": "basic",
+      "item": "ef329532de2645239789978efe531f3b",
+      "networkSettled": true,
+      "globals": {
+        "dojo": "1.14.0 (b27d4da)",
+        "esri": "3.27"
+      },
+      "scriptResponses": 28,
+      "pageErrors": [],
+      "blocked": []
+    }
+  ],
+  "staticMatches": [
+    {
+      "file": "viewers/cascade/app/viewer-min.js",
+      "results": [
+        {
+          "component": "bootstrap",
+          "version": "3.3.6",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "In Bootstrap before 3.4.0, XSS is possible in the tooltip data-viewport attribute.",
+                "issue": "27044",
+                "CVE": [
+                  "CVE-2018-20676"
+                ],
+                "githubID": "GHSA-3mgp-fx93-9xv5"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "In Bootstrap before 3.4.0, XSS is possible in the affix configuration target property.",
+                "CVE": [
+                  "CVE-2018-20677"
+                ],
+                "githubID": "GHSA-ph58-4vrj-w6hr"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in collapse data-parent attribute",
+                "issue": "20184",
+                "CVE": [
+                  "CVE-2018-14040"
+                ],
+                "githubID": "GHSA-3wqf-4x89-9g79"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in data-container property of tooltip",
+                "issue": "20184",
+                "CVE": [
+                  "CVE-2018-14042"
+                ],
+                "githubID": "GHSA-7mvr-5x2g-wfc8"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS is possible in the data-target attribute.",
+                "CVE": [
+                  "CVE-2016-10735"
+                ],
+                "githubID": "GHSA-4p24-vmcr-4gqj"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in data-template, data-content and data-title properties of tooltip/popover",
+                "issue": "28236",
+                "CVE": [
+                  "CVE-2019-8331"
+                ],
+                "githubID": "GHSA-9v3m-8fp8-mj99"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Bootstrap Cross-Site Scripting (XSS) vulnerability for data-* attributes",
+                "CVE": [
+                  "CVE-2024-6485"
+                ],
+                "githubID": "GHSA-vxmc-5x29-h64v"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "Bootstrap before 4.0.0 is end-of-life and no longer maintained.",
+                "retid": "72"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/mapjournal/app/viewer-min.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        },
+        {
+          "component": "lodash",
+          "version": "4.17.21",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash versions 4.0.0 through 4.17.22 are vulnerable to prototype pollution via the _.unset and _.omit functions. An attacker can pass crafted paths to delete methods from global prototypes such as Object.prototype, though the issue only permits deletion and not overwriting of properties.",
+                "githubID": "GHSA-xxjr-mmjv-4gpg",
+                "CVE": [
+                  "CVE-2025-13465"
+                ]
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash 4.17.23 and earlier are vulnerable to a prototype pollution bypass in _.unset and _.omit. The fix for CVE-2025-13465 only guards against string key members, so attackers can bypass it by passing array-wrapped path segments to delete properties from built-in prototypes including Object.prototype, Number.prototype, and String.prototype.",
+                "githubID": "GHSA-f23m-r3pf-42rh",
+                "CVE": [
+                  "CVE-2026-2950"
+                ]
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Lodash _.template is vulnerable to code injection via unsanitized options.imports key names. Untrusted key names are passed to the Function() constructor sink without validation, and the use of assignInWith (which enumerates inherited properties) also means that pre-existing prototype pollution on Object.prototype can flow into the Function() sink and execute arbitrary code at template compilation time.",
+                "githubID": "GHSA-r5fr-rjxr-66jc",
+                "CVE": [
+                  "CVE-2026-4800"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/mapseries/app/viewer-min.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        },
+        {
+          "component": "lodash",
+          "version": "4.17.21",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash versions 4.0.0 through 4.17.22 are vulnerable to prototype pollution via the _.unset and _.omit functions. An attacker can pass crafted paths to delete methods from global prototypes such as Object.prototype, though the issue only permits deletion and not overwriting of properties.",
+                "githubID": "GHSA-xxjr-mmjv-4gpg",
+                "CVE": [
+                  "CVE-2025-13465"
+                ]
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash 4.17.23 and earlier are vulnerable to a prototype pollution bypass in _.unset and _.omit. The fix for CVE-2025-13465 only guards against string key members, so attackers can bypass it by passing array-wrapped path segments to delete properties from built-in prototypes including Object.prototype, Number.prototype, and String.prototype.",
+                "githubID": "GHSA-f23m-r3pf-42rh",
+                "CVE": [
+                  "CVE-2026-2950"
+                ]
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Lodash _.template is vulnerable to code injection via unsanitized options.imports key names. Untrusted key names are passed to the Function() constructor sink without validation, and the use of assignInWith (which enumerates inherited properties) also means that pre-existing prototype pollution on Object.prototype can flow into the Function() sink and execute arbitrary code at template compilation time.",
+                "githubID": "GHSA-r5fr-rjxr-66jc",
+                "CVE": [
+                  "CVE-2026-4800"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/crowdsource/app/main-app.min.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "3.3.1",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Regex in its jQuery.htmlPrefilter sometimes may introduce XSS",
+                "CVE": [
+                  "CVE-2020-11022"
+                ],
+                "issue": "4642",
+                "githubID": "GHSA-gxr4-xjj5-5px2"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/assets/js/archive/jquery-1.9.1.min.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.9.1",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/cascade/resources/dompurify/purify.min.js",
+      "results": [
+        {
+          "component": "DOMPurify",
+          "version": "3.4.17",
+          "findings": []
+        }
+      ]
+    },
+    {
+      "file": "viewers/shortlist/resources/lib/jquery-ui.min.js",
+      "results": [
+        {
+          "component": "jquery-ui",
+          "version": "1.10.4",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in the `altField` option of the Datepicker widget",
+                "CVE": [
+                  "CVE-2021-41182"
+                ],
+                "githubID": "GHSA-9gj3-hwp5-pmwc"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in the `of` option of the `.position()` util",
+                "CVE": [
+                  "CVE-2021-41184"
+                ],
+                "githubID": "GHSA-gpqq-952q-5327"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS Vulnerability on text options of jQuery UI datepicker",
+                "CVE": [
+                  "CVE-2021-41183"
+                ],
+                "bug": "15284",
+                "githubID": "GHSA-j7qv-pgf6-hvh4"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS when refreshing a checkboxradio with an HTML-like initial text label ",
+                "CVE": [
+                  "CVE-2022-31160"
+                ],
+                "issue": "2101",
+                "githubID": "GHSA-h6gj-6jjq-h8g9"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/shortlist/resources/lib/jquery.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/shortlist/resources/lib/Swiper/swiper.js",
+      "results": [
+        {
+          "component": "swiper",
+          "version": "3.3.1",
+          "findings": [
+            {
+              "severity": "critical",
+              "identifiers": {
+                "summary": "Versions of the package swiper before 6.5.1 are susceptible to prototype pollution.",
+                "githubID": "GHSA-p3hc-fv2j-rp68",
+                "CVE": [
+                  "CVE-2021-23370"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "viewers/mapjournal/resources/tpl/viewer/print/jquery.js",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "networkMatches": [
+    {
+      "sha256": "006fdf46981219415df0101e9537ebfb74d645dd9c8d3da2a9e8f6bee812c0f1",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        },
+        {
+          "component": "lodash",
+          "version": "4.17.21",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash versions 4.0.0 through 4.17.22 are vulnerable to prototype pollution via the _.unset and _.omit functions. An attacker can pass crafted paths to delete methods from global prototypes such as Object.prototype, though the issue only permits deletion and not overwriting of properties.",
+                "githubID": "GHSA-xxjr-mmjv-4gpg",
+                "CVE": [
+                  "CVE-2025-13465"
+                ]
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash 4.17.23 and earlier are vulnerable to a prototype pollution bypass in _.unset and _.omit. The fix for CVE-2025-13465 only guards against string key members, so attackers can bypass it by passing array-wrapped path segments to delete properties from built-in prototypes including Object.prototype, Number.prototype, and String.prototype.",
+                "githubID": "GHSA-f23m-r3pf-42rh",
+                "CVE": [
+                  "CVE-2026-2950"
+                ]
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Lodash _.template is vulnerable to code injection via unsanitized options.imports key names. Untrusted key names are passed to the Function() constructor sink without validation, and the use of assignInWith (which enumerates inherited properties) also means that pre-existing prototype pollution on Object.prototype can flow into the Function() sink and execute arbitrary code at template compilation time.",
+                "githubID": "GHSA-r5fr-rjxr-66jc",
+                "CVE": [
+                  "CVE-2026-4800"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "7838555770d55f28c1e8e1ee10caf3084cbf3cba5497564a6ca8ec5c3f56d1ee",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.13.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Versions of dojo prior to 1.4.2 are vulnerable to DOM-based Cross-Site Scripting (XSS). The package does not sanitize URL parameters in the _testCommon.js and runner.html test files, allowing attackers to execute arbitrary JavaScript in the victim's browser.",
+                "PR": "307",
+                "CVE": [
+                  "CVE-2010-2273"
+                ],
+                "githubID": "GHSA-536q-8gxx-m782"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution in dojo",
+                "CVE": [
+                  "CVE-2020-5258"
+                ],
+                "githubID": "GHSA-jxfh-8wgv-vfr2"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "In Dojo Toolkit before 1.14.0, there is unescaped string injection in dojox/Grid/DataGrid.",
+                "CVE": [
+                  "CVE-2018-15494"
+                ],
+                "githubID": "GHSA-84cm-x2q5-8225"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "7fa89671ab871884d5951e04831fe912a36971f3da03aff27a8c3469ece50468",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "1.11.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "3rd party CORS request may execute",
+                "issue": "2432",
+                "CVE": [
+                  "CVE-2015-9251"
+                ],
+                "githubID": "GHSA-rmxg-73gg-4p98"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "parseHTML() executes scripts in event handlers",
+                "issue": "11974"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "jQuery 1.x and 2.x are End-of-Life and no longer receiving security updates",
+                "retid": "73",
+                "issue": "162"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            }
+          ]
+        },
+        {
+          "component": "lodash",
+          "version": "4.17.21",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash versions 4.0.0 through 4.17.22 are vulnerable to prototype pollution via the _.unset and _.omit functions. An attacker can pass crafted paths to delete methods from global prototypes such as Object.prototype, though the issue only permits deletion and not overwriting of properties.",
+                "githubID": "GHSA-xxjr-mmjv-4gpg",
+                "CVE": [
+                  "CVE-2025-13465"
+                ]
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Lodash 4.17.23 and earlier are vulnerable to a prototype pollution bypass in _.unset and _.omit. The fix for CVE-2025-13465 only guards against string key members, so attackers can bypass it by passing array-wrapped path segments to delete properties from built-in prototypes including Object.prototype, Number.prototype, and String.prototype.",
+                "githubID": "GHSA-f23m-r3pf-42rh",
+                "CVE": [
+                  "CVE-2026-2950"
+                ]
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Lodash _.template is vulnerable to code injection via unsanitized options.imports key names. Untrusted key names are passed to the Function() constructor sink without validation, and the use of assignInWith (which enumerates inherited properties) also means that pre-existing prototype pollution on Object.prototype can flow into the Function() sink and execute arbitrary code at template compilation time.",
+                "githubID": "GHSA-r5fr-rjxr-66jc",
+                "CVE": [
+                  "CVE-2026-4800"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "8e100a84a8cfb987358290f183ef68a96dab42df595142d2aa9090e91c424868",
+      "results": [
+        {
+          "component": "jquery",
+          "version": "3.3.1",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "jQuery before 3.4.0, as used in Drupal, Backdrop CMS, and other products, mishandles jQuery.extend(true, {}, ...) because of Object.prototype pollution",
+                "CVE": [
+                  "CVE-2019-11358"
+                ],
+                "PR": "4333",
+                "githubID": "GHSA-6c3j-c64m-qhgq"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "passing HTML containing <option> elements from untrusted sources - even after sanitizing it - to one of jQuery's DOM manipulation methods (i.e. .html(), .append(), and others) may execute untrusted code.",
+                "CVE": [
+                  "CVE-2020-11023"
+                ],
+                "issue": "4647",
+                "githubID": "GHSA-jpcq-cgw6-v4j6"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Regex in its jQuery.htmlPrefilter sometimes may introduce XSS",
+                "CVE": [
+                  "CVE-2020-11022"
+                ],
+                "issue": "4642",
+                "githubID": "GHSA-gxr4-xjj5-5px2"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "966e221b9ae1a247d55ec95b76088e163954a61860292575d1296dca781d4306",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.16.4",
+          "findings": [
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "976ba3b23fd67b31fa1f7909e0ff89a44c404e3aade6481232e09473ad56d77c",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.13.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Versions of dojo prior to 1.4.2 are vulnerable to DOM-based Cross-Site Scripting (XSS). The package does not sanitize URL parameters in the _testCommon.js and runner.html test files, allowing attackers to execute arbitrary JavaScript in the victim's browser.",
+                "PR": "307",
+                "CVE": [
+                  "CVE-2010-2273"
+                ],
+                "githubID": "GHSA-536q-8gxx-m782"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution in dojo",
+                "CVE": [
+                  "CVE-2020-5258"
+                ],
+                "githubID": "GHSA-jxfh-8wgv-vfr2"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "In Dojo Toolkit before 1.14.0, there is unescaped string injection in dojox/Grid/DataGrid.",
+                "CVE": [
+                  "CVE-2018-15494"
+                ],
+                "githubID": "GHSA-84cm-x2q5-8225"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "9dbd5a0211b8a684868cffcec3d50364b7823a86a9c9b95ba66148c06a8f8c0c",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.14.2",
+          "findings": [
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution in dojo",
+                "CVE": [
+                  "CVE-2020-5258"
+                ],
+                "githubID": "GHSA-jxfh-8wgv-vfr2"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "ca22c4ecb8271a7287f1dddcdec049d39ed2c7471ace6379598177a71da6983e",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.13.0",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Versions of dojo prior to 1.4.2 are vulnerable to DOM-based Cross-Site Scripting (XSS). The package does not sanitize URL parameters in the _testCommon.js and runner.html test files, allowing attackers to execute arbitrary JavaScript in the victim's browser.",
+                "PR": "307",
+                "CVE": [
+                  "CVE-2010-2273"
+                ],
+                "githubID": "GHSA-536q-8gxx-m782"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution in dojo",
+                "CVE": [
+                  "CVE-2020-5258"
+                ],
+                "githubID": "GHSA-jxfh-8wgv-vfr2"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "In Dojo Toolkit before 1.14.0, there is unescaped string injection in dojox/Grid/DataGrid.",
+                "CVE": [
+                  "CVE-2018-15494"
+                ],
+                "githubID": "GHSA-84cm-x2q5-8225"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "ca3b086deb1cfbfef3bd8f647e8d8b6a3cd213f794919cba0932eaa6d5297837",
+      "results": [
+        {
+          "component": "dojo",
+          "version": "1.14.0",
+          "findings": [
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution in dojo",
+                "CVE": [
+                  "CVE-2020-5258"
+                ],
+                "githubID": "GHSA-jxfh-8wgv-vfr2"
+              }
+            },
+            {
+              "severity": "high",
+              "identifiers": {
+                "summary": "Prototype pollution",
+                "CVE": [
+                  "CVE-2021-23450"
+                ],
+                "githubID": "GHSA-m8gw-hjpr-rjv7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "dfbd7016b5c586cd45d3019db45efbed861b40e47af2922ec5c381a31f2977e2",
+      "results": [
+        {
+          "component": "bootstrap",
+          "version": "3.3.6",
+          "findings": [
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "In Bootstrap before 3.4.0, XSS is possible in the tooltip data-viewport attribute.",
+                "issue": "27044",
+                "CVE": [
+                  "CVE-2018-20676"
+                ],
+                "githubID": "GHSA-3mgp-fx93-9xv5"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "In Bootstrap before 3.4.0, XSS is possible in the affix configuration target property.",
+                "CVE": [
+                  "CVE-2018-20677"
+                ],
+                "githubID": "GHSA-ph58-4vrj-w6hr"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in collapse data-parent attribute",
+                "issue": "20184",
+                "CVE": [
+                  "CVE-2018-14040"
+                ],
+                "githubID": "GHSA-3wqf-4x89-9g79"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in data-container property of tooltip",
+                "issue": "20184",
+                "CVE": [
+                  "CVE-2018-14042"
+                ],
+                "githubID": "GHSA-7mvr-5x2g-wfc8"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS is possible in the data-target attribute.",
+                "CVE": [
+                  "CVE-2016-10735"
+                ],
+                "githubID": "GHSA-4p24-vmcr-4gqj"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "XSS in data-template, data-content and data-title properties of tooltip/popover",
+                "issue": "28236",
+                "CVE": [
+                  "CVE-2019-8331"
+                ],
+                "githubID": "GHSA-9v3m-8fp8-mj99"
+              }
+            },
+            {
+              "severity": "medium",
+              "identifiers": {
+                "summary": "Bootstrap Cross-Site Scripting (XSS) vulnerability for data-* attributes",
+                "CVE": [
+                  "CVE-2024-6485"
+                ],
+                "githubID": "GHSA-vxmc-5x29-h64v"
+              }
+            },
+            {
+              "severity": "low",
+              "identifiers": {
+                "summary": "Bootstrap before 4.0.0 is end-of-life and no longer maintained.",
+                "retid": "72"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/arcgis-auth-helpers.js",
+      "status": 200,
+      "sha256": "cdd560403ebe69c0e2d378c58d86851f8ea62319b88e6761baa6ce31570343ab",
+      "bytes": 3313,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/social-link-policy.js",
+      "status": 200,
+      "sha256": "b07869ce66946364df2ca7c603fcdc1a317af4fc0f707a6631da5fee6a6e2e90",
+      "bytes": 4999,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/classic-storymaps-config.js",
+      "status": 200,
+      "sha256": "aa420935c716e34b3829aca61d8e6b59e339df293c4a4b66354f42990bf231f3",
+      "bytes": 9390,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/classic-story-discovery.js",
+      "status": 200,
+      "sha256": "044ced865815127ae3edd2122c1326c9edc9ea3fbf8f5a63d7a0faea51fd1eef",
+      "bytes": 4076,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/classic-story-gallery.js",
+      "status": 200,
+      "sha256": "8e4010f65f8229bea35f04db3e3d765b5d6c195b1dcc201b35957f59640d984b",
+      "bytes": 29476,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/classic-story-input.js",
+      "status": 200,
+      "sha256": "7e370a96fea44b7c9c51572da3fc6da1c28fe460f4be54baaba92502f827b4b0",
+      "bytes": 9822,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/init.js",
+      "status": 200,
+      "sha256": "9dbd5a0211b8a684868cffcec3d50364b7823a86a9c9b95ba66148c06a8f8c0c",
+      "bytes": 1438725,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojox/gfx/svg.js",
+      "status": 200,
+      "sha256": "82f624436dc823b6d3f3b0c33b8d11d68c8dc02f01b06e3fb600325e76c75b3b",
+      "bytes": 30668,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/nls/jsapi_en-us.js",
+      "status": 200,
+      "sha256": "b61ae6954b52513cfc8928c6ba4baa05c84b4a3253036e7a5fd3ab6b61af6121",
+      "bytes": 227930,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/maptour/app/maptour-config.js",
+      "status": 200,
+      "sha256": "6376ea3463066b6e50b3d61c8c24a067d93fec8ee06aae92b44f75dd337f9da0",
+      "bytes": 6903,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojox/gfx/svgext.js",
+      "status": 200,
+      "sha256": "1f72e34a3b297546006dc51aeb75d5564a265b5808372ea9b70c81254296f872",
+      "bytes": 1029,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojox/gfx/filters.js",
+      "status": 200,
+      "sha256": "422137ccf839c7fd8c8c3f3dfb841fcbaa8fcc9744d8d4792b6b5eb292f6337e",
+      "bytes": 17871,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/maptour/app/main-app.js",
+      "status": 200,
+      "sha256": "bf7dc0417653fa52e76620f694f58068eb4755cb547e374ba2e9dd4000b8e1b0",
+      "bytes": 1837,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/maptour/app/maptour-viewer-min.js",
+      "status": 200,
+      "sha256": "252a3885fc696122b9b45dd09218339ddaa53930877f8799b76e773151398777",
+      "bytes": 541353,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/TitlePane.js",
+      "status": 200,
+      "sha256": "323a20f0971cb140631f8410d72a89582b08557b64770d07206be87cef930a0b",
+      "bytes": 4806,
+      "runtimes": [
+        "maptour",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/layers/VectorTileLayer.js",
+      "status": 200,
+      "sha256": "ab3c37b73c209b43efa8d60174e2d66f1636e122d6b13254c69dc5a027999dbe",
+      "bytes": 999,
+      "runtimes": [
+        "maptour",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/debounce.js",
+      "status": 200,
+      "sha256": "34b26092ac078f6598cd7d329b18a3ba5111a2a2cf96f9e77ed9f605c473ab49",
+      "bytes": 379,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/arcgis/Portal.js",
+      "status": 200,
+      "sha256": "360b7aa5e16bce62ddf5be9099abaf68fa7a6845c1141f93b848876049e2daca",
+      "bytes": 21703,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/layers/VectorTileLayerImpl.js",
+      "status": 200,
+      "sha256": "fa2d4f0bbc78611ea7b1b72ce2298d67e688be884c6622fcd5f006f780c454b9",
+      "bytes": 612434,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/layers/nls/VectorTileLayerImpl_en-us.js",
+      "status": 200,
+      "sha256": "68b5df807946ae18e8022f2f99bd6736996c85b95a94f88e5c562fec9a89d0fd",
+      "bytes": 265,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/arcgis-runtime-auth.js",
+      "status": 200,
+      "sha256": "c13574dc04e4a8321416b354bfd8f484aa4f2b6bc549e61b477050fc9e24e8de",
+      "bytes": 4204,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/assets/js/arcgis-basemap-compatibility.js",
+      "status": 200,
+      "sha256": "3fac0cae9dfa6e982e0ea99b8d6f68af5a815d9862d02b4233377af0674f50e2",
+      "bytes": 9380,
+      "runtimes": [
+        "maptour",
+        "swipe",
+        "mapjournal",
+        "mapseries",
+        "cascade",
+        "shortlist",
+        "crowdsource",
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/",
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/",
+        "https://classicstorymaps.com/viewers/shortlist/",
+        "https://classicstorymaps.com/viewers/crowdsource/",
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/maptour/resources/nls/template.js",
+      "status": 200,
+      "sha256": "04f8148f15cb229f43ac38321debad9d61194f1480ac85176e31f266a0f04632",
+      "bytes": 56042,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+      "status": 200,
+      "sha256": "4adad6391b6273d2ac03a605a7bba37cb5609f609d90f0826198a3fe7c1cf6ee",
+      "bytes": 6446,
+      "runtimes": [
+        "maptour"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/maptour/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/swipe/app/swipe-config.js",
+      "status": 200,
+      "sha256": "a6141522736a4b057740bf5a65e254ea9588330cfb6484a81ee99fdea0c4dc3c",
+      "bytes": 2767,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/swipe/app/main-app.js",
+      "status": 200,
+      "sha256": "d1dd896ba54e7ae5d5fa0bacd8805ad4e6e28c701b8b404b51061533d680a771",
+      "bytes": 1599,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/swipe/app/swipe-viewer-min.js",
+      "status": 200,
+      "sha256": "2c2ad85969048f964093135faf0c0dd4494be416242e8302210ac3a3c128c22e",
+      "bytes": 429096,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/swipe/resources/nls/template.js",
+      "status": 200,
+      "sha256": "dac49b358a05df22b98ba7bb4ddb25ae5ab11e0829b66a56b130f5dc96a2df9b",
+      "bytes": 20407,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/Grid.js",
+      "status": 200,
+      "sha256": "3a5f9618b12313f8819d9f9f1be3daa9180dfabdbe7d4381a0f8b2446bc8e225",
+      "bytes": 6100,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/Selection.js",
+      "status": 200,
+      "sha256": "114f1746a8af536695540d7f2adb3244b340c5f1c13a034cb706701d9fed8712",
+      "bytes": 8063,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/extensions/Pagination.js",
+      "status": 200,
+      "sha256": "8bfa74d472d654322b2cf2613f6a2c85fd0321b1c471bdfe8c2515965fadc1f8",
+      "bytes": 7034,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/store/Cache.js",
+      "status": 200,
+      "sha256": "9e018a33abfd3ece529284fe95fabe68d6076c480fa9be80f03c91cad31b2182",
+      "bytes": 992,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/store/Observable.js",
+      "status": 200,
+      "sha256": "8f5cea6ffaf56d90bfea8dc28f7ee73407ded9e99864fedf446070df8c5d9ea2",
+      "bytes": 1906,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/put-selector/put.js",
+      "status": 200,
+      "sha256": "6d18556c5b509323aca3186d7ba208cd068b7d13802dae3792a98514a14fb851",
+      "bytes": 2068,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/util/mouse.js",
+      "status": 200,
+      "sha256": "2b8e715df6c88235acd13b95a59fb87e1fe2417fa9467d480c28d37a2a8f607f",
+      "bytes": 676,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/form/Select.js",
+      "status": 200,
+      "sha256": "d19b59706affc011032715364633573f510be68cef3be786e23254053ad6de91",
+      "bytes": 7416,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/tasks/locator.js",
+      "status": 200,
+      "sha256": "4f7d67e568db778df8e28811537f07d1bee1d0fc1ef8b19912ef7d878f8352a5",
+      "bytes": 4797,
+      "runtimes": [
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/dnd/move.js",
+      "status": 200,
+      "sha256": "7b5debf1e0841aee293dab972d0266a7d8f842947dc3b317fa754f73355e5f1f",
+      "bytes": 1570,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/dijit/Search.js",
+      "status": 200,
+      "sha256": "efa6dc27b9d7b6d7263c480dbdb7ed3cc6899c112aee1cedb620420a571d1f66",
+      "bytes": 44724,
+      "runtimes": [
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/dijit/Legend.js",
+      "status": 200,
+      "sha256": "a5b9b263dbf68bb6c73c6814fe7f6b7b1b1e9e8d2d943cd83ffe4ff02f2296d2",
+      "bytes": 62959,
+      "runtimes": [
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/widgets.js",
+      "status": 200,
+      "sha256": "e4868739074e78017917d84061a75e2d58b029338c3edfa789653c6996f2f6a6",
+      "bytes": 1233228,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/util/misc.js",
+      "status": 200,
+      "sha256": "db6e6dd6097a5496f75363c86d390d3e8efaf9057e871bbfa496e1fc1cc35ecb",
+      "bytes": 1515,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/List.js",
+      "status": 200,
+      "sha256": "0b9a73437a53814919dd9a5792c01105bccef0cff7fedb264d48caaea2bee86a",
+      "bytes": 11419,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/_StoreMixin.js",
+      "status": 200,
+      "sha256": "f0d00ea4674fa315dbaf70fb74b45b17325a2674dc9aaa9c2a13bf6e1c58a700",
+      "bytes": 4232,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dgrid/extensions/nls/pagination.js",
+      "status": 200,
+      "sha256": "95b57e1a66f0bb9189b6797dbc6ed81c92dafa1ae569b4fbf5669e4d3a7716b6",
+      "bytes": 500,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/xstyle/css.js",
+      "status": 200,
+      "sha256": "db9ce9b9f1fc129aba9647f626ce7e5b7c64c15845e9f48af09b637f232d6f34",
+      "bytes": 802,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/form/_FormSelectWidget.js",
+      "status": 200,
+      "sha256": "eca35234b50e864b04763664d33eda813bbf84b7942f8a7b7e8377a2ee6e5d68",
+      "bytes": 8240,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/DropDownMenu.js",
+      "status": 200,
+      "sha256": "bb3f9c64dfe3d06a685b4f164bfcc1519b5258e7deb951fb59e0add67e64b850",
+      "bytes": 880,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/MenuItem.js",
+      "status": 200,
+      "sha256": "3b61de00fdb5824baea800493e4e27bef73c25430d21a9ffa2013d76d796de0d",
+      "bytes": 3176,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/MenuSeparator.js",
+      "status": 200,
+      "sha256": "2b49a6e8db9fe4c28f4f75c699da8c8d3f47e5266c8a0f73678252ec88b2b32a",
+      "bytes": 955,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/_KeyNavMixin.js",
+      "status": 200,
+      "sha256": "d08efa7fd94dd6768b31c61688c4712add3f4d657b2839a211b38047f5025273",
+      "bytes": 4479,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/tasks/AddressCandidate.js",
+      "status": 200,
+      "sha256": "7dab4bde377d96f4a8ee8e3c086a0ceb2d72ccb6ef049abebb1022b022074fed",
+      "bytes": 502,
+      "runtimes": [
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/styles/basic.js",
+      "status": 200,
+      "sha256": "d5a74560497b86f9c3297cce35bc84588d043ae01a076244f9982d188a4be195",
+      "bytes": 3470,
+      "runtimes": [
+        "swipe",
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/",
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/nls/widgets_en-us.js",
+      "status": 200,
+      "sha256": "70458429570cbbffe640e91eb7fbbf16346f6e0edb913275ed8e63bb8d5ead3e",
+      "bytes": 6990,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/tasks/LegendLayer.js",
+      "status": 200,
+      "sha256": "80392a3c1cf3ff33bf8c5e4a79b97e0730ec906fc9bb918bcfaed6c6bbcae630",
+      "bytes": 419,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/xstyle/has-class.js",
+      "status": 200,
+      "sha256": "f63f79ec9aa4b12f4478f52b0ef7ad8a80fa1fd17aca9d092e9a74c80619b48c",
+      "bytes": 317,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/xstyle/core/load-css.js",
+      "status": 200,
+      "sha256": "b5106d7ab7f34c30b827ff2eb49c113e511e4203bb66058eb09c6692f38ce554",
+      "bytes": 891,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dijit/PopupMenuItem.js",
+      "status": 200,
+      "sha256": "2eb97dabf7e6b0f070b02093038b2b787fdccde0015adb3ab7f8343ce5974179",
+      "bytes": 1202,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/dnd/AutoSource.js",
+      "status": 200,
+      "sha256": "e1fc6ab2a30e59502b70a3fcf8607c35eaa9d22c6f946d69c79486aca55aa44e",
+      "bytes": 364,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/dojo/dnd/Target.js",
+      "status": 200,
+      "sha256": "c2d64a01b40a9bb9aceea3bb66fcdb14204419b3b8d6089b43cdab8a1f48f069",
+      "bytes": 409,
+      "runtimes": [
+        "swipe"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/swipe/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/app/main-config.js",
+      "status": 200,
+      "sha256": "4a460d6317ae241da84ab50b74d92c3ae0b37525d4b9bc32ead3582e6ad6247d",
+      "bytes": 3448,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/app/main-app.js",
+      "status": 200,
+      "sha256": "200cda9ca25fd7546a61dcf7584d0645f6e18bc8daf653ef4d9e2ab29d6586b7",
+      "bytes": 2033,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/init.js",
+      "status": 200,
+      "sha256": "966e221b9ae1a247d55ec95b76088e163954a61860292575d1296dca781d4306",
+      "bytes": 1745324,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/app/config.js",
+      "status": 200,
+      "sha256": "9b5ff3f8339e78e9695a60fe013e7ffef252fa16f4cc5abfd398dcba5f969f89",
+      "bytes": 7144,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojox/gfx/svg.js",
+      "status": 200,
+      "sha256": "8e62232beaf69feddd671db91004b098c8ecf7b1f3f6694c41b8546faea5e4f1",
+      "bytes": 30668,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/nls/jsapi_en-us.js",
+      "status": 200,
+      "sha256": "6ca3feb9a07d6be9e40d3d5762b5c3ae2d6b841388156d219cf290312e523a1a",
+      "bytes": 257767,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/app/viewer-min.js",
+      "status": 200,
+      "sha256": "006fdf46981219415df0101e9537ebfb74d645dd9c8d3da2a9e8f6bee812c0f1",
+      "bytes": 515596,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/resources/common/nls/webmap.js",
+      "status": 200,
+      "sha256": "8805642d110ffd1ad9516a95cafd68843ee1d17c87766f90ab0a9017337ceeca",
+      "bytes": 5502,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/resources/tpl/viewer/nls/template.js",
+      "status": 200,
+      "sha256": "3ed8f0d0fd29a726d8df863025347ca4b99df60dd9495a617f0dbd62738a9cf6",
+      "bytes": 7217,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/resources/common/nls/core.js",
+      "status": 200,
+      "sha256": "9e8e9156f50e3656418654ac9bd6c9505caf5433321a98638d450ec255f1d10c",
+      "bytes": 10600,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapjournal/app/custom-scripts.js",
+      "status": 200,
+      "sha256": "0851ef3bc5d290026fead9125327d9e32c38dcc1b38c5ad702a414686e5489ea",
+      "bytes": 317,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojox/gfx/filters.js",
+      "status": 200,
+      "sha256": "6de5eda7615b74f15519e857edb1bdd2a89fbc4498f6dab99853cfaeec4dd53c",
+      "bytes": 17871,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojox/gfx/svgext.js",
+      "status": 200,
+      "sha256": "dcd53e0833ad20080f6fd0c09930c14ab8a8b7046d9b45f9cb411672ea0146ec",
+      "bytes": 1029,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojo/cookie.js",
+      "status": 200,
+      "sha256": "a39c4fb27bda8649e5631d511dca04d150d9ab9582d76a3ff4e7cc9507b61ce7",
+      "bytes": 1013,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/tasks/locator.js",
+      "status": 200,
+      "sha256": "9883fb988b2736d40771daf52febd195bebbb139c9508df46d2158fd0de56faa",
+      "bytes": 4813,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/dijit/Search.js",
+      "status": 200,
+      "sha256": "3dd3576c100cd4f2394a26a3630f93ee9fc3a38c719a9539cfad9a2ff25a6cad",
+      "bytes": 44839,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/dijit/OverviewMap.js",
+      "status": 200,
+      "sha256": "21e6417b35b5ddebf5a4dce152757eba8dd06a334f13fad99c06bb2c6a358e86",
+      "bytes": 9044,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/dijit/Legend.js",
+      "status": 200,
+      "sha256": "e0d505dd37a88bb692343f28bde94cd053d1d1fde0cb7399eb6a22b11ae3f1e8",
+      "bytes": 68206,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/arcgis/Portal.js",
+      "status": 200,
+      "sha256": "7a5f2ee9b4e5b8281972502d57cf54ed3e62d0a084b802ce7ff2d5916cf830f7",
+      "bytes": 23696,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/dijit/BasemapGallery.js",
+      "status": 200,
+      "sha256": "ae69f7db584ef04084371246231418047d53294d664bf08839376b5c17cad4c7",
+      "bytes": 514081,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/styles/basic.js",
+      "status": 200,
+      "sha256": "2099f3fd44e1249ae78a29d25e291d6806485927a94d8fd26ef5c8c29fcf7fc6",
+      "bytes": 3491,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/tasks/AddressCandidate.js",
+      "status": 200,
+      "sha256": "4a3f6373e06fadf94ce399344cd195de1322e05fb8fa7500a85d0167af05ebc2",
+      "bytes": 503,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/virtualearth/VETiledLayer.js",
+      "status": 200,
+      "sha256": "c473eda57c6254455e16e614fd9430641aeed4f3d39e295dee2013a037ecd7d2",
+      "bytes": 4864,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/VectorTileLayer.js",
+      "status": 200,
+      "sha256": "a175e1283980229c148178400a942693d64c894300bb503213afd93f7b113e21",
+      "bytes": 996,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/ArcGISImageServiceLayer.js",
+      "status": 200,
+      "sha256": "323987f39b029b1454c23f6342b212f4cdd2f8eb0f0d0ffe558e44e64e33f39e",
+      "bytes": 93502,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/RasterXLayer.js",
+      "status": 200,
+      "sha256": "ad9882baed97cbc031b2222d8091a2cda9efce38483d09c99a2bb8c5a4a06a9f",
+      "bytes": 480544,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/dijit/nls/BasemapGallery_en-us.js",
+      "status": 200,
+      "sha256": "526cee606af2332d138d090dd94aef4dc2ec7d61c9d8fcd76b39ea00417b78f1",
+      "bytes": 260,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/VectorTileLayerImpl.js",
+      "status": 200,
+      "sha256": "ce62f3f1c2f9e964d36251c9f1494083c852b4ea4750632de6ff21663ce0016d",
+      "bytes": 612903,
+      "runtimes": [
+        "mapjournal",
+        "mapseries",
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/",
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/nls/RasterXLayer_en-us.js",
+      "status": 200,
+      "sha256": "9f863ea19c37eb2a73829a140224df415331209bebb5bfd0e677f4022d3a651f",
+      "bytes": 259,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/nls/VectorTileLayerImpl_en-us.js",
+      "status": 200,
+      "sha256": "2439af101d4e70ce1f8c20de7d1e670f984b39b403b2f182be59525e984d5e2e",
+      "bytes": 266,
+      "runtimes": [
+        "mapjournal",
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/",
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/vectorTiles/core/workers/worker.js",
+      "status": 200,
+      "sha256": "ffd75d6e9836304c7931e881559483d12142e3a7f7c7c52d460c7c5acf2d44a4",
+      "bytes": 3511,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/vectorTiles/core/workers/worker-init.js",
+      "status": 200,
+      "sha256": "7838555770d55f28c1e8e1ee10caf3084cbf3cba5497564a6ca8ec5c3f56d1ee",
+      "bytes": 234311,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/config.js",
+      "status": 200,
+      "sha256": "c8b3c132365b9dca0f51bc472ee3c0049f4e801663b00848a478f49ed41f60f5",
+      "bytes": 2888,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/vectorTiles/core/workers/nls/worker-init_en-us.js",
+      "status": 200,
+      "sha256": "7da9656e9995aafc482784e6425d54c51143894c64bb9aff42a6688235a6d56a",
+      "bytes": 6263,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/tasks/support/pbfDeps.js",
+      "status": 200,
+      "sha256": "70ec42b95664668ae7f22308a3891c0976b6c4111793fbddb330b14c50eb20db",
+      "bytes": 30447,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/tasks/support/nls/pbfDeps_en-us.js",
+      "status": 200,
+      "sha256": "501207df6fb51c6ceb976c7ff18cee5e009d26d21d25101716e3155e92092d07",
+      "bytes": 261,
+      "runtimes": [
+        "mapjournal"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapjournal/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/app/main-config.js",
+      "status": 200,
+      "sha256": "049556b4167d4f64aaee68f8dc1b52bd4cc028a4b20bc5b7f49bc0b0e0a05f2b",
+      "bytes": 3434,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/app/main-app.js",
+      "status": 200,
+      "sha256": "b9c88321d026cdf15cf183a758eaf5cd8f592d1bda4f512054fcd417418169a2",
+      "bytes": 2055,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/app/config.js",
+      "status": 200,
+      "sha256": "799642f3004ef2392d10fd6732652da27471359b42b1f593e39f949404f4db9a",
+      "bytes": 12965,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/app/viewer-min.js",
+      "status": 200,
+      "sha256": "7fa89671ab871884d5951e04831fe912a36971f3da03aff27a8c3469ece50468",
+      "bytes": 518541,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/app/custom-scripts.js",
+      "status": 200,
+      "sha256": "0851ef3bc5d290026fead9125327d9e32c38dcc1b38c5ad702a414686e5489ea",
+      "bytes": 317,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/resources/common/nls/webmap.js",
+      "status": 200,
+      "sha256": "00077a3ca9ce468831f08f396a7eb3fd9b380cf4e9bd49e2a2a1a9ab8082a768",
+      "bytes": 4804,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/resources/common/nls/media.js",
+      "status": 200,
+      "sha256": "6368f519147c172af435b8e18e98a121c9925d02a58c08ae8fd8bf703257ab36",
+      "bytes": 7771,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/resources/tpl/viewer/nls/template.js",
+      "status": 200,
+      "sha256": "09c23b48f3398ffa1dc5133c2c6da311977e0dc12b52d2e07be47bdcaf68546f",
+      "bytes": 5997,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/mapseries/resources/common/nls/core.js",
+      "status": 200,
+      "sha256": "3677380dc5a38a1db32fa5beba3ab46c6221cff362c02a5f4a797c2ae1ed46a6",
+      "bytes": 10643,
+      "runtimes": [
+        "mapseries"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/mapseries/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/app/main-config.js",
+      "status": 200,
+      "sha256": "a973b97e8f0e3da80f833b2fe90f45f8896638609db2d209f65013e4caf333c2",
+      "bytes": 7823,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/app/main-app.js",
+      "status": 200,
+      "sha256": "4ef36fcf4608bfd46d840d9453846a22e2362046f2589cf31d217be5c7ebf446",
+      "bytes": 2587,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/app/custom-scripts.js",
+      "status": 200,
+      "sha256": "abfe9fb5e8217f44f2dce733201f568cf10f7f9756638bf584617cd6ef6ed7e9",
+      "bytes": 574,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/app/config.js",
+      "status": 200,
+      "sha256": "f11ec1b219e7233d018bed3cd10141343004fdc1011b547fe73143120d08df5d",
+      "bytes": 3287,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/app/viewer-min.js",
+      "status": 200,
+      "sha256": "dfbd7016b5c586cd45d3019db45efbed861b40e47af2922ec5c381a31f2977e2",
+      "bytes": 703308,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/cascade/resources/tpl/viewer/nls/app.js",
+      "status": 200,
+      "sha256": "7f3b23db9070ff9fbd7d0c87dcabb26de5e9913733750d22840ca07c499f1883",
+      "bytes": 7984,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dijit/nls/loading.js",
+      "status": 200,
+      "sha256": "6760ea1c74e7925b13671532ea8b60747702761de5056704852a605126b09292",
+      "bytes": 385,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojo/cldr/nls/number.js",
+      "status": 200,
+      "sha256": "00a6077269b5faf3648f19f7586610c18d30225e30358622f15ac227a013d083",
+      "bytes": 1359,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojo/cldr/nls/gregorian.js",
+      "status": 200,
+      "sha256": "dc609b46274b8608889fb7815cb9b6ee96ba7410bd7498addad8ea329c49b596",
+      "bytes": 10956,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dijit/nls/common.js",
+      "status": 200,
+      "sha256": "422f01057d57e0c0da34c22b9b8338947d4bda452111765fc0b3a547306ad854",
+      "bytes": 392,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dijit/form/nls/validate.js",
+      "status": 200,
+      "sha256": "a13d78cbc16ec228a9e409b0e04fc7eee2ebc9e1dd832baa903ea9b9a2a8cb14",
+      "bytes": 460,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/nls/jsapi.js",
+      "status": 200,
+      "sha256": "7eb1cd24a641b65f39991ad7f5daaa84841435d10fd5f26eb08fbb748af6d74f",
+      "bytes": 244944,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://s.ytimg.com/yts/jsbin/www-widgetapi-vflY6gPjD/www-widgetapi.js",
+      "status": 200,
+      "sha256": "a599232b27762d0deef401c854b6c5f7f9f7b69c63a22fdf36b99bac156946fc",
+      "bytes": 20602,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojo/cldr/nls/en/number.js",
+      "status": 200,
+      "sha256": "576561fc32468323e4257d17824b4b57bdb4aa7bace8b5afd97345f1c9cfe07e",
+      "bytes": 636,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/dojo/cldr/nls/en/gregorian.js",
+      "status": 200,
+      "sha256": "325893b5e64bb51c817f9ce924bc9be164ffd09cf746f8ba1cb4bdb6336c208f",
+      "bytes": 10224,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.41/esri/layers/vectorTiles/nls/common.js",
+      "status": 200,
+      "sha256": "452ca9c39e6d156a71e378068c5223524567972f5c2e0b6943acef79277289d8",
+      "bytes": 214,
+      "runtimes": [
+        "cascade"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/cascade/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/app/main-config.js",
+      "status": 200,
+      "sha256": "cfd70c6966d2fcd3bb97066abae1706b61585165908bdaed0c182cbf2c71b1df",
+      "bytes": 3659,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/app/config.js",
+      "status": 200,
+      "sha256": "690875bc9e1e4327b19de2f45edd378429c58ef219143d449edca63149ba5b5a",
+      "bytes": 4145,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/app/viewer-min.js",
+      "status": 200,
+      "sha256": "11e364aaf4a9a7fb3e3209b3dc764751fc440e49d75fee9a54bf7d7640b5673a",
+      "bytes": 505718,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/app/main-app.js",
+      "status": 200,
+      "sha256": "6f9a590669cf327e7c2638f755c208f03bdb005d2a0608dc852f48af7be361cb",
+      "bytes": 2112,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/dijit/OverviewMap.js",
+      "status": 200,
+      "sha256": "321b6b82b38720559cb0233929e59ea9de46118517a7be2f0a89de6c6bd83e16",
+      "bytes": 8961,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/dijit/BasemapGallery.js",
+      "status": 200,
+      "sha256": "ae96d30358b26afd8beef58a88109528733088e95ec7a5ab399b65928c4d3149",
+      "bytes": 118727,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/resources/common/nls/webmap.js",
+      "status": 200,
+      "sha256": "3805172ff6d179ab4ac04cbf4f7c302259a0c1aaaf3fd72c6ad7b7be6455a997",
+      "bytes": 4784,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/resources/common/nls/media.js",
+      "status": 200,
+      "sha256": "6f0bc2b870b2d5ef628770a14f554acded4f02db8bd6a844ed0a43a35718e7b7",
+      "bytes": 7438,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/resources/tpl/viewer/nls/template.js",
+      "status": 200,
+      "sha256": "9a8c8d294c1f5e85bbbcbedb1b711e85f40385387ade674054f9209d15f927fb",
+      "bytes": 5100,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/resources/common/nls/core.js",
+      "status": 200,
+      "sha256": "c30c9f1aa73133716922f9fc30c7c8cd89b63952396fad236566829a3062cf16",
+      "bytes": 8848,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/layers/ArcGISImageServiceLayer.js",
+      "status": 200,
+      "sha256": "50048c66ad53c6732bdb62ee445f93e12e33d6a8497a5e074443b3b387e89c70",
+      "bytes": 84886,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/virtualearth/VETiledLayer.js",
+      "status": 200,
+      "sha256": "53192161c37c572b4370863e93db256fc5ed115b5c240b1ded75fea2cca5f4e2",
+      "bytes": 4860,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/shortlist/app/custom-scripts.js",
+      "status": 200,
+      "sha256": "a84eea76d41fbfc883411b4a394d63519dd9ac6650f36feec1ff046f4ac65314",
+      "bytes": 536,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/layers/LabelLayer.js",
+      "status": 200,
+      "sha256": "7130ab462166819dcea7fbe27423fddb83c3a4c2965acae03afe348a0f287509",
+      "bytes": 32353,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/tasks/support/pbfDeps.js",
+      "status": 200,
+      "sha256": "d713b85a774e04ba16dd9c2249f3fbb183238246e624a530754efbf3340ea772",
+      "bytes": 30274,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.31/esri/tasks/support/nls/pbfDeps_en-us.js",
+      "status": 200,
+      "sha256": "041a10bf37bb93487a61f4a48caa5c4f0dd8a5f34c051ba88dfc086d6b6ed2ce",
+      "bytes": 260,
+      "runtimes": [
+        "shortlist"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/shortlist/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/crowdsource/app/main-config.min.js",
+      "status": 200,
+      "sha256": "4a279ff8d75ae62af15ba9c5f77292601bd462fbabbddccd61bde31a3994c56b",
+      "bytes": 3612,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/crowdsource/app/main-app.min.js",
+      "status": 200,
+      "sha256": "8e100a84a8cfb987358290f183ef68a96dab42df595142d2aa9090e91c424868",
+      "bytes": 773539,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/init.js",
+      "status": 200,
+      "sha256": "ca22c4ecb8271a7287f1dddcdec049d39ed2c7471ace6379598177a71da6983e",
+      "bytes": 1381954,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/nls/jsapi_en-us.js",
+      "status": 200,
+      "sha256": "6763fd6f1b0eb42e792aa711d958c6590240ef9f8c0a6d4d4ecc51f69feda99d",
+      "bytes": 200773,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/layers/VectorTileLayerImpl.js",
+      "status": 200,
+      "sha256": "0b2cde1eef00f16f9cb5f72e4a577160f4cdaafe8506d10218f73cf95265e952",
+      "bytes": 632045,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/dojox/gfx/svg.js",
+      "status": 200,
+      "sha256": "cb453595e8c08cc1d5ad6e2e415859f6debf3229f78c79370b3cb22d5f734b12",
+      "bytes": 30721,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/dijit/Geocoder.js",
+      "status": 200,
+      "sha256": "b57bd678c7c1af9eb8f8c17cd912d81c0f95c25e5ed2d532c8820c750c7ec7b3",
+      "bytes": 26985,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/dijit/LocateButton.js",
+      "status": 200,
+      "sha256": "50cd19c9fe3a5021a3171b0bc5a36dd7d7f4f3c3a0b92e17a7a54fce8cd28a50",
+      "bytes": 8999,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/dijit/HomeButton.js",
+      "status": 200,
+      "sha256": "3633accce0676e6013bb9257b4e4e53fc2b330b023f42a109d6b9ad8c9542806",
+      "bytes": 2934,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/tasks/locator.js",
+      "status": 200,
+      "sha256": "5109fc151dd26cd46ceb8a31f9cfe45a62ab2df8fc21bd0f70f111c24ff869cf",
+      "bytes": 4718,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/arcgis/Portal.js",
+      "status": 200,
+      "sha256": "0f0f96ecc26fca448197d251efc2c03c395ae16c4800f41b5edf5daafffabdfc",
+      "bytes": 20692,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/layers/nls/VectorTileLayerImpl_en-us.js",
+      "status": 200,
+      "sha256": "8da275553ee2d70daded598561393906d9e7d8319c9e71aac8c474745e39b6c6",
+      "bytes": 265,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/dojox/gfx/filters.js",
+      "status": 200,
+      "sha256": "422137ccf839c7fd8c8c3f3dfb841fcbaa8fcc9744d8d4792b6b5eb292f6337e",
+      "bytes": 17871,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/tasks/ProjectParameters.js",
+      "status": 200,
+      "sha256": "454e55427a2164800f0587979e643f365110ce8c6bfb39b02b1c11a1ccff7922",
+      "bytes": 1063,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/dojox/gfx/svgext.js",
+      "status": 200,
+      "sha256": "1f72e34a3b297546006dc51aeb75d5564a265b5808372ea9b70c81254296f872",
+      "bytes": 1029,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/tasks/AddressCandidate.js",
+      "status": 200,
+      "sha256": "5f0cf020c8e5b21fd13a845448b0512deccce7954f83f9b5395c214b1c7c0dcc",
+      "bytes": 502,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/crowdsource/resources/translations/viewer/nls/template.js",
+      "status": 200,
+      "sha256": "9d5a0819f8a1452a199f0fb1b7dc43f0415873fbc60dfe1d02102e62dfe01b6d",
+      "bytes": 7263,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/layers/vectorTiles/core/workers/worker.js",
+      "status": 200,
+      "sha256": "9b73a6b1da7fc2b76b3fe0ac2c6715fca786cab857d822ea170499ce35f7f282",
+      "bytes": 3510,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/index.html"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/layers/vectorTiles/core/workers/worker-init.js",
+      "status": 200,
+      "sha256": "976ba3b23fd67b31fa1f7909e0ff89a44c404e3aade6481232e09473ad56d77c",
+      "bytes": 234173,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/index.html"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/config.js",
+      "status": 200,
+      "sha256": "76ec8fd1b8dedc30ba7da1b0df021969e41eb9afc8ccabfef537eb27090ddf9e",
+      "bytes": 2802,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/index.html"
+      ]
+    },
+    {
+      "url": "https://js.arcgis.com/3.25/esri/layers/vectorTiles/core/workers/nls/worker-init_en-us.js",
+      "status": 200,
+      "sha256": "7da9656e9995aafc482784e6425d54c51143894c64bb9aff42a6688235a6d56a",
+      "bytes": 6263,
+      "runtimes": [
+        "crowdsource"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/crowdsource/index.html"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/",
+      "status": 301,
+      "bodyUnavailable": true,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": []
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/init.js",
+      "status": 200,
+      "sha256": "ca3b086deb1cfbfef3bd8f647e8d8b6a3cd213f794919cba0932eaa6d5297837",
+      "bytes": 1421315,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/basic/config/templateConfig.js",
+      "status": 200,
+      "sha256": "d3fb42b8cc263fd314117e99bd60ab229cce60156b227e3e9d4d1b74900aa213",
+      "bytes": 2965,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/basic/js/template.js",
+      "status": 200,
+      "sha256": "f8962c8290d898aa36d30d551d662fbd3ffabadb7d51fb7ad7b9d4487e9192b1",
+      "bytes": 30384,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/basic/js/main.js",
+      "status": 200,
+      "sha256": "9bd36b581998a1133e109d29dad3c347eca4860664f8fb1580e568ed2ed9e8d9",
+      "bytes": 14355,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/layers/VectorTileLayerImpl.js",
+      "status": 200,
+      "sha256": "c61ef301230501758f67bac576629a58117183c2ddf08642f1b6c2a21ae40c2f",
+      "bytes": 632733,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/nls/jsapi_en-us.js",
+      "status": 200,
+      "sha256": "7e51e86743ba0888159937c7fb6f2a75a3d46a8ff38fbb0dce2fc0a844473198",
+      "bytes": 205583,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dijit/layout/BorderContainer.js",
+      "status": 200,
+      "sha256": "58279bcd961e735b00f812cd55b1568562fe9aa0bf54ee451d45b0f73b6a2091",
+      "bytes": 6472,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dojox/gfx/svg.js",
+      "status": 200,
+      "sha256": "82f624436dc823b6d3f3b0c33b8d11d68c8dc02f01b06e3fb600325e76c75b3b",
+      "bytes": 30668,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/basic/js/MapUrlParams.js",
+      "status": 200,
+      "sha256": "45a2a5b8618d0e966386f47a2e504d4c59c8cfe033db5ac854d111b23e733ae1",
+      "bytes": 9751,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://classicstorymaps.com/viewers/basic/config/defaults.js",
+      "status": 200,
+      "sha256": "55f23db1a65ca00d2e1bd0a254183378ac583322d8252a03945ea9240d404afa",
+      "bytes": 3287,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/layers/nls/VectorTileLayerImpl_en-us.js",
+      "status": 200,
+      "sha256": "c258ff9164a380fc5cbd18870083bdbb5ed42686d3b798563878a4a872400243",
+      "bytes": 265,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/arcgis/Portal.js",
+      "status": 200,
+      "sha256": "cb072a2375ea2af7e14137b4196cb058fd179dbf0b56d5481ffcfc3c3ec39238",
+      "bytes": 21159,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dijit/layout/LayoutContainer.js",
+      "status": 200,
+      "sha256": "5378c89a4222aa5cff1e857e2bc54cf40d81964b20a347e8846925175973b4b9",
+      "bytes": 1459,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/dijit/HomeButton.js",
+      "status": 200,
+      "sha256": "f41af285bf8c2ce23189075d185d7aa70cd8507a992de2ccc46df0dbb32e07cd",
+      "bytes": 2934,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/esri/tasks/ProjectParameters.js",
+      "status": 200,
+      "sha256": "1e0d0cabd4293fdf876516ce6799713e9a777ab33c590bc38766bc2e4e1456b7",
+      "bytes": 1063,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dojox/gfx/filters.js",
+      "status": 200,
+      "sha256": "422137ccf839c7fd8c8c3f3dfb841fcbaa8fcc9744d8d4792b6b5eb292f6337e",
+      "bytes": 17871,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dojox/gfx/svgext.js",
+      "status": 200,
+      "sha256": "1f72e34a3b297546006dc51aeb75d5564a265b5808372ea9b70c81254296f872",
+      "bytes": 1029,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dijit/layout/_LayoutWidget.js",
+      "status": 200,
+      "sha256": "986980ae3f59fc22580ea52637f3e54aea756824208d1182c0535aa8d924e0e0",
+      "bytes": 1412,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    },
+    {
+      "url": "https://jsdev.arcgis.com/3.27/dijit/_Contained.js",
+      "status": 200,
+      "sha256": "5e4f9b086a0218be2b6737e3e9fe7c10af926201004c8c2209dc0de806ba6c74",
+      "bytes": 489,
+      "runtimes": [
+        "basic"
+      ],
+      "frames": [
+        "https://classicstorymaps.com/viewers/basic/"
+      ]
+    }
+  ],
+  "advisories": [
+    {
+      "id": "GHSA-3mgp-fx93-9xv5",
+      "url": "https://github.com/advisories/GHSA-3mgp-fx93-9xv5",
+      "summary": "XSS vulnerability that affects bootstrap",
+      "severity": "medium",
+      "updatedAt": "2024-08-05T16:28:42Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": "< 3.4.0",
+          "firstPatched": "3.4.0"
+        },
+        {
+          "package": "bootstrap-sass",
+          "affected": "< 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-ph58-4vrj-w6hr",
+      "url": "https://github.com/advisories/GHSA-ph58-4vrj-w6hr",
+      "summary": "bootstrap Cross-site Scripting vulnerability",
+      "severity": "medium",
+      "updatedAt": "2024-08-05T16:30:12Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": "< 3.4.0",
+          "firstPatched": "3.4.0"
+        },
+        {
+          "package": "bootstrap-sass",
+          "affected": "< 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-3wqf-4x89-9g79",
+      "url": "https://github.com/advisories/GHSA-3wqf-4x89-9g79",
+      "summary": "Bootstrap vulnerable to Cross-Site Scripting (XSS)",
+      "severity": "medium",
+      "updatedAt": "2024-08-05T16:34:01Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": ">= 4.0.0, < 4.1.2",
+          "firstPatched": "4.1.2"
+        },
+        {
+          "package": "bootstrap",
+          "affected": ">= 2.3.0, < 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-7mvr-5x2g-wfc8",
+      "url": "https://github.com/advisories/GHSA-7mvr-5x2g-wfc8",
+      "summary": "Bootstrap Cross-site Scripting vulnerability",
+      "severity": "medium",
+      "updatedAt": "2026-06-08T23:16:19Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": ">= 4.0.0, < 4.1.2",
+          "firstPatched": "4.1.2"
+        },
+        {
+          "package": "bootstrap",
+          "affected": ">= 2.3.0, < 3.4.0",
+          "firstPatched": "3.4.0"
+        },
+        {
+          "package": "bootstrap-sass",
+          "affected": ">= 2.0.4, < 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-4p24-vmcr-4gqj",
+      "url": "https://github.com/advisories/GHSA-4p24-vmcr-4gqj",
+      "summary": "Bootstrap Cross-site Scripting vulnerability",
+      "severity": "medium",
+      "updatedAt": "2024-08-05T16:29:12Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": ">= 4.0.0-beta, < 4.0.0-beta.2",
+          "firstPatched": "4.0.0-beta.2"
+        },
+        {
+          "package": "bootstrap",
+          "affected": ">= 2.0.4, < 3.4.0",
+          "firstPatched": "3.4.0"
+        },
+        {
+          "package": "bootstrap-sass",
+          "affected": ">= 2.0.4, < 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-9v3m-8fp8-mj99",
+      "url": "https://github.com/advisories/GHSA-9v3m-8fp8-mj99",
+      "summary": "Bootstrap Vulnerable to Cross-Site Scripting",
+      "severity": "medium",
+      "updatedAt": "2026-06-02T22:01:58Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": ">= 4.0.0, < 4.3.1",
+          "firstPatched": "4.3.1"
+        },
+        {
+          "package": "bootstrap",
+          "affected": ">= 3.0.0, < 3.4.1",
+          "firstPatched": "3.4.1"
+        },
+        {
+          "package": "bootstrap-sass",
+          "affected": ">= 3.0.0, < 3.4.1",
+          "firstPatched": "3.4.1"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-vxmc-5x29-h64v",
+      "url": "https://github.com/advisories/GHSA-vxmc-5x29-h64v",
+      "summary": "Bootstrap Cross-Site Scripting (XSS) vulnerability for data-* attributes",
+      "severity": "medium",
+      "updatedAt": "2025-11-03T21:31:11Z",
+      "npmRanges": [
+        {
+          "package": "bootstrap",
+          "affected": ">= 1.4.0, <= 3.4.1",
+          "firstPatched": null
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-rmxg-73gg-4p98",
+      "url": "https://github.com/advisories/GHSA-rmxg-73gg-4p98",
+      "summary": "Cross-Site Scripting (XSS) in jquery",
+      "severity": "medium",
+      "updatedAt": "2023-09-25T23:28:12Z",
+      "npmRanges": [
+        {
+          "package": "jquery",
+          "affected": "< 1.12.2",
+          "firstPatched": "1.12.2"
+        },
+        {
+          "package": "jquery",
+          "affected": ">= 1.12.3, < 3.0.0",
+          "firstPatched": "3.0.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-6c3j-c64m-qhgq",
+      "url": "https://github.com/advisories/GHSA-6c3j-c64m-qhgq",
+      "summary": "XSS in jQuery as used in Drupal, Backdrop CMS, and other products",
+      "severity": "medium",
+      "updatedAt": "2024-11-05T20:16:56Z",
+      "npmRanges": [
+        {
+          "package": "jquery",
+          "affected": ">= 1.1.4, < 3.4.0",
+          "firstPatched": "3.4.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-jpcq-cgw6-v4j6",
+      "url": "https://github.com/advisories/GHSA-jpcq-cgw6-v4j6",
+      "summary": "Potential XSS vulnerability in jQuery",
+      "severity": "medium",
+      "updatedAt": "2025-10-22T17:52:05Z",
+      "npmRanges": [
+        {
+          "package": "jquery",
+          "affected": ">= 1.0.3, < 3.5.0",
+          "firstPatched": "3.5.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-xxjr-mmjv-4gpg",
+      "url": "https://github.com/advisories/GHSA-xxjr-mmjv-4gpg",
+      "summary": "Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions",
+      "severity": "medium",
+      "updatedAt": "2026-06-09T10:56:35Z",
+      "npmRanges": [
+        {
+          "package": "lodash",
+          "affected": ">= 4.0.0, <= 4.17.22",
+          "firstPatched": "4.17.23"
+        },
+        {
+          "package": "lodash.unset",
+          "affected": ">= 4.0.0, <= 4.5.2",
+          "firstPatched": null
+        },
+        {
+          "package": "lodash-es",
+          "affected": ">= 4.0.0, <= 4.17.22",
+          "firstPatched": "4.17.23"
+        },
+        {
+          "package": "lodash-amd",
+          "affected": ">= 4.0.0, <= 4.17.22",
+          "firstPatched": "4.17.23"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-f23m-r3pf-42rh",
+      "url": "https://github.com/advisories/GHSA-f23m-r3pf-42rh",
+      "summary": "lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`",
+      "severity": "medium",
+      "updatedAt": "2026-04-01T23:50:28Z",
+      "npmRanges": [
+        {
+          "package": "lodash",
+          "affected": "<= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash-es",
+          "affected": "<= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash-amd",
+          "affected": "<= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash.unset",
+          "affected": ">= 4.0.0, < 4.18.0",
+          "firstPatched": "4.18.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-r5fr-rjxr-66jc",
+      "url": "https://github.com/advisories/GHSA-r5fr-rjxr-66jc",
+      "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+      "severity": "high",
+      "updatedAt": "2026-04-01T23:51:13Z",
+      "npmRanges": [
+        {
+          "package": "lodash",
+          "affected": ">= 4.0.0, <= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash-es",
+          "affected": ">= 4.0.0, <= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash-amd",
+          "affected": ">= 4.0.0, <= 4.17.23",
+          "firstPatched": "4.18.0"
+        },
+        {
+          "package": "lodash.template",
+          "affected": ">= 4.0.0, < 4.18.0",
+          "firstPatched": "4.18.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-gxr4-xjj5-5px2",
+      "url": "https://github.com/advisories/GHSA-gxr4-xjj5-5px2",
+      "summary": "Potential XSS vulnerability in jQuery",
+      "severity": "medium",
+      "updatedAt": "2026-07-09T19:26:18Z",
+      "npmRanges": [
+        {
+          "package": "jquery",
+          "affected": ">= 1.12.0, < 3.5.0",
+          "firstPatched": "3.5.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-9gj3-hwp5-pmwc",
+      "url": "https://github.com/advisories/GHSA-9gj3-hwp5-pmwc",
+      "summary": "XSS in the `altField` option of the Datepicker widget in jquery-ui",
+      "severity": "medium",
+      "updatedAt": "2023-09-26T21:52:24Z",
+      "npmRanges": [
+        {
+          "package": "jquery-ui",
+          "affected": "< 1.13.0",
+          "firstPatched": "1.13.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-gpqq-952q-5327",
+      "url": "https://github.com/advisories/GHSA-gpqq-952q-5327",
+      "summary": "XSS in the `of` option of the `.position()` util in jquery-ui",
+      "severity": "medium",
+      "updatedAt": "2025-11-04T19:36:07Z",
+      "npmRanges": [
+        {
+          "package": "jquery-ui",
+          "affected": "< 1.13.0",
+          "firstPatched": "1.13.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-j7qv-pgf6-hvh4",
+      "url": "https://github.com/advisories/GHSA-j7qv-pgf6-hvh4",
+      "summary": "XSS in `*Text` options of the Datepicker widget in jquery-ui",
+      "severity": "medium",
+      "updatedAt": "2023-09-26T18:11:05Z",
+      "npmRanges": [
+        {
+          "package": "jquery-ui",
+          "affected": "< 1.13.0",
+          "firstPatched": "1.13.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-h6gj-6jjq-h8g9",
+      "url": "https://github.com/advisories/GHSA-h6gj-6jjq-h8g9",
+      "summary": "jQuery UI vulnerable to XSS when refreshing a checkboxradio with an HTML-like initial text label",
+      "severity": "medium",
+      "updatedAt": "2025-07-21T18:33:50Z",
+      "npmRanges": [
+        {
+          "package": "jquery-ui",
+          "affected": "< 1.13.2",
+          "firstPatched": "1.13.2"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-p3hc-fv2j-rp68",
+      "url": "https://github.com/advisories/GHSA-p3hc-fv2j-rp68",
+      "summary": "Prototype Pollution in swiper",
+      "severity": "critical",
+      "updatedAt": "2023-02-01T05:05:35Z",
+      "npmRanges": [
+        {
+          "package": "swiper",
+          "affected": "< 6.5.1",
+          "firstPatched": "6.5.1"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-536q-8gxx-m782",
+      "url": "https://github.com/advisories/GHSA-536q-8gxx-m782",
+      "summary": "Cross-Site Scripting in dojo",
+      "severity": "medium",
+      "updatedAt": "2023-01-09T05:01:55Z",
+      "npmRanges": [
+        {
+          "package": "dojo",
+          "affected": "= 1.13.0",
+          "firstPatched": "1.13.1"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.12.0, < 1.12.4",
+          "firstPatched": "1.12.4"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.11.0, < 1.11.6",
+          "firstPatched": "1.11.6"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.10.0, < 1.10.10",
+          "firstPatched": "1.10.10"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-jxfh-8wgv-vfr2",
+      "url": "https://github.com/advisories/GHSA-jxfh-8wgv-vfr2",
+      "summary": "Prototype pollution in dojo",
+      "severity": "high",
+      "updatedAt": "2023-01-27T05:02:30Z",
+      "npmRanges": [
+        {
+          "package": "dojo",
+          "affected": "< 1.11.10",
+          "firstPatched": "1.11.10"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.12.0, < 1.12.8",
+          "firstPatched": "1.12.8"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.13.0, < 1.13.7",
+          "firstPatched": "1.13.7"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.14.0, < 1.14.6",
+          "firstPatched": "1.14.6"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.15.0, < 1.15.3",
+          "firstPatched": "1.15.3"
+        },
+        {
+          "package": "dojo",
+          "affected": ">= 1.16.0, < 1.16.2",
+          "firstPatched": "1.16.2"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-84cm-x2q5-8225",
+      "url": "https://github.com/advisories/GHSA-84cm-x2q5-8225",
+      "summary": "dojox vulnerable to unescaped string injection",
+      "severity": "critical",
+      "updatedAt": "2023-09-27T12:57:00Z",
+      "npmRanges": [
+        {
+          "package": "dojox",
+          "affected": "< 1.14.0",
+          "firstPatched": "1.14.0"
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    },
+    {
+      "id": "GHSA-m8gw-hjpr-rjv7",
+      "url": "https://github.com/advisories/GHSA-m8gw-hjpr-rjv7",
+      "summary": "Prototype Pollution in dojo",
+      "severity": "high",
+      "updatedAt": "2023-01-31T01:30:12Z",
+      "npmRanges": [
+        {
+          "package": "dojo",
+          "affected": "<= 1.16.4",
+          "firstPatched": null
+        }
+      ],
+      "reachability": "See visitor-library-security.md; version match does not establish attacker input reachability"
+    }
+  ]
+}

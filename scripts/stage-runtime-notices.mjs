@@ -48,6 +48,10 @@ export function stageRuntimeNotices(runtime, output) {
     supplement('DOMPurify-LICENSE.txt', fs.readFileSync(path.join(repository, prefix, 'src/resources/dompurify/LICENSE')));
     supplement('DOMPurify-attribution.txt', 'DOMPurify 3.4.17\nCopyright Cure53 and other contributors; the vendored distribution retains its upstream copyright header.\nSource: https://github.com/cure53/DOMPurify/tree/3.4.17\nPackage: https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz\nThe Apache-2.0 option is used; full terms are in DOMPurify-LICENSE.txt.\nGenerated output encloses the unchanged vendor code in a local AMD wrapper with a terminating newline for the legacy Dojo loader. A separate local policy restricts print markup and formatting.\n');
   }
+  if (runtime === 'crowdsource') {
+    supplement('jQuery-3.7.1-LICENSE.txt', fs.readFileSync(path.join(repository, 'runtimes/crowdsource/patches/vendor/jquery-3.7.1/LICENSE.txt')));
+    supplement('jQuery-3.7.1-attribution.txt', 'jQuery 3.7.1\nCopyright OpenJS Foundation and other contributors. MIT License; full terms in jQuery-3.7.1-LICENSE.txt.\nSource: https://github.com/jquery/jquery/tree/3.7.1\nPackage: https://registry.npmjs.org/jquery/-/jquery-3.7.1.tgz\nThe build replaces only the verified bundled jQuery 3.3.1 expression with the unchanged 3.7.1 vendor expression, retaining the upstream header and AMD registration. No legacy toolchain rebuild is involved.\n');
+  }
   if (runtime === 'shortlist') {
     for (const family of ['icomoon', 'fontelloIcons']) {
       for (const extension of ['eot', 'svg', 'ttf', 'woff']) {

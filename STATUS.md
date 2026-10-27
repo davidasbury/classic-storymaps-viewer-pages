@@ -12,7 +12,7 @@ updated: 2026-10-27
 extra:
   agents: [claude, copilot-enterprise]
   image_failure_notice: Shared dismissible image-failure modal verified in Chrome and native Map Tour; publication pending
-  dependency_security: Four targeted Dependabot fixes verified; three major upgrades and remaining legacy advisories deferred; no deployment
+  dependency_security: Compatible Dependabot fixes present in deployed 4a9b461; first visitor-code audit and Crowdsource jQuery 3.7.1 fix verified locally; other runtime advisories remain open
   media_credentials: Inherited provider defaults removed from source and isolated publication; upstream revocation and production publication pending
   basemap_fallback: Shared unavailable-vector-style recovery verified across eight SDK integrations and the supplied native Crowdsource; publication pending
   legacy_swipe: SwipeSpyglass startup recognition verified in nested Journal embeds; publication pending
@@ -20,7 +20,7 @@ extra:
   maptour_compatibility: Implementation verified; publication and private-content acceptance pending
   maptour_archived_images: Per-story opt-in discovery verified; commit/push authorized; relay hosting and publication pending
   story_archive_discovery: Explicit public-pointer lookup verified; disabled in static publication pending relay hosting approval
-  phase: Gallery counting, shared sign-in and vector basemap fallback verified locally; publication and remaining acceptance pending
+  phase: First visitor-code security pass verified; Crowdsource patch publication and remaining advisory reachability review pending
 ---
 
 # Classic StoryMaps Viewer Pages
@@ -29,6 +29,31 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Visitor-code security has a verified first fix; the broader audit remains open.**
+
+The pinned production artifact and anonymous script responses from eight viewers
+were inventoried and independently scanned. The real Crowdsource item reducer
+reproduced jQuery prototype pollution before replacement and rejected the same
+directly supplied action with the official jQuery 3.7.1 library. The guarded
+replacement changes only the verified library expression, preserves authentication
+adapters and indexes the vendor license. End-to-end hostile item-response
+reachability was not established; other legacy jQuery, Bootstrap, Lodash, jQuery
+UI, Swiper and SDK-provided Dojo findings remain open, not classified as safe.
+
+All 248 Node tests, native desktop/mobile map-and-gallery checks and three
+synthetic Crowdsource authentication cases passed. See the
+[audit, inventory and limits](docs/testing/visitor-library-security.md) and
+[session 0065](session-logs/2026-10-27-0065-session-log.md).
+This session did not deploy, write ArcGIS content or access owner sessions.
+Broader legacy toolchain modernization remains separate.
+
+Production provenance was independently refreshed: owner-dispatched run
+`40572400125` deployed `4a9b4615d053bb050750556be843862c59e4a8e5`, and four sampled
+live responses matched its artifact. Older "unpublished" statements below are
+superseded for source changes included in that commit, not for their unperformed
+production acceptance checks. The subsequent image-notice change and this
+jQuery fix still await publication; upstream credential revocation remains open.
 
 **Image failures have a shared explanation and owner repair guidance locally.**
 
