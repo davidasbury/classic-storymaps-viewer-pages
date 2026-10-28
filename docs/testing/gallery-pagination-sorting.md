@@ -1,10 +1,17 @@
 # Gallery Pagination and Sorting
 
-Updated 2026-10-27 with progressive filtered counts and conventional navigation.
+Updated 2026-10-28 with URL-only Classic admission and bounded candidate searches.
 Publication of this follow-up remains pending; closure uses `[skip ci]`.
 
 ## Behavior
 
+- Remote searches retrieve Web Mapping Applications within the selected scope,
+  sharing level and title/advanced expression. Classic metadata is not required
+  by the remote query. Locally, Classic metadata or a recognized URL path permits
+  classification; the full classifier still rejects modern apps and ambiguous
+  metadata. Owner, organization, sharing and app-type checks remain active.
+- URL-only admission broadens candidate batches, not accepted app formats.
+  Sparse searches may need additional pages within the existing limits below.
 - Numbered page buttons show the current neighborhood and verified endpoints,
   with ellipses across gaps. The current button has `aria-current="page"`.
 - Previously loaded pages are cached in memory. Filter, sort and account changes
@@ -35,7 +42,25 @@ Publication of this follow-up remains pending; closure uses `[skip ci]`.
   Unsupported values use safe defaults. Type sorting is omitted because all
   candidates are Web Mapping Applications.
 
-## Current Verification
+## URL Admission Verification
+
+All 36 focused Node tests and 13 existing gallery browser scenarios passed.
+The advanced-search fixture included a Basic item without Classic metadata and
+exercised My Content, organization, public Online, sharing and app-type filters
+at desktop and two phone widths. A modern Instant URL containing a Classic path
+in its query string remained excluded. Pagination/counting and synthetic-session
+checks passed without changing their bounds.
+
+An independent public REST title search returned Traffic Fatalities item
+`13c5a58889604931a72c31387e5a4125`. Unmocked desktop/mobile gallery searches
+displayed its one Basic card with the expected native viewer link. Both had no
+page exceptions or horizontal overflow; screenshots were inspected. URL-field
+wildcard probes were unsuitable: a deliberately false leading-wildcard pattern
+still returned the item, while tested prefixed patterns missed the known match.
+The implementation therefore does not depend on a URL-field query.
+See [session 0074](../../session-logs/2026-10-28-0074-session-log.md).
+
+## Pagination Verification
 
 - All 230 Node tests passed on Node 24.22.1, including 32 gallery contracts.
 - Ten browser scenarios passed on each of the root and project-prefix layouts:

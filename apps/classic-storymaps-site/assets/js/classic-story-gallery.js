@@ -40,7 +40,9 @@
     var sharing = selection.sharing || 'public';
     if (sharing === 'private' ? !['private', 'shared'].includes(item.access) : item.access !== sharing) return null;
     var terms = (Array.isArray(item.tags) ? item.tags : []).concat(Array.isArray(item.typeKeywords) ? item.typeKeywords : []).map(normalize);
-    if (!terms.some(function(term) { return term.indexOf('storymap') !== -1 || term.indexOf('storytelling') !== -1; })) return null;
+    var classicMetadata = terms.some(function(term) { return term.indexOf('storymap') !== -1 || term.indexOf('storytelling') !== -1; });
+    var urlRuntime = config.classifyClassicRuntimeFromItem({ type: item.type, url: item.url });
+    if (!classicMetadata && !Object.prototype.hasOwnProperty.call(config.appRegistry, urlRuntime)) return null;
     var runtime = config.classifyClassicRuntimeFromItem(item);
     if (!Object.prototype.hasOwnProperty.call(config.appRegistry, runtime)) return null;
     return {
@@ -82,7 +84,7 @@
     var sortField = SORT_FIELDS.includes(options.sort) ? options.sort : 'modified';
     var sortOrder = ['asc', 'desc'].includes(options.sortOrder) ? options.sortOrder
       : ['title', 'owner'].includes(sortField) ? 'asc' : 'desc';
-    var query = source + ' AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)';
+    var query = source + ' AND type:"Web Mapping Application"';
     var text = String(options.title || '').trim();
     if (text) query += ' AND ' + (options.searchMode === 'advanced' ? advancedExpression(text) : 'title:' + quote(text));
     url.search = new URLSearchParams({ f: 'json', q: query, num: '100', start: String(options.start || 1),

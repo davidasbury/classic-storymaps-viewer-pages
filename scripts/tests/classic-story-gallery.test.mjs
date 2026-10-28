@@ -97,7 +97,7 @@ test('legacy SwipeSpyglass items pass gallery and native startup classification'
   }
 });
 
-test('legacy Basic URL variants pass native startup without relaxing gallery metadata filters', async () => {
+test('legacy Basic URL variants pass gallery and native startup classification', async () => {
   const config = configuration();
   for (const [id, url, webmap] of [
     ['fb12a83afaa943d6a2e91df06e8840dd', 'https://carto.maps.arcgis.com/apps/OnePane/storytelling_basic/index.html', '4bcbb3b6ea1d4560b7682b3dbfc938d9'],
@@ -107,7 +107,7 @@ test('legacy Basic URL variants pass native startup without relaxing gallery met
       typeKeywords: ['JavaScript', 'Map', 'Mapping Site', 'Online Map', 'Ready To Use', 'Web Map'],
       url: url + '?appid=' + id });
     assert.equal(config.classifyClassicRuntimeFromItem(candidate), 'basic');
-    assert.equal(gallery().storyFromItem(candidate, config), null);
+    assert.equal(gallery().storyFromItem(candidate, config).runtime, 'basic');
     const resolved = await input().resolveItem(id, { config, client: { json: async endpoint =>
       endpoint.pathname.endsWith('/data') ? { values: { webmap } } : candidate } });
     assert.equal(resolved.runtime, 'basic');
@@ -177,15 +177,24 @@ test('self-hosted URL lookup requires an exact, unambiguous Classic item match',
   await assert.rejects(input().resolve(address, { client, config }), /No accessible/);
 });
 
-test('gallery membership validates owner, type, ID, public access and Classic metadata before routes', () => {
+test('gallery membership validates access and requires Classic metadata or a verified URL before routes', () => {
   const config = configuration();
   const accept = (candidate, owner = 'owner', sharing = 'public') => gallery().storyFromItem(candidate, config, { scope: owner ? 'mine' : 'online', owner, sharing });
   assert.equal(accept(item(1)).runtime, 'mapjournal');
   assert.equal(accept(item(1, { typeKeywords: [], tags: ['Story Map Journal'] })).runtime, 'mapjournal');
   assert.equal(accept(item(1, { tags: [] })).runtime, 'mapjournal');
+  const legacy = item(1, { tags: [], typeKeywords: [], url: 'https://example.org/MapJournal/' });
+  assert.equal(accept(legacy).runtime, 'mapjournal');
+  for (const override of [{ owner: 'another' }, { access: 'private' }, { type: 'Web Map' }, { id: '../foreign' }]) {
+    assert.equal(accept({ ...legacy, ...override }), null);
+  }
+  assert.equal(accept({ ...legacy, access: 'private' }, ''), null);
+  assert.equal(accept({ ...legacy, access: 'private' }, 'owner', 'private').runtime, 'mapjournal');
+  assert.equal(gallery().storyFromItem({ ...legacy, orgId: 'other' }, config, { scope: 'org', orgId: 'wanted', sharing: 'public' }), null);
+  assert.equal(gallery().storyFromItem({ ...legacy, orgId: 'wanted' }, config, { scope: 'org', orgId: 'wanted', sharing: 'public' }).runtime, 'mapjournal');
   for (const override of [
     { owner: 'another' }, { type: 'StoryMap' }, { id: '../foreign' },
-    { tags: [], typeKeywords: [], url: 'https://example.org/MapJournal/' },
+    { tags: [], typeKeywords: [], url: 'https://example.org/Unrecognized/' },
     { tags: ['Story Map'], typeKeywords: [], url: '' },
     { typeKeywords: ['Story Map Journal', 'Story Map Tour'] }
   ]) assert.equal(accept(item(1, override)), null, JSON.stringify(override));
@@ -373,10 +382,10 @@ test('REST data reads accept empty pointer bodies but retain ArcGIS errors', asy
 });
 
 test('scope and sharing searches preserve escaping and public-only online searches', () => {
-  assert.match(gallery().searchUrl({ scope: 'online', sharing: 'public' }).searchParams.get('q'), /typekeywords:Story\* OR tags:Story\*/);
+  assert.equal(gallery().searchUrl({ scope: 'online', sharing: 'public' }).searchParams.get('q'), 'access:public AND type:"Web Mapping Application"');
   const search = gallery().searchUrl({ scope: 'mine', owner: 'test" OR owner:*', title: '" OR type:*', start: 1, sort: 'title' });
   assert.equal(search.origin, 'https://www.arcgis.com');
-  assert.equal(search.searchParams.get('q'), 'owner:"test\\" OR owner\\:\\*" AND access:public AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*) AND title:"\\" OR type\\:\\*"');
+  assert.equal(search.searchParams.get('q'), 'owner:"test\\" OR owner\\:\\*" AND access:public AND type:"Web Mapping Application" AND title:"\\" OR type\\:\\*"');
   const publicSearch = gallery().searchUrl({ scope: 'online', start: 1 });
   assert.match(publicSearch.searchParams.get('q'), /^access:public AND type:/);
   assert.doesNotMatch(publicSearch.href, /owner|token/);
@@ -386,7 +395,7 @@ test('scope and sharing searches preserve escaping and public-only online search
   assert.match(gallery().searchUrl({ scope: 'org', orgId: 'synthetic-org', sharing: 'private' }).searchParams.get('q'), /orgid:"synthetic\\-org" AND \(access:private OR access:shared\)/);
 });
 
-test('advanced expressions retain syntax while scope, sharing and Classic constraints stay outside their group', () => {
+test('advanced expressions retain syntax while scope, sharing and application type stay outside their group', () => {
   for (const selection of [
     { scope: 'online', sharing: 'public' },
     { scope: 'mine', owner: 'owner', sharing: 'private' },

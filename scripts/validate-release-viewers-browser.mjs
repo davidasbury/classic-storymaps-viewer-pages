@@ -1267,7 +1267,8 @@ try {
       const captured = [];
       const story = (number, overrides = {}) => ({ id: number.toString(16).padStart(32, '0'),
         title: 'Ocean story ' + number, owner: 'owner-self', orgId: 'synthetic-org', access: 'public',
-        type: 'Web Mapping Application', typeKeywords: ['Story Map Journal'], ...overrides });
+        type: 'Web Mapping Application', typeKeywords: number === 1 ? [] : ['Story Map Journal'],
+        url: number === 1 ? 'https://story.maps.arcgis.com/apps/StorytellingTextLegend/index.html' : undefined, ...overrides });
       await context.addInitScript(() => {
         sessionStorage.setItem('arcgis_access_token', 'synthetic-advanced-session');
         sessionStorage.setItem('arcgis_access_token_expires', String(Date.now() + 600000));
@@ -1281,7 +1282,8 @@ try {
         assert.ok(query);
         const online = query.startsWith('access:public');
         assert.equal(request.headers()['x-esri-authorization'], online ? undefined : 'Bearer synthetic-advanced-session');
-        assert.ok(query.includes('AND type:"Web Mapping Application" AND (typekeywords:Story* OR tags:Story*)'));
+        assert.ok(query.includes('AND type:"Web Mapping Application"'));
+        assert.ok(!query.includes('typekeywords:Story* OR tags:Story*'));
         captured.push({ query, start: url.searchParams.get('start') });
         if (query.endsWith('(badfield:)')) return route.fulfill({ json: { error: { code: 400 } } });
         const access = query.includes('access:private') ? 'private' : query.includes('access:org') ? 'org' : 'public';
@@ -1294,7 +1296,8 @@ try {
         if (query.startsWith('orgid:')) entries = [story(1, { access }), story(2, { access, owner: 'colleague' }),
           story(3, { access, orgId: 'outside-org' }), story(4, { access: access === 'private' ? 'public' : 'private' })];
         entries.push(story(90, { access, type: 'StoryMap' }), story(91, { access: 'org' }),
-          story(92, { access, owner: 'wrong-owner', orgId: 'outside-org', typeKeywords: ['Dashboard'] }));
+          story(92, { access, owner: 'wrong-owner', orgId: 'outside-org', typeKeywords: ['Dashboard'] }),
+          story(93, { access, typeKeywords: [], url: 'https://example.com/apps/instant/nearby/?next=/MapJournal/' }));
         return route.fulfill({ json: { results: entries, nextStart: -1 } });
       });
       const settled = count => page.waitForFunction(count => document.getElementById('story-gallery').getAttribute('aria-busy') === 'false'
@@ -1339,7 +1342,7 @@ try {
         await page.getByLabel('Search', { exact: true }).fill('owner:dwright_storymaps OR owner:another');
         await settled(2);
         assert.ok(captured.at(-1).query.endsWith('AND (owner:dwright_storymaps OR owner:another)'));
-        await page.locator('#stories-runtime').selectOption('mapjournal');
+        await page.locator('#stories-runtime').selectOption('basic');
         await settled(1);
         await page.locator('#stories-runtime').selectOption('');
         await settled(2);

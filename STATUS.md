@@ -8,10 +8,10 @@ state: active
 health: green
 priority: 2
 next_action: "link converter and viewer pages"
-updated: 2026-10-27
+updated: 2026-10-28
 extra:
   agents: [claude, copilot-enterprise]
-  legacy_basic: Two legacy Basic URL aliases recognized; Traffic Fatalities renders; Mussel services fail DNS; publication pending
+  legacy_basic: Legacy URL-only items admitted to gallery and direct viewing; Traffic Fatalities live gallery verified; Mussel services fail DNS; publication pending
   esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
   code_scanning: Twelve inert-template false-positive dismissals retained; CodeQL confirms Map Series mobile-title alert 48 fixed; 263 staged Node tests and native checks passed; 171 alerts remain; publication pending
   advanced_gallery_search: Dedicated Search row, linked operator help and ordered filters verified; expression mode preserves filtering; publication pending
@@ -35,6 +35,24 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
+**The gallery admits recognized Classic URLs without requiring Classic tags locally.**
+
+Remote searches retain scope, sharing, application type and grouped user search
+terms, but no longer require `Story*` metadata. The local gate accepts Classic
+metadata or a URL-only match from the existing runtime classifier, then applies
+the full classifier with its modern-app and conflicting-metadata exclusions.
+Owner, organization, public-only Online, sharing and app-type checks remain.
+The broader candidate search can require more pages; existing request budgets,
+search-window limits and incomplete-count reporting are unchanged.
+
+All 36 focused Node tests and 13 gallery browser scenarios passed. An independent
+public REST search returned the supplied Traffic Fatalities item, and unmocked
+desktop/mobile gallery searches displayed its single Basic card and correct
+viewer link without page exceptions. See
+[session 0074](session-logs/2026-10-28-0074-session-log.md) and
+[gallery behavior](docs/testing/gallery-pagination-sorting.md).
+No saved items, owner sessions or existing previews changed; publication is pending.
+
 **Legacy Basic URL recognition is repaired locally; one supplied story has unavailable services.**
 
 Direct opening now recognizes `/apps/OnePane/storytelling_basic/` and
@@ -48,8 +66,8 @@ Restoring those services remains unresolved; no substitute thematic data was use
 
 All 36 focused gallery/classifier tests passed. Four live HTTPS cases confirmed
 the rendering and unavailable-service outcomes without page exceptions or
-horizontal overflow. Gallery metadata constraints, saved items, existing shared
-previews and owner sessions were unchanged. See
+horizontal overflow. Saved items, existing shared previews and owner sessions
+were unchanged. The subsequent gallery change above also admits URL-only items. See
 [session 0072](session-logs/2026-10-27-0072-session-log.md).
 Publication remains pending.
 
