@@ -58,7 +58,7 @@ test('every runtime has two to eight unique screenshot-backed examples', () => {
     }
   }
   assert.equal(identifiers.size, 19);
-  assert.equal(config.gallery.converter.enabled, false);
+  assert.equal(config.gallery.converter.enabled, true);
   assert.equal(config.gallery.publicGroupId, '');
 });
 
@@ -478,13 +478,14 @@ test('pager exposes only filtered buffered pages and shares a bounded jump reque
 
 test('conversion is gated by identity, deployment approval and supported runtime', () => {
   const config = configuration();
+  config.gallery.converter.enabled = false;
   assert.equal(gallery().convertUrl(item(1, { runtime: 'mapjournal' }), config, 'owner'), null);
   config.gallery.converter.enabled = true;
   const story = item(1, { runtime: 'mapjournal' });
   assert.equal(gallery().convertUrl(story, config, ''), null);
   assert.equal(gallery().convertUrl({ ...story, runtime: 'basic' }, config, 'owner'), null);
   const link = new URL(gallery().convertUrl(story, config, 'owner'));
-  assert.equal(link.origin, 'https://regal-sable-0a6dde.netlify.app');
+  assert.equal(link.origin, 'https://convert.classicstorymaps.com');
   assert.deepEqual([...link.searchParams], [['appid', story.id]]);
   config.gallery.converter.url = 'javascript:alert(1)';
   assert.equal(gallery().convertUrl(story, config, 'owner'), null);

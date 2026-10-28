@@ -11,6 +11,7 @@ next_action: "link converter and viewer pages"
 updated: 2026-10-28
 extra:
   agents: [claude, copilot-enterprise]
+  converter_integration: Owner-only View and Convert actions restored in source for convert.classicstorymaps.com; handoff verified; viewer publication pending
   legacy_basic: Legacy URL-only items admitted to gallery and direct viewing; Traffic Fatalities live gallery verified; Mussel services fail DNS; publication pending
   esri_story_url_fallback: Verified missing Esri story URLs retry the Esri archive in memory; live Warming Cities URL pair confirmed; publication pending
   code_scanning: Twelve inert-template false-positive dismissals retained; CodeQL confirms Map Series mobile-title alert 48 fixed; 263 staged Node tests and native checks passed; 171 alerts remain; publication pending
@@ -34,6 +35,23 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Viewer-to-converter card actions are restored locally for the canonical domain.**
+
+The integration flag is enabled in source and the destination is
+`https://convert.classicstorymaps.com/?appid=<item-id>`. Existing signed-in-owner
+and Tour/Journal/Series/Cascade/Swipe restrictions remain intact. Eligible cards
+show View and Convert; other cards retain their clickable viewer title. No
+converter source, dependency, OAuth or hosting settings were changed.
+
+All 36 focused viewer tests and four gallery browser scenarios passed, including
+both buttons at desktop/mobile widths, exact ID forwarding, new-tab/no-opener
+behavior and synthetic-session credential/referrer exclusions. Nine existing
+mocked converter handoff tests passed. The live signed-out converter captured
+the linked ID and retained it across navigation without the query, with zero POST
+requests. Production OAuth and authenticated conversion were not exercised.
+See [session 0075](session-logs/2026-10-28-0075-session-log.md).
+Viewer publication remains pending; existing previews and owner sessions were untouched.
 
 **The gallery admits recognized Classic URLs without requiring Classic tags locally.**
 

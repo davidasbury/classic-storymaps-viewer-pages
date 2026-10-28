@@ -9,7 +9,8 @@ The owner accepted the ownership/domain cutover on 2026-10-26; see
 [transfer decisions](.github/prompts/transfer-decisions.prompt.md).
 The old GitHub Pages root and catalog return 404. Update saved viewer links to
 the custom domain, removing the `/classic-storymaps-viewer-pages` prefix while
-preserving the remaining path and query. Conversion integration remains disabled.
+preserving the remaining path and query. Conversion integration is restored in
+source for the canonical converter domain; viewer publication remains pending.
 
 ## Initial Contents
 - `.github/prompts/plan-storymapsSiteDeploy.prompt.md` - primary execution checklist and scope for this repo
@@ -250,16 +251,21 @@ or provide a proxy. Unindexed URLs, wrapper items without Classic metadata,
 and ambiguous matches require the app ID instead. See
 [classic-story-input.js](apps/classic-storymaps-site/assets/js/classic-story-input.js).
 
-`gallery.converter.enabled` is **false** until an owner-approved converter release
-containing ownership enforcement and app-ID prefill is deployed. The owner has
-verified the sign-in/prefill flow, but the confirmed locked production release
-predates those changes. When enabled, Convert is
-available only to validated signed-in owners for Tour, Journal, Series, Cascade,
-and Swipe. Its configured destination is currently
-`https://regal-sable-0a6dde.netlify.app/?appid=<item-id>`; no credentials are passed,
-and conversion is not started automatically. Switching to
-`https://convert.classicstorymaps.com/` requires separate domain and OAuth
-readiness work. Basic, Shortlist, and Crowdsource do not receive Convert buttons.
+`gallery.converter.enabled` is **true** in source. Eligible cards show View and
+Convert together for validated signed-in owners of Tour, Journal, Series,
+Cascade and Swipe stories. Convert opens
+`https://convert.classicstorymaps.com/?appid=<item-id>` in a new tab with no
+opener or referrer; the link contains only the item ID, not authentication data.
+The converter retains that ID while signed out and prefills its field after
+sign-in without starting conversion. Basic, Shortlist and Crowdsource remain
+outside this viewer integration's allowlist and do not receive Convert buttons.
+
+The canonical converter's public response and signed-out ID retention were
+verified live. Nine mocked converter tests covered prefill, invalid links and
+the signed-out return; viewer tests covered both actions and ownership gates.
+This does not certify a real production OAuth roundtrip or conversion. The viewer
+configuration change is not deployed; see
+[session 0075](session-logs/2026-10-28-0075-session-log.md).
 
 The gallery sends authenticated REST requests only to `www.arcgis.com` using
 `X-Esri-Authorization`, not token-bearing rendered URLs. Thumbnails use temporary

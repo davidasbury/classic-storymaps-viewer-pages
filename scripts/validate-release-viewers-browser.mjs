@@ -1671,11 +1671,14 @@ try {
       assert.equal(await page.locator('.story-title').first().innerText(), '<img src=x onerror=alert(1)>');
       assert.equal(await page.locator('.story-title img').count(), 0);
       await page.waitForFunction(() => document.querySelector('.story-image').src.startsWith('blob:'));
-      assert.equal(await page.getByRole('link', { name: /^Convert / }).count(), 0);
+      assert.equal(await page.getByRole('link', { name: /^Convert / }).count(), 23);
       await page.getByRole('button', { name: 'Next page', exact: true }).click();
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 6);
       await page.getByRole('button', { name: 'Previous page', exact: true }).click();
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 24);
+      await page.evaluate(() => { window.ClassicStoryMapsConfig.gallery.converter.enabled = false; });
+      await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
+      await page.waitForFunction(() => document.querySelectorAll('.story-action-secondary').length === 0);
       await page.evaluate(() => { window.ClassicStoryMapsConfig.gallery.converter.enabled = true; });
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
       await page.waitForFunction(() => document.querySelectorAll('.story-action-secondary').length === 23);
@@ -1706,11 +1709,16 @@ try {
       }
       await page.setViewportSize({ width: 1280, height: 850 });
       const conversion = new URL(await page.locator('.story-action-secondary').first().getAttribute('href'));
-      assert.equal(conversion.origin, 'https://regal-sable-0a6dde.netlify.app');
+      assert.equal(conversion.origin, 'https://convert.classicstorymaps.com');
       assert.deepEqual([...conversion.searchParams.keys()], ['appid']);
+      assert.equal(conversion.searchParams.get('appid'), new URL(viewDestination).searchParams.get('appid'));
       assert.equal(await page.locator('.story-title > a').count(), 24);
       assert.equal(await page.locator('.story-card a a').count(), 0);
-      await context.route(conversion.href, route => route.fulfill({ contentType: 'text/html', body: '<title>Local converter destination</title>' }));
+      await context.route(conversion.href, route => {
+        const headers = route.request().headers();
+        for (const name of ['authorization', 'x-esri-authorization', 'cookie', 'referer']) assert.equal(headers[name], undefined);
+        return route.fulfill({ contentType: 'text/html', body: '<title>Local converter destination</title>' });
+      });
       const conversionPopupPromise = page.waitForEvent('popup');
       await page.locator('.story-action-secondary').first().click();
       const conversionPopup = await conversionPopupPromise;

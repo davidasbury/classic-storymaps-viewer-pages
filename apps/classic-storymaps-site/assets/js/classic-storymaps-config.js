@@ -247,8 +247,8 @@
     gallery: {
       publicGroupId: '',
       converter: {
-        enabled: false,
-        url: 'https://regal-sable-0a6dde.netlify.app/',
+        enabled: true,
+        url: 'https://convert.classicstorymaps.com/',
         runtimes: ['maptour', 'mapjournal', 'mapseries', 'cascade', 'swipe']
       }
     },
