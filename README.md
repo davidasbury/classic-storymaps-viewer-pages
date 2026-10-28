@@ -253,19 +253,32 @@ and ambiguous matches require the app ID instead. See
 
 `gallery.converter.enabled` is **true** in source. Eligible cards show View and
 Convert together for validated signed-in owners of Tour, Journal, Series,
-Cascade and Swipe stories. Convert opens
+Cascade, Swipe, Shortlist, Crowdsource and Basic stories. Convert opens
 `https://convert.classicstorymaps.com/?appid=<item-id>` in a new tab with no
 opener or referrer; the link contains only the item ID, not authentication data.
 The converter retains that ID while signed out and prefills its field after
-sign-in without starting conversion. Basic, Shortlist and Crowdsource remain
-outside this viewer integration's allowlist and do not receive Convert buttons.
+sign-in without starting conversion. A Convert link offers a handoff, not a
+guarantee that every source configuration can be converted:
+
+- Shortlist supports standalone conversion; nested Shortlist in Map Series is blocked.
+- Crowdsource conversion is enabled with accepted initial-release limitations.
+- Basic reaches partial-support Instant Basic review, not StoryMaps conversion.
+
+Basic's narrow scope requires supported standalone 2D maps, public read-only hosted
+feature layers and standard Esri basemaps. Search, hosted tiles, private feature
+services and unsupported settings remain blocked by the converter.
+
+The converter retains its own ownership, source assessment, consent and recovery
+checks. Unknown viewer types, signed-out visitors and other owners do not receive
+Convert links.
 
 The canonical converter's public response and signed-out ID retention were
 verified live. Nine mocked converter tests covered prefill, invalid links and
 the signed-out return; viewer tests covered both actions and ownership gates.
-This does not certify a real production OAuth roundtrip or conversion. The viewer
-configuration change is not deployed; see
-[session 0075](session-logs/2026-10-28-0075-session-log.md).
+This does not certify a real production OAuth roundtrip or conversion. The
+eight-type allowlist passed 36 gallery tests and four browser scenarios, including
+the three newly eligible card types. The viewer configuration change is not
+deployed; see [session 0076](session-logs/2026-10-28-0076-session-log.md).
 
 The gallery sends authenticated REST requests only to `www.arcgis.com` using
 `X-Esri-Authorization`, not token-bearing rendered URLs. Thumbnails use temporary

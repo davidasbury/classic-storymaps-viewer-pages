@@ -482,11 +482,14 @@ test('conversion is gated by identity, deployment approval and supported runtime
   assert.equal(gallery().convertUrl(item(1, { runtime: 'mapjournal' }), config, 'owner'), null);
   config.gallery.converter.enabled = true;
   const story = item(1, { runtime: 'mapjournal' });
-  assert.equal(gallery().convertUrl(story, config, ''), null);
-  assert.equal(gallery().convertUrl({ ...story, runtime: 'basic' }, config, 'owner'), null);
-  const link = new URL(gallery().convertUrl(story, config, 'owner'));
-  assert.equal(link.origin, 'https://convert.classicstorymaps.com');
-  assert.deepEqual([...link.searchParams], [['appid', story.id]]);
+  for (const runtime of ['maptour', 'mapjournal', 'mapseries', 'cascade', 'swipe', 'shortlist', 'crowdsource', 'basic']) {
+    const candidate = { ...story, runtime };
+    assert.equal(gallery().convertUrl(candidate, config, ''), null, runtime);
+    assert.equal(gallery().convertUrl(candidate, config, 'other-owner'), null, runtime);
+    assert.equal(gallery().convertUrl({ ...candidate, id: 'invalid' }, config, 'owner'), null, runtime);
+    assert.equal(gallery().convertUrl(candidate, config, 'owner'), 'https://convert.classicstorymaps.com/?appid=' + story.id, runtime);
+  }
+  assert.equal(gallery().convertUrl({ ...story, runtime: 'unknown' }, config, 'owner'), null);
   config.gallery.converter.url = 'javascript:alert(1)';
   assert.equal(gallery().convertUrl(story, config, 'owner'), null);
 });
@@ -501,7 +504,8 @@ test('HTTP conversion requires explicit development opt-in and a loopback destin
   converter.allowLocalHttp = true;
   assert.equal(gallery().convertUrl(story, config, 'owner'), 'http://localhost:8888/?appid=' + story.id);
   assert.equal(gallery().convertUrl(story, config, ''), null);
-  assert.equal(gallery().convertUrl({ ...story, runtime: 'shortlist' }, config, 'owner'), null);
+  assert.equal(gallery().convertUrl({ ...story, runtime: 'shortlist' }, config, 'owner'), 'http://localhost:8888/?appid=' + story.id);
+  assert.equal(gallery().convertUrl({ ...story, runtime: 'unknown' }, config, 'owner'), null);
   for (const url of ['http://example.org/', 'http://localhost.example.org/', 'http://user:password@localhost:8888/', 'ftp://localhost/']) {
     converter.url = url;
     assert.equal(gallery().convertUrl(story, config, 'owner'), null, url);

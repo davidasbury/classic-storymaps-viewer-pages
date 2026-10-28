@@ -249,7 +249,7 @@
       converter: {
         enabled: true,
         url: 'https://convert.classicstorymaps.com/',
-        runtimes: ['maptour', 'mapjournal', 'mapseries', 'cascade', 'swipe']
+        runtimes: ['maptour', 'mapjournal', 'mapseries', 'cascade', 'swipe', 'shortlist', 'crowdsource', 'basic']
       }
     },
     runtimeViewerByApp: getRuntimeViewerByApp(),

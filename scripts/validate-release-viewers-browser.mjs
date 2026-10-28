@@ -1624,7 +1624,7 @@ try {
     const syntheticItem = (number, owner) => ({
       id: number.toString(16).padStart(32, '0'), title: number === 1 ? '<img src=x onerror=alert(1)>' : 'Synthetic story ' + number,
       owner, type: 'Web Mapping Application', tags: ['Story Map'], access: 'private',
-      typeKeywords: [number === 2 ? 'Story Map Basic' : 'Story Map Journal'], thumbnail: number === 1 ? 'thumbnail/test.png' : null
+      typeKeywords: [{ 2: 'Story Map Basic', 3: 'Story Map Shortlist', 4: 'Story Map Crowdsource' }[number] || 'Story Map Journal'], thumbnail: number === 1 ? 'thumbnail/test.png' : null
     });
     await context.addInitScript(() => {
       sessionStorage.setItem('arcgis_access_token', 'synthetic-one');
@@ -1671,7 +1671,15 @@ try {
       assert.equal(await page.locator('.story-title').first().innerText(), '<img src=x onerror=alert(1)>');
       assert.equal(await page.locator('.story-title img').count(), 0);
       await page.waitForFunction(() => document.querySelector('.story-image').src.startsWith('blob:'));
-      assert.equal(await page.getByRole('link', { name: /^Convert / }).count(), 23);
+      assert.equal(await page.getByRole('link', { name: /^Convert / }).count(), 24);
+      for (const [number, runtime] of [[2, 'basic'], [3, 'shortlist'], [4, 'crowdsource']]) {
+        const card = page.locator('.story-card').nth(number - 1);
+        const itemId = number.toString(16).padStart(32, '0');
+        const viewer = new URL(await card.locator('.story-action-view').getAttribute('href'), page.url());
+        assert.ok(viewer.pathname.includes('/' + runtime + '/'), runtime);
+        assert.equal(viewer.searchParams.get('appid'), itemId, runtime);
+        assert.equal(await card.locator('.story-action-secondary').getAttribute('href'), 'https://convert.classicstorymaps.com/?appid=' + itemId, runtime);
+      }
       await page.getByRole('button', { name: 'Next page', exact: true }).click();
       await page.waitForFunction(() => document.querySelectorAll('.story-card').length === 6);
       await page.getByRole('button', { name: 'Previous page', exact: true }).click();
@@ -1681,8 +1689,8 @@ try {
       await page.waitForFunction(() => document.querySelectorAll('.story-action-secondary').length === 0);
       await page.evaluate(() => { window.ClassicStoryMapsConfig.gallery.converter.enabled = true; });
       await page.getByRole('button', { name: 'Refresh stories', exact: true }).click();
-      await page.waitForFunction(() => document.querySelectorAll('.story-action-secondary').length === 23);
-      assert.equal(await page.locator('.story-action-view').count(), 23);
+      await page.waitForFunction(() => document.querySelectorAll('.story-action-secondary').length === 24);
+      assert.equal(await page.locator('.story-action-view').count(), 24);
       const viewAction = page.locator('.story-action-view').first();
       const viewDestination = new URL(await viewAction.getAttribute('href'), page.url()).href;
       assert.equal(viewDestination, new URL(await page.locator('.story-title > a').first().getAttribute('href'), page.url()).href);
