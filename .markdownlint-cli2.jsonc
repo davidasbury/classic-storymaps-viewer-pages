@@ -1,0 +1,8 @@
+{
+  // CLAUDE.md files in this system are one-line import stubs whose entire
+  // content is `@AGENTS.md` (see AGENTS.md and docs/runbooks/box-setup-runbook.md
+  // section 5). They have no heading by design, so markdownlint's MD041 ("first
+  // line should be a top-level heading") fires on every one. Skip these stubs
+  // only; MD041 and every other rule stay on for real docs.
+  "ignores": ["**/CLAUDE.md"]
+}

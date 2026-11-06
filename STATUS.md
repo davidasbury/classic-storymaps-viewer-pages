@@ -8,7 +8,7 @@ state: active
 health: green
 priority: 2
 next_action: "link converter and viewer pages"
-updated: 2026-10-28
+updated: 2026-11-06
 extra:
   agents: [claude, copilot-enterprise]
   converter_integration: Owner-only handoff enabled for all eight Classic types; Basic remains partial Instant Basic support; viewer publication pending
@@ -35,6 +35,18 @@ This repository hosts the Classic StoryMaps viewers and their GitHub Pages
 publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`.
 
 ## Current state
+
+**Local STATUS validation tooling is installed and verified.**
+
+The staged-content pre-commit hook, shared validator-environment bootstrap,
+hook installer and CLAUDE-stub Markdown lint exclusion are present locally.
+The existing validator, schema and CLAUDE stub are unchanged. All 48 upstream
+hook regression cases passed; the installed executable hook matches its source,
+the real STATUS file passed validation, and VS Code reported no diagnostics for
+the opened CLAUDE stub. The Git index was unchanged by installation. The owner
+authorized a `[skip ci]` tooling commit and push; no application publication was
+authorized.
+See [session 0077](session-logs/2026-11-06-0077-session-log.md).
 
 **Viewer card eligibility matches the converter's eight-type handoff scope locally.**
 
