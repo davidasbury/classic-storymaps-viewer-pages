@@ -1,5 +1,5 @@
 ---
-schema_version: 1
+schema_version: 2
 id: classic-storymaps-viewer-pages
 name: Classic StoryMaps Viewer Pages
 domain: work
@@ -45,9 +45,10 @@ version, and enforces v2's 400-character next-action limit. Canonical validator
 and distribution acceptance passed 79 tests, including 67 real-commit hook
 cases. The local snapshots match the canonical bundle; the installed executable
 hook is unchanged and the real STATUS file passes. Setup is documented in
-`scripts/README.md`. This project's v1 declaration, owner fields and CLAUDE stub
-remain unchanged; no application publication is authorized.
-See [session 0078](session-logs/2026-11-06-0078-session-log.md).
+`scripts/README.md`. This project now declares v2, with local authoring rules
+preventing silent downgrades. Owner fields and the CLAUDE stub remain unchanged;
+no application publication is authorized.
+See [session 0079](session-logs/2026-11-06-0079-session-log.md).
 
 **Viewer card eligibility matches the converter's eight-type handoff scope locally.**
 

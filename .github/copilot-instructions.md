@@ -6,8 +6,8 @@ system so that automated digests and weekly reports are generated consistently
 across every project. Follow them whenever you create or update tracking files
 (`STATUS.md`, `session-logs/`).
 
-This is a snapshot of the conventions as of **`schema_version: 1`**
-(**`template_version: 3`** — see the comment at the top of this file). The
+This repository uses **`schema_version: 2`**. The template-version marker
+identifies the base policy snapshot; this schema guidance is updated locally. The
 canonical source lives in the owner's personal `project-tracking` repo and
 **cannot be reached from here** (see "Boundary" below). If the owner tells you
 the schema version has bumped, ask them for the new contract — do not invent
@@ -48,11 +48,11 @@ project-tracking ADR-017):
 
 Every project has exactly one `STATUS.md` at the repo root with a YAML
 frontmatter block followed by prose. The frontmatter contract for
-`schema_version: 1`:
+`schema_version: 2`, defined by `schema/status-v2.yaml`:
 
 | field | type | rules |
 |---|---|---|
-| `schema_version` | integer | `1` for this template. Do not change unless the owner says so. |
+| `schema_version` | integer | `2` for this project. Never downgrade unless the owner explicitly approves. |
 | `id` | string | Stable slug. **Immutable** — never changes, even on rename. Set once; if it's already filled, leave it. |
 | `name` | string | Display name. May change freely. |
 | `domain` | enum | `work` for this repo. Never `personal`. |
@@ -60,7 +60,7 @@ frontmatter block followed by prose. The frontmatter contract for
 | `state` | enum | one of `active`, `paused`, `blocked`, `done`, `archived`. **Owner-meaningful — never fabricate** (see below). |
 | `health` | enum | one of `green`, `yellow`, `red`. **Owner-meaningful.** |
 | `priority` | integer | Owner-defined ordinal. **Owner-meaningful.** |
-| `next_action` | string | One line: the next concrete step. **Owner-meaningful.** |
+| `next_action` | string | One current next step, at most 400 characters. **Owner-meaningful.** Never truncate owner text merely to pass validation. |
 | `updated` | string | `YYYY-MM-DD`. Set to today's date whenever you change `STATUS.md`. |
 | `extra` | object | Open, unvalidated block. Project-specific fields (e.g. `role`, `phase`) go here. Safe to add to. |
 
