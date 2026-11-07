@@ -36,17 +36,18 @@ publication workflow. Its stable tracking ID is `classic-storymaps-viewer-pages`
 
 ## Current state
 
-**Local STATUS validation tooling is installed and verified.**
+**Version-aware STATUS validation tooling is installed and verified.**
 
 The staged-content pre-commit hook, shared validator-environment bootstrap,
 hook installer and CLAUDE-stub Markdown lint exclusion are present locally.
-The existing validator, schema and CLAUDE stub are unchanged. All 48 upstream
-hook regression cases passed; the installed executable hook matches its source,
-the real STATUS file passed validation, and VS Code reported no diagnostics for
-the opened CLAUDE stub. The Git index was unchanged by installation. The owner
-authorized a `[skip ci]` tooling commit and push; no application publication was
-authorized.
-See [session 0077](session-logs/2026-11-06-0077-session-log.md).
+The corrected validator bundles v1 and v2, routes by each file's declared
+version, and enforces v2's 400-character next-action limit. Canonical validator
+and distribution acceptance passed 79 tests, including 67 real-commit hook
+cases. The local snapshots match the canonical bundle; the installed executable
+hook is unchanged and the real STATUS file passes. Setup is documented in
+`scripts/README.md`. This project's v1 declaration, owner fields and CLAUDE stub
+remain unchanged; no application publication is authorized.
+See [session 0078](session-logs/2026-11-06-0078-session-log.md).
 
 **Viewer card eligibility matches the converter's eight-type handoff scope locally.**
 

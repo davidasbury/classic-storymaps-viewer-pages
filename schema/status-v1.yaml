@@ -55,8 +55,9 @@ required_fields:
     type: integer
     description: >
       Owner-defined ordinal scale. The meaning of "lower/higher = more
-      urgent" is a convention defined elsewhere (PLAN.md / aggregator
-      config), not by this schema.
+      urgent" and the value used for non-active projects are conventions
+      defined in scripts/aggregate_status.py (the convention block by
+      LOWER_PRIORITY_IS_MORE_URGENT), not by this schema.
 
   next_action:
     type: string

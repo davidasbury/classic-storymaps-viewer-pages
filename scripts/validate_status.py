@@ -43,6 +43,7 @@ except ImportError:
 
 # Default schema, relative to this script: <repo>/schema/status-v1.yaml
 DEFAULT_SCHEMA = Path(__file__).resolve().parent.parent / "schema" / "status-v1.yaml"
+SCHEMA_DIR = DEFAULT_SCHEMA.parent
 
 
 def _type_ok(value, type_name: str) -> bool:
@@ -77,6 +78,37 @@ def load_schema(schema_path: Path) -> dict:
     if not isinstance(data, dict) or "required_fields" not in data:
         raise ValueError(f"{schema_path}: not a schema file (no 'required_fields')")
     return data
+
+
+def get_schema_for_version(version, schema_dir: Path, cache: dict):
+    """Return (schema_dict, None) or (None, error_message). Cached per version.
+
+    The single implementation of ADR-001's schema_version routing (D4: "the
+    aggregator accepts old and new versions during any transition"). Both the
+    write-time CLI (main(), below) and the read-time aggregator
+    (aggregate_status.py) call this rather than each re-implementing the
+    version-to-file lookup, per the single-parser principle in ADR-001's
+    2026-06-14 amendment.
+    """
+    if version in cache:
+        return cache[version]
+    if not isinstance(version, int) or isinstance(version, bool):
+        result = (None, f"schema_version: expected an integer, got {version!r}.")
+    else:
+        schema_path = schema_dir / f"status-v{version}.yaml"
+        if not schema_path.is_file():
+            result = (
+                None,
+                f"schema_version: file declares {version} but "
+                f"{schema_path.name} does not exist in {schema_dir}.",
+            )
+        else:
+            try:
+                result = (load_schema(schema_path), None)
+            except (OSError, ValueError, yaml.YAMLError) as exc:
+                result = (None, f"cannot load {schema_path.name}: {exc}")
+    cache[version] = result
+    return result
 
 
 def parse_frontmatter(text: str):
@@ -142,13 +174,22 @@ def validate(frontmatter: dict, schema: dict) -> list[str]:
         if enum is not None and value not in enum:
             errors.append(f"{field}: {value!r} is not one of {enum}.")
 
+        max_length = spec.get("max_length")
+        if max_length is not None and isinstance(value, str) and len(value) > max_length:
+            errors.append(
+                f"{field}: {len(value)} chars exceeds max_length {max_length}. "
+                "This usually means session updates were prepended instead of "
+                "replacing the field (AGENTS.md close-out step 2) — move the "
+                "history into session-logs/ and leave one current line here."
+            )
+
     return errors
 
 
 def validate_file(path: Path, schema: dict) -> list[str]:
-    """Validate one STATUS.md file. Returns error strings (empty == valid)."""
+    """Validate one STATUS.md file against a fixed schema. Empty list == valid."""
     try:
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
     except OSError as exc:
         return [f"could not read file: {exc}"]
     frontmatter, err = parse_frontmatter(text)
@@ -157,9 +198,26 @@ def validate_file(path: Path, schema: dict) -> list[str]:
     return validate(frontmatter, schema)
 
 
+def validate_file_auto(path: Path, schema_dir: Path, cache: dict) -> list[str]:
+    """Validate one STATUS.md file against the schema its own schema_version
+    names (ADR-001 D4 lazy migration), instead of one fixed schema for every
+    file. Empty list == valid."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"could not read file: {exc}"]
+    frontmatter, err = parse_frontmatter(text)
+    if err:
+        return [err]
+    schema, err = get_schema_for_version(frontmatter.get("schema_version"), schema_dir, cache)
+    if err:
+        return [err]
+    return validate(frontmatter, schema)
+
+
 def main(argv: list[str]) -> int:
     args = argv[1:]
-    schema_path = DEFAULT_SCHEMA
+    schema_path = None
     if "--schema" in args:
         i = args.index("--schema")
         try:
@@ -175,15 +233,31 @@ def main(argv: list[str]) -> int:
         )
         return 2
 
-    try:
-        schema = load_schema(schema_path)
-    except (OSError, ValueError, yaml.YAMLError) as exc:
-        sys.stderr.write(f"error: cannot load schema: {exc}\n")
-        return 2
-
     any_invalid = False
+
+    if schema_path is not None:
+        # Explicit override: force every file given against this one schema.
+        try:
+            schema = load_schema(schema_path)
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            sys.stderr.write(f"error: cannot load schema: {exc}\n")
+            return 2
+        for arg in args:
+            errors = validate_file(Path(arg), schema)
+            if errors:
+                any_invalid = True
+                sys.stderr.write(f"FAIL {arg}\n")
+                for e in errors:
+                    sys.stderr.write(f"  - {e}\n")
+            else:
+                sys.stdout.write(f"OK   {arg}\n")
+        return 1 if any_invalid else 0
+
+    # Default: each file is validated against the schema its own
+    # schema_version names, so v1 and v2 (etc.) files coexist correctly.
+    cache: dict = {}
     for arg in args:
-        errors = validate_file(Path(arg), schema)
+        errors = validate_file_auto(Path(arg), SCHEMA_DIR, cache)
         if errors:
             any_invalid = True
             sys.stderr.write(f"FAIL {arg}\n")
